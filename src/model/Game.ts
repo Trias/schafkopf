@@ -8,28 +8,53 @@ import GameResult from "./GameResult";
 import Player from "./Player";
 import Round from "./Round";
 import Ordering from "./orderings/Ordering";
+import GamePhase from "./GamePhase";
+import {CardEnum} from "./Card";
 
 export default class Game {
     private readonly players: [Player, Player, Player, Player];
-    private readonly rounds: Round[];
-    private readonly gameMode: GameMode;
-    private readonly gameResult: GameResult;
+    // noinspection JSMismatchedCollectionQueryUpdate
+    private rounds: Round[];
+    private gameMode?: GameMode;
+    private gamePhase: GamePhase;
 
-    constructor(player1:Player, player2:Player, player3:Player, player4:Player){
+    constructor(players: [Player, Player, Player, Player]) {
         this.rounds = [];
-        this.players = [player1, player2, player3, player4];
+        this.players = players;
+        this.gamePhase = GamePhase.BEFORE_GAME;
+    }
 
-        this.gameMode = this.determineGameMode();
+    play(cardsInSets: CardEnum[][]) {
+        if (this.gamePhase != GamePhase.BEFORE_GAME) {
+            throw Error('Invalid state transition');
+        }
 
-        if(this.gameMode.getCallingPlayer()){
+        this.setGamePhase(GamePhase.BEFORE_GAME);
+
+        console.log(`-----deal first batch of cards ------`);
+        for (let i = 0; i < this.players.length; i++) {
+            this.players[i].receiveFirstBatchOfCards(cardsInSets[i]);
+        }
+        this.setGamePhase(GamePhase.FOUR_CARDS_DEALT);
+
+        console.log(`-----deal second batch of cards ------`);
+        for (let i = 0; i < this.players.length; i++) {
+            this.players[i].receiveSecondBatchOfCards(cardsInSets[i + 4]);
+        }
+        this.setGamePhase(GamePhase.ALL_CARDS_DEALT);
+
+        this.gameMode = this.askPlayersWhatTheyWantToPlay();
+
+        if (this.gameMode.getCallingPlayer()) {
             this.notifyPlayersOfGameMode(this.gameMode);
+            this.setGamePhase(GamePhase.IN_PLAY);
 
             console.log(`game mode decided: ${this.gameMode.getMode()}, by ${this.gameMode.getCallingPlayer()}, calling for ${this.gameMode.getColor()}`);
 
             this.rounds = this.playRounds();
         }
 
-        this.gameResult = new GameResult(this.gameMode, this.rounds, this.players);
+        this.setGamePhase(GamePhase.AFTER_GAME);
     }
 
     playRounds(): Round[] {
@@ -42,24 +67,24 @@ export default class Game {
             for (let j = 0; j < 4; j++) {
                 let card = activePlayer.playCard(round);
                 round.addCard(card);
-                console.log(`player ${this.getPlayerIndex(activePlayer) + 1} played ${card} from set ${Ordering.sortByNaturalOrdering(activePlayer.getCurrentCardSet().concat(card))}`);
+                console.log(`player ${activePlayer.getName()} played ${card} from set ${Ordering.sortByNaturalOrdering(activePlayer.getCurrentCardSet().concat(card))}`);
 
                 activePlayer = this.nextPlayer(activePlayer);
 
                 // console.log(`------pli ${j+1} finished-----`);
             }
             rounds.push(round);
-            activePlayer = round.getWinningPlayer(this.gameMode, this.players);
+            activePlayer = round.getWinningPlayer(this.getGameMode(), this.players);
 
-            console.log(`round winner: ${round.getWinningPlayer(this.gameMode, this.players).getName()} at position ${round.getWinnerIndex(this.gameMode) + 1}; round cards: ${round.getCards()}`);
-            console.log(`------round ${i+1} finished-----`);
+            console.log(`round winner: ${round.getWinningPlayer(this.getGameMode(), this.players).getName()} at position ${round.getWinnerIndex(this.getGameMode()) + 1}; round cards: ${round.getCards()}`);
+            console.log(`------round ${i + 1} finished-----`);
         }
         console.log(`=====game finished=======`);
 
         return rounds;
     }
 
-    determineGameMode(): GameMode{
+    askPlayersWhatTheyWantToPlay(): GameMode {
         let currentGameMode = new GameMode(GameModeEnum.RETRY);
         for (let i = 0; i < 4; i++) {
             let newGameMode = this.players[i].whatDoYouWantToPlay(currentGameMode);
@@ -76,16 +101,35 @@ export default class Game {
     }
 
     notifyPlayersOfGameMode(gameMode: GameMode) {
-        for(let i = 0; i < 4; i++){
+        for (let i = 0; i < 4; i++) {
             this.players[i].notifyGameMode(gameMode);
         }
     }
 
-    getGameResult(){
-        return this.gameResult;
+    notifyPlayersOfGamePhase(gamePhase: GamePhase) {
+        for (let i = 0; i < 4; i++) {
+            this.players[i].notifyGamePhase(gamePhase);
+        }
     }
 
-    private getPlayerIndex(activePlayer: Player) {
-        return this.players.indexOf(activePlayer);
+    getGameResult() {
+        if (this.gamePhase !== GamePhase.AFTER_GAME) {
+            throw Error('gameResult not yet determined!');
+        }
+        let rounds = this.rounds as Round[];
+
+        return new GameResult(this.getGameMode(), rounds, this.players);
+    }
+
+    private getGameMode() {
+        if (this.gamePhase < GamePhase.IN_PLAY) {
+            throw Error('gameMode not yet determined!');
+        }
+        return this.gameMode as GameMode;
+    }
+
+    private setGamePhase(gamePhase: GamePhase) {
+        this.gamePhase = gamePhase;
+        this.notifyPlayersOfGamePhase(gamePhase);
     }
 }

@@ -3,7 +3,6 @@ import PlayableMoves from "../../PlayableMoves";
 import {shuffle} from "lodash"
 import {ColorEnum, Colors} from "../../ColorEnum";
 import {GameMode, GameModeEnum} from "../../GameMode";
-import CardSet from "../../CardSet";
 import Round from "../../Round";
 import {CardEnum} from "../../Card";
 
@@ -25,7 +24,8 @@ export default class RandomStrategy implements StrategyInterface {
             throw Error(`no playable card found! ${cardSet}`);
         }
     }
-    chooseGameToCall(cardSet:CardSet, previousGameMode:GameMode): [GameModeEnum?, ColorEnum?] {
+
+    chooseGameToCall(cardSet: CardEnum[], previousGameMode: GameMode): [GameModeEnum?, ColorEnum?] {
         if (Math.random() < 0.25) {
             return [];
         }
