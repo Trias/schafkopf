@@ -9,20 +9,20 @@ import StrategyInterface from "./strategy/StrategyInterface";
 import Ordering from "./orderings/Ordering";
 
 export default class Player {
-    private readonly startCardSet: CardSet;
+    private readonly startCardSet: CardEnum[];
     private readonly name: string;
     private readonly strategy: StrategyInterface;
     private gameMode?: GameMode;
-    private currentCardSet: CardSet;
+    private currentCardSet: CardEnum[];
 
-    constructor(name: string, startCardSet: CardSet, strategy: StrategyInterface){
+    constructor(name: string, startCardSet: CardEnum[], strategy: StrategyInterface) {
         this.name = name;
         this.startCardSet = startCardSet;
         this.currentCardSet = startCardSet;
         this.strategy = strategy;
     }
 
-    getStartCardSet(): CardSet {
+    getStartCardSet(): CardEnum[] {
         return this.startCardSet;
     }
 
@@ -35,7 +35,7 @@ export default class Player {
 
         let card = this.strategy.chooseCardToPlay(round, this.currentCardSet, gameMode);
 
-        this.currentCardSet = this.currentCardSet.removeCard(card);
+        this.currentCardSet = CardSet.removeCard(this.currentCardSet, card);
 
         return card;
     }
@@ -55,7 +55,7 @@ export default class Player {
     }
 
     getCurrentCardSet() {
-        return new CardSet(Ordering.sortByNaturalOrdering(this.currentCardSet.asArray()));
+        return Ordering.sortByNaturalOrdering(this.currentCardSet);
     }
 
     toString() {

@@ -5,6 +5,7 @@ import Round from "./Round";
 import {CardEnum} from "./Card";
 import TrumpOrderingCallGame from "./orderings/TrumpOrderingCallGame";
 import Ordering from "./orderings/Ordering";
+import CardSet from "./CardSet";
 
 /**
  * who wins with how many points
@@ -82,7 +83,7 @@ export default class GameResult{
             let calledAce = this.gameMode.getColor() + CardFaceEnum.ACE as CardEnum;
 
             for(let i = 0; i< 4;i++){
-                if(this.players[i].getStartCardSet().hasCard(calledAce)){
+                if (CardSet.hasCard(this.players[i].getStartCardSet(), calledAce)) {
                     return [callingPlayer, this.players[i]];
                 }
             }
@@ -120,7 +121,7 @@ export default class GameResult{
         let playingTeam = this.getPlayingTeam();
         if (this.gameMode.getMode() == GameModeEnum.CALL_GAME) {
             let playingTeamCallGame = playingTeam as [Player, Player];
-            let winnerCardSet = playingTeamCallGame[0].getStartCardSet().asArray().concat(playingTeamCallGame[1].getStartCardSet().asArray());
+            let winnerCardSet = playingTeamCallGame[0].getStartCardSet().concat(playingTeamCallGame[1].getStartCardSet());
             let sortedWinnerCardSet = Ordering.sortAndFilterBy(TrumpOrderingCallGame, winnerCardSet);
 
             let laufende = 0;

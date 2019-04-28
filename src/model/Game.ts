@@ -42,7 +42,7 @@ export default class Game {
             for (let j = 0; j < 4; j++) {
                 let card = activePlayer.playCard(round);
                 round.addCard(card);
-                console.log(`player ${this.getPlayerIndex(activePlayer) + 1} played ${card} from set ${Ordering.sortByNaturalOrdering(activePlayer.getCurrentCardSet().asArray().concat(card))}`);
+                console.log(`player ${this.getPlayerIndex(activePlayer) + 1} played ${card} from set ${Ordering.sortByNaturalOrdering(activePlayer.getCurrentCardSet().concat(card))}`);
 
                 activePlayer = this.nextPlayer(activePlayer);
 

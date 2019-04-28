@@ -8,8 +8,8 @@ import Round from "../../Round";
 import {CardEnum} from "../../Card";
 
 export default class RandomStrategy implements StrategyInterface {
-    chooseCardToPlay(round:Round, cardSet:CardSet, gameMode:GameMode): CardEnum{
-        let cards = shuffle(cardSet.asArray());
+    chooseCardToPlay(round: Round, cardSet: CardEnum[], gameMode: GameMode): CardEnum {
+        let cards = shuffle(cardSet);
 
         let chosenCard = null;
         for(let card of cards){
@@ -22,7 +22,7 @@ export default class RandomStrategy implements StrategyInterface {
         if(chosenCard){
             return chosenCard;
         }else{
-            throw Error(`no playable card found! ${cardSet.asArray()}`);
+            throw Error(`no playable card found! ${cardSet}`);
         }
     }
     chooseGameToCall(cardSet:CardSet, previousGameMode:GameMode): [GameModeEnum?, ColorEnum?] {
