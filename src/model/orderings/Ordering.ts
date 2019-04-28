@@ -1,6 +1,6 @@
 import {CardEnum} from "../Card";
 import {intersection, sortBy} from "lodash";
-import CardDeck from "../CardDeck";
+import CardDeck from "./CardDeck";
 
 export default class Ordering {
     static sortAndFilterBy(allTrumpsSorted: CardEnum[], winnerCardSet: CardEnum[]): CardEnum[] {

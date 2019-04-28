@@ -3,19 +3,40 @@ import {GameModeEnum} from "./GameMode";
 import Player from "./Player";
 import {includes} from "lodash";
 
-export default class Statistics {
-    private readonly results: GameResult[];
+type Stats = {
+    wins: number;
+    cents: number;
+    inPlayingTeam: number;
+    retries: number;
+}
 
-    constructor(results: GameResult[]) {
-        this.results = results;
+export default class Statistics {
+    //private readonly results: GameResult[];
+    private readonly players: Player[];
+    private stats: Map<Player, Stats>;
+
+    constructor(players: Player[]) {
+        this.players = players;
+        //this.results = [];
+        this.stats = new Map<Player, Stats>();
+        for (let player of players) {
+            this.stats.set(player, {wins: 0, cents: 0, inPlayingTeam: 0, retries: 0});
+        }
     }
 
-    getStatisticsForPlayer(player: Player): [number, number, number, number] {
-        let wins = 0;
-        let cents = 0;
-        let inPlayingTeam = 0;
-        let retries = 0;
-        for (let result of this.results) {
+    getStatsForPlayer(player: Player) {
+        return this.stats.get(player) as Stats;
+    }
+
+    addResult(gameResult: GameResult) {
+        // this.results.push(gameResult);
+        this.updateStatistics(gameResult);
+    }
+
+    private updateStatistics(result: GameResult) {
+        for (let player of this.players) {
+            let {wins, cents, inPlayingTeam, retries} = this.stats.get(player) as Stats;
+
             if (result.getGameMode() === GameModeEnum.CALL_GAME) {
                 if (includes(result.getPlayingTeam(), player)) {
                     inPlayingTeam = inPlayingTeam + 1;
@@ -29,13 +50,27 @@ export default class Statistics {
                 } else {
                     cents = cents - result.getGameMoneyValue();
                 }
+            } else if (result.getGameMode() === GameModeEnum.SOLO || result.getGameMode() === GameModeEnum.WENZ) {
+                if (includes(result.getPlayingTeam(), player)) {
+                    inPlayingTeam = inPlayingTeam + 1;
+                }
+                if (result.hasPlayingTeamWon() && includes(result.getPlayingTeam(), player)) {
+                    wins = wins + 1;
+                    cents = cents + result.getGameMoneyValue() * 3;
+                } else if (result.hasPlayingTeamWon() && !includes(result.getPlayingTeam(), player)) {
+                    cents = cents - result.getGameMoneyValue();
+                } else if (!result.hasPlayingTeamWon() && !includes(result.getPlayingTeam(), player)) {
+                    wins = wins + 1;
+                    cents = cents + result.getGameMoneyValue();
+                } else {
+                    cents = cents - result.getGameMoneyValue() * 3;
+                }
             } else if (result.getGameMode() === GameModeEnum.RETRY) {
                 retries = retries + 1;
             } else {
                 throw Error('not implemented');
             }
-
+            this.stats.set(player, {wins, cents, inPlayingTeam, retries});
         }
-        return [wins, cents, inPlayingTeam, retries];
     }
 }

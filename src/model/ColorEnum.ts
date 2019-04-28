@@ -1,5 +1,3 @@
-import {includes} from "lodash";
-
 enum ColorEnum {
     TRUMP = "T",
     EICHEL = "E",
@@ -16,10 +14,6 @@ namespace Colors {
 
     export function callableColorsAsArray(): [ColorEnum, ColorEnum, ColorEnum] {
         return [ColorEnum.EICHEL, ColorEnum.BLATT, ColorEnum.SCHELLE];
-    }
-
-    export function isAKnownColor(color: ColorEnum): boolean {
-        return includes(Colors.asArray(), color)
     }
 }
 

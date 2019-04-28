@@ -20,11 +20,11 @@ export default class Round {
         return this.playedCards.length === 4;
     }
 
-    getRoundColor(){
+    getRoundColor(gameMode: GameMode) {
         if(this.isEmpty()){
             throw Error('no card played');
         }else{
-            return Card.getColor(this.playedCards[0]);
+            return Card.getColor(this.playedCards[0], gameMode);
         }
     }
 

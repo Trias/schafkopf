@@ -30,6 +30,15 @@ export default class RandomStrategy implements StrategyInterface {
             return [];
         }
 
+        if (Math.random() < 0.05) {
+            let callColor = shuffle(Colors.asArray()).shift();
+            return [GameModeEnum.SOLO, callColor];
+        }
+
+        if (Math.random() < 0.05) {
+            return [GameModeEnum.WENZ];
+        }
+
         let shuffledColors = shuffle(Colors.callableColorsAsArray());
         let callColor = null;
         for (let color of shuffledColors) {

@@ -1,7 +1,7 @@
 import {ColorEnum} from "./ColorEnum";
 import CardFaceEnum from "./CardFaceEnum";
-import TrumpOrderingCallGame from "./orderings/TrumpOrderingCallGame";
 import {includes} from "lodash";
+import {GameMode} from "./GameMode";
 
 enum CardEnum {
     EO = "EO", BO = "BO", HO = "HO", SO = "SO",
@@ -13,12 +13,12 @@ enum CardEnum {
 }
 
 namespace Card {
-    export function isOfColor(card: CardEnum, color: ColorEnum){
-        return color === Card.getColor(card);
+    export function isOfColor(card: CardEnum, color: ColorEnum, gameMode: GameMode) {
+        return color === Card.getColor(card, gameMode);
     }
 
-    export function getColor(card: CardEnum): ColorEnum{
-        if (includes(TrumpOrderingCallGame, card)) {
+    export function getColor(card: CardEnum, gameMode: GameMode): ColorEnum {
+        if (includes(gameMode.getTrumpOrdering(), card)) {
             return ColorEnum.TRUMP;
         }
         return card[0] as ColorEnum;
@@ -26,6 +26,10 @@ namespace Card {
 
     export function getFace(card: CardEnum): CardFaceEnum{
         return card[1] as CardFaceEnum;
+    }
+
+    export function getColorIgnoringTrump(card: CardEnum) {
+        return card[0] as ColorEnum;
     }
 }
 

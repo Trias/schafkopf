@@ -2,7 +2,7 @@
  * shuffle it to receive 4 card Sets..
  *
  */
-import {CardEnum} from "./Card";
+import {CardEnum} from "../Card";
 
 export default [
     "EO", "BO", "HO", "SO",
