@@ -8,6 +8,7 @@ import {Faces} from "./orderings/ColorOrderingCallGame";
 import {ColorEnum} from "./ColorEnum";
 import {Card, CardEnum} from "./Card";
 import Player from "./Player";
+import {includes} from "lodash";
 
 enum GameModeEnum {
     CALL_GAME = "C",
@@ -28,7 +29,7 @@ class GameMode {
 
     isTrump(card: CardEnum) {
         if(this.mode === GameModeEnum.CALL_GAME){
-            return TrumpOrderingCallGame.indexOf(card) !== -1;
+            return includes(TrumpOrderingCallGame, card);
         }
 
         throw Error('not implemented');

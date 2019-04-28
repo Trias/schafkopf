@@ -3,11 +3,11 @@
  */
 import {Card, CardEnum} from "./Card";
 import {ColorEnum} from "./ColorEnum";
-import {some, without} from "lodash";
+import {includes, some, without} from "lodash";
 
 namespace CardSet {
     export function hasCard(cards: CardEnum[], otherCard: CardEnum): boolean {
-        return cards.indexOf(otherCard) !== -1;
+        return includes(cards, otherCard);
     }
 
     export function hasColor(cards: CardEnum[], otherColor: ColorEnum) {

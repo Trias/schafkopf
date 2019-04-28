@@ -1,6 +1,7 @@
 import {ColorEnum} from "./ColorEnum";
 import CardFaceEnum from "./CardFaceEnum";
 import TrumpOrderingCallGame from "./orderings/TrumpOrderingCallGame";
+import {includes} from "lodash";
 
 enum CardEnum {
     EO = "EO", BO = "BO", HO = "HO", SO = "SO",
@@ -17,7 +18,7 @@ namespace Card {
     }
 
     export function getColor(card: CardEnum): ColorEnum{
-        if(TrumpOrderingCallGame.indexOf(card)!==-1){
+        if (includes(TrumpOrderingCallGame, card)) {
             return ColorEnum.TRUMP;
         }
         return card[0] as ColorEnum;

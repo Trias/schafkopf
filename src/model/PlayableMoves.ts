@@ -11,7 +11,7 @@ import CardFaceEnum from "./CardFaceEnum";
 import CardSet from "./CardSet";
 import Round from "./Round";
 import TrumpOrderingCallGame from "./orderings/TrumpOrderingCallGame";
-import {intersection} from "lodash";
+import {includes, intersection} from "lodash";
 
 export default class PlayableMoves {
     static canCallColor(cardsOnHand: CardEnum[], color: ColorEnum) {
@@ -40,9 +40,9 @@ export default class PlayableMoves {
                 }
             }
 
-            if(gameMode.getMode() === GameModeEnum.CALL_GAME && TrumpOrderingCallGame.indexOf(round.getCards()[0]) !== -1){
+            if (gameMode.getMode() === GameModeEnum.CALL_GAME && includes(TrumpOrderingCallGame, round.getCards()[0])) {
                 //  console.log('trumpf gespielt');
-                return TrumpOrderingCallGame.indexOf(card) !== -1 || intersection(TrumpOrderingCallGame, cardsOnHand).length == 0
+                return includes(TrumpOrderingCallGame, card) || intersection(TrumpOrderingCallGame, cardsOnHand).length == 0
             }
 
             //console.log('erste karte');

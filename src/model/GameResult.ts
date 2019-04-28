@@ -6,6 +6,7 @@ import {CardEnum} from "./Card";
 import TrumpOrderingCallGame from "./orderings/TrumpOrderingCallGame";
 import Ordering from "./orderings/Ordering";
 import CardSet from "./CardSet";
+import {includes} from "lodash";
 
 /**
  * who wins with how many points
@@ -159,7 +160,7 @@ export default class GameResult{
         let playingTeamRounds = [];
 
         for (let round of this.rounds) {
-            if (playingTeam.indexOf(round.getWinningPlayer(this.gameMode, this.players)) !== -1) {
+            if (includes(playingTeam, round.getWinningPlayer(this.gameMode, this.players))) {
                 playingTeamRounds.push(round);
             }
         }

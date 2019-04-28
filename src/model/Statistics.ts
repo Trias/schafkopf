@@ -1,6 +1,7 @@
 import GameResult from "./GameResult";
 import {GameModeEnum} from "./GameMode";
 import Player from "./Player";
+import {includes} from "lodash";
 
 export default class Statistics {
     private readonly results: GameResult[];
@@ -16,13 +17,13 @@ export default class Statistics {
         let retries = 0;
         for (let result of this.results) {
             if (result.getGameMode() === GameModeEnum.CALL_GAME) {
-                if (result.getPlayingTeam().indexOf(player) !== -1) {
+                if (includes(result.getPlayingTeam(), player)) {
                     inPlayingTeam = inPlayingTeam + 1;
                 }
-                if (result.hasPlayingTeamWon() && result.getPlayingTeam().indexOf(player) !== -1) {
+                if (result.hasPlayingTeamWon() && includes(result.getPlayingTeam(), player)) {
                     wins = wins + 1;
                     cents = cents + result.getGameMoneyValue();
-                } else if (!result.hasPlayingTeamWon() && result.getPlayingTeam().indexOf(player) === -1) {
+                } else if (!result.hasPlayingTeamWon() && !includes(result.getPlayingTeam(), player)) {
                     wins = wins + 1;
                     cents = cents + result.getGameMoneyValue();
                 } else {

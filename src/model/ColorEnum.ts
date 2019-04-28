@@ -1,3 +1,5 @@
+import {includes} from "lodash";
+
 enum ColorEnum {
     TRUMP = "T",
     EICHEL = "E",
@@ -17,7 +19,7 @@ namespace Colors {
     }
 
     export function isAKnownColor(color: ColorEnum): boolean {
-        return Colors.asArray().indexOf(color) === -1
+        return includes(Colors.asArray(), color)
     }
 }
 
