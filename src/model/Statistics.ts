@@ -16,7 +16,7 @@ export default class Statistics {
         let retries = 0;
         for (let result of this.results) {
             if (result.getGameMode() === GameModeEnum.CALL_GAME) {
-                if (result.getPlayingTeam().indexOf(player)) {
+                if (result.getPlayingTeam().indexOf(player) !== -1) {
                     inPlayingTeam = inPlayingTeam + 1;
                 }
                 if (result.hasPlayingTeamWon() && result.getPlayingTeam().indexOf(player) !== -1) {

@@ -5,7 +5,7 @@ import Statistics from "./model/Statistics";
 import shuffleCards from "./model/shuffleCards";
 
 let results = [];
-let runs = 100;
+let runs = 120;
 
 let player1 = new Player("Player 1", new RandomStrategy());
 let player2 = new Player("Player 2", new RandomStrategy());
