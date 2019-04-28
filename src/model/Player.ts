@@ -6,6 +6,7 @@ import Round from "./Round";
 import {CardEnum} from "./Card";
 import {GameMode} from "./GameMode";
 import StrategyInterface from "./strategy/StrategyInterface";
+import Ordering from "./orderings/Ordering";
 
 export default class Player {
     private readonly startCardSet: CardSet;
@@ -46,7 +47,7 @@ export default class Player {
     whatDoYouWantToPlay(currentGameMode: GameMode): GameMode {
         let [gameMode, color] = this.strategy.chooseGameToCall(this.startCardSet, currentGameMode);
 
-        if(gameMode){
+        if (gameMode && gameMode !== currentGameMode.getMode()) {
             return new GameMode(gameMode, this, color);
         }else {
             return currentGameMode;
@@ -54,6 +55,14 @@ export default class Player {
     }
 
     getCurrentCardSet() {
-        return this.currentCardSet;
+        return new CardSet(Ordering.sortByNaturalOrdering(this.currentCardSet.asArray()));
+    }
+
+    toString() {
+        return this.name;
+    }
+
+    getName() {
+        return this.name;
     }
 }

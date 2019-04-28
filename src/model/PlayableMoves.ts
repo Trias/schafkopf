@@ -22,36 +22,36 @@ export default class PlayableMoves {
     static canPlayCard(gameMode: GameMode, cardsOnHand: CardSet, card: CardEnum, round: Round): boolean{
         if(round.isEmpty()){
             if(this.isCalledColorButNotAce(gameMode, cardsOnHand, card)){
-                console.log('ruffarbe gespielt');
+                // console.log('ruffarbe gespielt');
                 return false;
             }else{
-                console.log('erste karte');
+                //  console.log('erste karte');
                 return true;
             }
         }else{
             let roundColor = round.getRoundColor();
 
-            console.log(`round color:${roundColor}`);
+            //  console.log(`round color:${roundColor}`);
 
             if(gameMode.getMode() === GameModeEnum.CALL_GAME && roundColor === gameMode.getColor() && Card.isOfColor(card, roundColor)){
-                console.log('ruffarbe gespielt');
+                //  console.log('ruffarbe gespielt');
                 if(this.isCalledColorButNotAce(gameMode, cardsOnHand, card)){
                     return false;
                 }
             }
 
             if(gameMode.getMode() === GameModeEnum.CALL_GAME && TrumpOrderingCallGame.indexOf(round.getCards()[0]) !== -1){
-                console.log('trumpf gespielt');
+                //  console.log('trumpf gespielt');
                 return TrumpOrderingCallGame.indexOf(card)!==-1 || intersection(TrumpOrderingCallGame, cardsOnHand.asArray()).length==0
             }
 
-            console.log('erste karte');
+            //console.log('erste karte');
 
             if(!cardsOnHand.hasColor(roundColor)){
-                console.log('farbe nicht auf der hand?');
+                //console.log('farbe nicht auf der hand?');
                 return true;
             }else {
-                console.log('gleiche farbe?');
+                //console.log('gleiche farbe?');
                 return Card.isOfColor(card, roundColor);
             }
         }

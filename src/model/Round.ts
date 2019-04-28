@@ -45,7 +45,7 @@ export default class Round {
             for(let i = 1; i < this.playedCards.length; i++){
                 let newHighestCardCandidate = gameMode.highestCard(highestCard, this.playedCards[i]);
                 if(highestCard !== newHighestCardCandidate){
-                    console.log(`new highest card: ${newHighestCardCandidate}`);
+                    // console.log(`new highest card: ${newHighestCardCandidate}`);
                     highestCardIndex = i;
                     highestCard = newHighestCardCandidate;
                 }

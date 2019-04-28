@@ -3,6 +3,8 @@ import CardFaceEnum from "./CardFaceEnum";
 import Player from "./Player";
 import Round from "./Round";
 import {CardEnum} from "./Card";
+import TrumpOrderingCallGame from "./orderings/TrumpOrderingCallGame";
+import Ordering from "./orderings/Ordering";
 
 /**
  * who wins with how many points
@@ -97,5 +99,69 @@ export default class GameResult{
 
     getPlayerByIndex(index: number): Player {
         return this.players[index];
+    }
+
+    getGameMoneyValue() {
+        if (this.gameMode.getMode() == GameModeEnum.CALL_GAME) {
+            let laufende = this.getLaufende();
+            let schneider = this.getPlayingTeamPoints() > 90 || this.getPlayingTeamPoints() <= 30;
+            let schwarz = this.getPlayingTeamRounds().length == 0 || this.getPlayingTeamRounds().length == 8;
+            return 10 + (laufende > 2 ? laufende : 0) * 10 + (schneider ? 10 : 0) + (schwarz ? 10 : 0);
+        } else if (this.gameMode.getMode() == GameModeEnum.SOLO || this.gameMode.getMode() == GameModeEnum.WENZ) {
+            return 50;
+        } else if (this.gameMode.getMode() == GameModeEnum.RETRY) {
+            return 0;
+        } else {
+            throw Error('not implemented');
+        }
+    }
+
+    private getLaufende(): number {
+        let playingTeam = this.getPlayingTeam();
+        if (this.gameMode.getMode() == GameModeEnum.CALL_GAME) {
+            let playingTeamCallGame = playingTeam as [Player, Player];
+            let winnerCardSet = playingTeamCallGame[0].getStartCardSet().asArray().concat(playingTeamCallGame[1].getStartCardSet().asArray());
+            let sortedWinnerCardSet = Ordering.sortAndFilterBy(TrumpOrderingCallGame, winnerCardSet);
+
+            let laufende = 0;
+
+            if (sortedWinnerCardSet.length === 0) {
+                return TrumpOrderingCallGame.length;
+            }
+
+            let positive = sortedWinnerCardSet[0] === TrumpOrderingCallGame[0];
+
+            if (positive) {
+                for (laufende; laufende < sortedWinnerCardSet.length; laufende++) {
+
+                    if (sortedWinnerCardSet[laufende] !== TrumpOrderingCallGame[laufende]) {
+                        break;
+                    }
+                }
+            } else {
+                laufende = TrumpOrderingCallGame.indexOf(sortedWinnerCardSet[0]);
+                if (laufende < 1) {
+                    throw Error('laufende error in calculation');
+                }
+            }
+
+            return laufende;
+        } else if (this.gameMode.getMode() == GameModeEnum.RETRY) {
+            return 0;
+        }
+
+        throw Error('not implemented');
+    }
+
+    private getPlayingTeamRounds(): Round[] {
+        let playingTeam = this.getPlayingTeam();
+        let playingTeamRounds = [];
+
+        for (let round of this.rounds) {
+            if (playingTeam.indexOf(round.getWinningPlayer(this.gameMode, this.players)) !== -1) {
+                playingTeamRounds.push(round);
+            }
+        }
+        return playingTeamRounds;
     }
 }

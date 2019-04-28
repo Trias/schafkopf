@@ -7,7 +7,6 @@ import TrumpOrderingCallGame from "./orderings/TrumpOrderingCallGame";
 import {Faces} from "./orderings/ColorOrderingCallGame";
 import {ColorEnum} from "./ColorEnum";
 import {Card, CardEnum} from "./Card";
-import Game from "./Game";
 import Player from "./Player";
 
 enum GameModeEnum {
@@ -35,28 +34,24 @@ class GameMode {
         throw Error('not implemented');
     }
 
-    getGameResult(game: Game){
-
-    }
-
     highestCard(card1:CardEnum, card2:CardEnum){
         if(this.isTrump(card1) && this.isTrump(card2)){
-            console.log(`trump over trump: ${card1}, ${card2}  => ${this.highestCardTrumpOrdering(card1, card2)}`);
+            //console.log(`trump over trump: ${card1}, ${card2}  => ${this.highestCardTrumpOrdering(card1, card2)}`);
             return this.highestCardTrumpOrdering(card1, card2);
         } else if(this.isTrump(card1) && !this.isTrump(card2)){
-            console.log(`trump over color: ${card1}, ${card2} => ${card1}`);
+            // console.log(`trump over color: ${card1}, ${card2} => ${card1}`);
             return card1
         }else if(!this.isTrump(card1) && this.isTrump(card2)){
-            console.log(`not trump by trump: ${card1}, ${card2} => ${card2}`);
+            // console.log(`not trump by trump: ${card1}, ${card2} => ${card2}`);
             return card2;
         }else if(Card.getColor(card1) !== Card.getColor(card2)){
-            console.log(`stays at card1: ${card1}, ${card2} => ${card1}`);
+            // console.log(`stays at card1: ${card1}, ${card2} => ${card1}`);
             return card1;
         }else if(Card.getColor(card1) === Card.getColor(card2)){
-            console.log(`color over color: ${card1}, ${card2} => ${this.highestCardColorOrdering(card1, card2)}`);
+            //  console.log(`color over color: ${card1}, ${card2} => ${this.highestCardColorOrdering(card1, card2)}`);
             return this.highestCardColorOrdering(card1, card2);
         }else{
-            console.log(`stays at card1: ${card1}, ${card2} => ${card1}`);
+            //  console.log(`stays at card1: ${card1}, ${card2} => ${card1}`);
             return card1;
         }
     }

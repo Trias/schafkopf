@@ -9,10 +9,6 @@ import {CardEnum} from "../../Card";
 
 export default class RandomStrategy implements StrategyInterface {
     chooseCardToPlay(round:Round, cardSet:CardSet, gameMode:GameMode): CardEnum{
-        for(let card of cardSet.asArray()){
-            console.log(`card: ${card}: ${PlayableMoves.canPlayCard(gameMode, cardSet, card, round)}`);
-        }
-
         let cards = shuffle(cardSet.asArray());
 
         let chosenCard = null;
@@ -30,10 +26,22 @@ export default class RandomStrategy implements StrategyInterface {
         }
     }
     chooseGameToCall(cardSet:CardSet, previousGameMode:GameMode): [GameModeEnum?, ColorEnum?] {
-        return Math.random() < 0.5
-            ? []
-            : [GameModeEnum.CALL_GAME, shuffle(Colors.normalColorsAsArray()).reduce((prev, color) => {
-            return prev || Math.random() < 0.8 && PlayableMoves.canCallColor(cardSet, color) && color;
-        })];
+        if (Math.random() < 0.25) {
+            return [];
+        }
+
+        let shuffledColors = shuffle(Colors.callableColorsAsArray());
+        let callColor = null;
+        for (let color of shuffledColors) {
+            if (Math.random() < 0.8 && PlayableMoves.canCallColor(cardSet, color)) {
+                callColor = color;
+            }
+        }
+
+        if (callColor) {
+            return [GameModeEnum.CALL_GAME, callColor];
+        } else {
+            return [];
+        }
     }
 }

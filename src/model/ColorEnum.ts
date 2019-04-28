@@ -12,7 +12,7 @@ namespace Colors {
         return [ColorEnum.EICHEL, ColorEnum.BLATT, ColorEnum.HERZ, ColorEnum.SCHELLE];
     }
 
-    export function normalColorsAsArray(): [ColorEnum, ColorEnum, ColorEnum] {
+    export function callableColorsAsArray(): [ColorEnum, ColorEnum, ColorEnum] {
         return [ColorEnum.EICHEL, ColorEnum.BLATT, ColorEnum.SCHELLE];
     }
 
