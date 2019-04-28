@@ -131,5 +131,8 @@ export default class Game {
     private setGamePhase(gamePhase: GamePhase) {
         this.gamePhase = gamePhase;
         this.notifyPlayersOfGamePhase(gamePhase);
+        if (gamePhase === GamePhase.BEFORE_GAME) {
+            this.gameMode = undefined;
+        }
     }
 }
