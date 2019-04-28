@@ -91,8 +91,12 @@ export default class Player {
         }
     }
 
+    doYouWantToRaise() {
+        return this.strategy.chooseToRaise(this.getCurrentCardSet());
+    }
+
     getCurrentCardSet() {
-        if (this.gamePhase < GamePhase.ALL_CARDS_DEALT) {
+        if (this.gamePhase < GamePhase.FOUR_CARDS_DEALT) {
             throw Error('function not available in this state');
         }
         let currentCardSet = this.currentCardSet as CardEnum[];

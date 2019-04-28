@@ -99,18 +99,16 @@ export default class GameResult{
         }
     }
 
-    getPlayerByIndex(index: number): Player {
-        return this.players[index];
-    }
-
     getGameMoneyValue() {
         if (this.gameMode.getMode() == GameModeEnum.CALL_GAME) {
             let laufende = this.getLaufende();
             let schneider = this.getPlayingTeamPoints() > 90 || this.getPlayingTeamPoints() <= 30;
             let schwarz = this.getPlayingTeamRounds().length == 0 || this.getPlayingTeamRounds().length == 8;
-            return 10 + (laufende > 2 ? laufende : 0) * 10 + (schneider ? 10 : 0) + (schwarz ? 10 : 0);
+            let baseValue = 10 + (laufende > 2 ? laufende : 0) * 10 + (schneider ? 10 : 0) + (schwarz ? 10 : 0);
+
+            return baseValue * 2 ** this.gameMode.getRaises();
         } else if (this.gameMode.getMode() == GameModeEnum.SOLO || this.gameMode.getMode() == GameModeEnum.WENZ) {
-            return 50;
+            return 50 * 2 ** this.gameMode.getRaises();
         } else if (this.gameMode.getMode() == GameModeEnum.RETRY) {
             return 0;
         } else {

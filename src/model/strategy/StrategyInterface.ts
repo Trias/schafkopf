@@ -8,4 +8,6 @@ export default interface StrategyInterface {
     chooseCardToPlay(round: Round, cardSet: CardEnum[], gameMode: GameMode): CardEnum
 
     chooseGameToCall(cardSet: CardEnum[], gameMode: GameMode): [GameModeEnum?, ColorEnum?];
+
+    chooseToRaise(cardSet: CardEnum[]): boolean;
 }

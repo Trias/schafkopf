@@ -24,7 +24,7 @@ for (let i = 0; i < runs; i++) {
 
     results.push(gameResult);
 
-    console.log(`Team (${gameResult.getPlayingTeam()}) ${gameResult.hasPlayingTeamWon() ? 'win' : 'loose'} ` +
+    console.log(`Team (${gameResult.getPlayingTeam()}) ${gameResult.hasPlayingTeamWon() ? 'wins' : 'looses'} ` +
         `with ${gameResult.getPlayingTeamPoints()} points ` +
         `and ${gameResult.hasPlayingTeamWon() ? 'win' : 'loose'} ${Math.abs(gameResult.getGameMoneyValue())} cents each!`);
 

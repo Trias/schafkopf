@@ -18,9 +18,11 @@ enum GameModeEnum {
 }
 
 class GameMode {
+
     private readonly mode: GameModeEnum;
     private readonly color?: ColorEnum;
     private readonly callingPlayer?: Player;
+    private raises: number = 0;
     constructor(mode: GameModeEnum, callingPlayer?: Player, color?: ColorEnum){
         this.mode = mode;
         this.color = color;
@@ -110,6 +112,14 @@ class GameMode {
 
     getCallingPlayer() {
         return this.callingPlayer;
+    }
+
+    setRaises(raises: number) {
+        this.raises = raises;
+    }
+
+    getRaises(): number {
+        return this.raises;
     }
 }
 

@@ -44,4 +44,8 @@ export default class RandomStrategy implements StrategyInterface {
             return [];
         }
     }
+
+    chooseToRaise(cardSet: CardEnum[]): boolean {
+        return Math.random() < 0.1;
+    }
 }

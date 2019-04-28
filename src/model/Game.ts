@@ -37,6 +37,17 @@ export default class Game {
         }
         this.setGamePhase(GamePhase.FOUR_CARDS_DEALT);
 
+        let raises = 0;
+
+        for (let i = 0; i < this.players.length; i++) {
+            let raise = this.players[i].doYouWantToRaise();
+
+            if (raise) {
+                console.log(`${this.players[i]} raises with cards: ${this.players[i].getCurrentCardSet()}!`);
+                raises = raises + 1;
+            }
+        }
+
         console.log(`-----deal second batch of cards ------`);
         for (let i = 0; i < this.players.length; i++) {
             this.players[i].receiveSecondBatchOfCards(cardsInSets[i + 4]);
@@ -44,6 +55,8 @@ export default class Game {
         this.setGamePhase(GamePhase.ALL_CARDS_DEALT);
 
         this.gameMode = this.askPlayersWhatTheyWantToPlay();
+
+        this.gameMode.setRaises(raises);
 
         if (this.gameMode.getCallingPlayer()) {
             this.notifyPlayersOfGameMode(this.gameMode);
