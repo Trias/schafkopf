@@ -1,5 +1,5 @@
-import {CardEnum} from "../Card";
+import {Card} from "../Cards";
 
 export default [
-    "EU", "BU", "HU", "SU"
-] as CardEnum[];
+    "EU", "GU", "HU", "SU"
+] as Card[];

@@ -1,50 +1,50 @@
-import {Card, CardEnum} from "./Card";
+import {Card, Cards} from "./Cards";
 import {GameMode} from "./GameMode";
 import Player from "./Player";
-import pointMapping from "./CardFaceToValueMap";
+import cardRankToValue from "./CardRankToValue";
 
-export default class Round {
-    private playedCards:CardEnum[];
+export default class Trick {
+    private playedCards: Card[];
     private readonly startPlayer: Player;
 
-    constructor(startPlayer: Player){
+    constructor(startPlayer: Player) {
         this.playedCards = [];
         this.startPlayer = startPlayer;
     }
 
-    isEmpty(){
+    isEmpty() {
         return this.playedCards.length === 0;
     }
 
-    isFinished(){
+    isFinished() {
         return this.playedCards.length === 4;
     }
 
-    getRoundColor(gameMode: GameMode) {
-        if(this.isEmpty()){
+    getRoundSuit(gameMode: GameMode) {
+        if (this.isEmpty()) {
             throw Error('no card played');
-        }else{
-            return Card.getColor(this.playedCards[0], gameMode);
+        } else {
+            return Cards.getSuit(this.playedCards[0], gameMode);
         }
     }
 
-    addCard(card: CardEnum){
+    addCard(card: Card) {
         this.playedCards.push(card);
     }
 
-    getStartPlayer(){
+    getStartPlayer() {
         return this.startPlayer;
     }
 
-    getWinnerIndex(gameMode: GameMode){
-        if(!this.isFinished()){
+    getWinnerIndex(gameMode: GameMode) {
+        if (!this.isFinished()) {
             throw Error('round not finished');
-        }else{
+        } else {
             let highestCard = this.playedCards[0];
             let highestCardIndex = 0;
-            for(let i = 1; i < this.playedCards.length; i++){
+            for (let i = 1; i < this.playedCards.length; i++) {
                 let newHighestCardCandidate = gameMode.highestCard(highestCard, this.playedCards[i]);
-                if(highestCard !== newHighestCardCandidate){
+                if (highestCard !== newHighestCardCandidate) {
                     // console.log(`new highest card: ${newHighestCardCandidate}`);
                     highestCardIndex = i;
                     highestCard = newHighestCardCandidate;
@@ -54,15 +54,15 @@ export default class Round {
         }
     }
 
-    getWinningPlayer(gameMode: GameMode, players: Player[]){
-        return players[(this.getWinnerIndex(gameMode) + players.indexOf(this.getStartPlayer()))%4];
+    getWinningPlayer(gameMode: GameMode, players: Player[]) {
+        return players[(this.getWinnerIndex(gameMode) + players.indexOf(this.getStartPlayer())) % 4];
     }
 
     getPoints(): number {
         let points = 0;
-        for(let playedCard of this.playedCards){
-            let cardFace = Card.getFace(playedCard);
-            let addedPoints = pointMapping.get(cardFace) as number;
+        for (let playedCard of this.playedCards) {
+            let cardFace = Cards.getRank(playedCard);
+            let addedPoints = cardRankToValue[cardFace];
             points = points + addedPoints;
         }
 

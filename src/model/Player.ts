@@ -2,8 +2,8 @@
  * hold the card set, calculates accrued points...
  */
 import CardSet from "./CardSet";
-import Round from "./Round";
-import {CardEnum} from "./Card";
+import Trick from "./Trick";
+import {Card} from "./Cards";
 import {GameMode} from "./GameMode";
 import StrategyInterface from "./strategy/StrategyInterface";
 import Ordering from "./orderings/Ordering";
@@ -11,11 +11,11 @@ import GamePhase from "./GamePhase";
 
 export default class Player {
     // noinspection JSMismatchedCollectionQueryUpdate
-    private startCardSet?: CardEnum[];
+    private startCardSet?: Card[];
     private readonly name: string;
     private readonly strategy: StrategyInterface;
     private gameMode?: GameMode;
-    private currentCardSet?: CardEnum[];
+    private currentCardSet?: Card[];
     private gamePhase: GamePhase;
 
     constructor(name: string, strategy: StrategyInterface) {
@@ -25,7 +25,7 @@ export default class Player {
         this.name = name;
     }
 
-    receiveFirstBatchOfCards(cards: CardEnum[]) {
+    receiveFirstBatchOfCards(cards: Card[]) {
         if (this.gamePhase != GamePhase.BEFORE_GAME) {
             throw Error('function not available in this state');
         }
@@ -36,7 +36,7 @@ export default class Player {
         this.currentCardSet = cards;
     }
 
-    receiveSecondBatchOfCards(cards: CardEnum[]) {
+    receiveSecondBatchOfCards(cards: Card[]) {
         if (this.gamePhase != GamePhase.FOUR_CARDS_DEALT) {
             throw Error('function not available in this state');
         }
@@ -44,20 +44,20 @@ export default class Player {
             throw Error('Wrong number of cards dealt');
         }
 
-        let currentCardSet = this.currentCardSet as CardEnum[];
+        let currentCardSet = this.currentCardSet as Card[];
 
         this.currentCardSet = currentCardSet.concat(cards);
         this.startCardSet = this.currentCardSet;
     }
 
-    getStartCardSet(): CardEnum[] {
+    getStartCardSet(): Card[] {
         if (this.gamePhase < GamePhase.ALL_CARDS_DEALT) {
             throw Error('function not available in this state');
         }
-        return this.startCardSet as CardEnum[];
+        return this.startCardSet as Card[];
     }
 
-    playCard(round: Round): CardEnum {
+    playCard(round: Trick): Card {
         if (this.gamePhase !== GamePhase.IN_PLAY) {
             throw Error('function not available in this state');
         }
@@ -82,10 +82,10 @@ export default class Player {
         if (this.gamePhase !== GamePhase.ALL_CARDS_DEALT) {
             throw Error('function not available in this state');
         }
-        let [gameMode, color] = this.strategy.chooseGameToCall(this.getStartCardSet(), currentGameMode);
+        let [gameMode, suit] = this.strategy.chooseGameToCall(this.getStartCardSet(), currentGameMode);
 
         if (gameMode && gameMode !== currentGameMode.getMode()) {
-            return new GameMode(gameMode, this, color);
+            return new GameMode(gameMode, this, suit);
         } else {
             return currentGameMode;
         }
@@ -99,7 +99,7 @@ export default class Player {
         if (this.gamePhase < GamePhase.FOUR_CARDS_DEALT) {
             throw Error('function not available in this state');
         }
-        let currentCardSet = this.currentCardSet as CardEnum[];
+        let currentCardSet = this.currentCardSet as Card[];
         return Ordering.sortByNaturalOrdering(currentCardSet);
     }
 

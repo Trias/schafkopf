@@ -1,22 +1,22 @@
 /**
  * up to 8 cards hold by one player
  */
-import {Card, CardEnum} from "./Card";
-import {ColorEnum} from "./ColorEnum";
+import {Card, Cards} from "./Cards";
+import {Suit} from "./Suit";
 import {includes, some, without} from "lodash";
 import {GameMode} from "./GameMode";
 import OberAndUnter from "./orderings/OberAndUnter";
 
 namespace CardSet {
-    export function hasCard(cards: CardEnum[], otherCard: CardEnum): boolean {
+    export function hasCard(cards: Card[], otherCard: Card): boolean {
         return includes(cards, otherCard);
     }
 
-    export function hasColorNoTrump(cards: CardEnum[], otherColor: ColorEnum) {
-        return some(cards, card => !includes(OberAndUnter, card) && Card.getColorIgnoringTrump(card) === otherColor);
+    export function hasSuitNoTrump(cards: Card[], otherSuit: Suit) {
+        return some(cards, card => !includes(OberAndUnter, card) && Cards.getSuitIgnoringTrump(card) === otherSuit);
     }
 
-    export function removeCard(cards: CardEnum[], card: CardEnum): CardEnum[] {
+    export function removeCard(cards: Card[], card: Card): Card[] {
         if (cards.indexOf(card) < 0) {
             throw Error(`card (${card}) not in Deck ${cards.toString()}`);
         }
@@ -26,8 +26,8 @@ namespace CardSet {
         return without(cards, card);
     }
 
-    export function hasColor(cardsOnHand: CardEnum[], otherColor: ColorEnum, gameMode: GameMode) {
-        return some(cardsOnHand, card => Card.getColor(card, gameMode) === otherColor);
+    export function hasSuit(cardsOnHand: Card[], otherSuit: Suit, gameMode: GameMode) {
+        return some(cardsOnHand, card => Cards.getSuit(card, gameMode) === otherSuit);
     }
 }
 

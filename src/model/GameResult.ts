@@ -1,8 +1,8 @@
 import {GameMode, GameModeEnum} from "./GameMode";
-import CardFaceEnum from "./CardFaceEnum";
+import CardRank from "./CardRank";
 import Player from "./Player";
-import Round from "./Round";
-import {CardEnum} from "./Card";
+import Trick from "./Trick";
+import {Card} from "./Cards";
 import Ordering from "./orderings/Ordering";
 import CardSet from "./CardSet";
 import {includes} from "lodash";
@@ -17,9 +17,9 @@ export default class GameResult{
     private readonly pointsByPlayer: Map<Player, number>;
     private readonly players: Player[];
     private readonly gameMode: GameMode;
-    private readonly rounds: Round[];
+    private readonly rounds: Trick[];
 
-    constructor(gameMode: GameMode, rounds: Round[], players: Player[]){
+    constructor(gameMode: GameMode, rounds: Trick[], players: Player[]) {
         this.gameMode = gameMode;
         this.rounds = rounds;
         this.players = players;
@@ -83,7 +83,7 @@ export default class GameResult{
     determinePlayingTeam() :[Player?, Player?] {
         if (this.gameMode.getMode() === GameModeEnum.CALL_GAME) {
             let callingPlayer = this.gameMode.getCallingPlayer() as Player;
-            let calledAce = this.gameMode.getColor() + CardFaceEnum.ACE as CardEnum;
+            let calledAce = this.gameMode.getSuitOfTheGame() + CardRank.ACE as Card;
 
             for(let i = 0; i< 4;i++){
                 if (CardSet.hasCard(this.players[i].getStartCardSet(), calledAce)) {
@@ -104,10 +104,10 @@ export default class GameResult{
     getGameMoneyValue() {
         if (this.gameMode.getMode() == GameModeEnum.CALL_GAME) {
             let baseValue = 10 + this.getAddedValue();
-            return baseValue * 2 ** this.gameMode.getRaises();
+            return baseValue * 2 ** this.gameMode.getKlopfer();
         } else if (this.gameMode.getMode() == GameModeEnum.SOLO || this.gameMode.getMode() == GameModeEnum.WENZ) {
             let baseValue = 50 + this.getAddedValue();
-            return baseValue * 2 ** this.gameMode.getRaises();
+            return baseValue * 2 ** this.gameMode.getKlopfer();
         } else if (this.gameMode.getMode() == GameModeEnum.RETRY) {
             return 0;
         } else {
@@ -168,7 +168,7 @@ export default class GameResult{
         }
     }
 
-    private getPlayingTeamRounds(): Round[] {
+    private getPlayingTeamRounds(): Trick[] {
         let playingTeam = this.getPlayingTeam();
         let playingTeamRounds = [];
 

@@ -4,23 +4,23 @@
  *
  */
 
-import {ColorEnum} from "./ColorEnum";
+import {Suit} from "./Suit";
 import {GameMode, GameModeEnum} from "./GameMode";
-import {Card, CardEnum} from "./Card";
-import CardFaceEnum from "./CardFaceEnum";
+import {Card, Cards} from "./Cards";
+import CardRank from "./CardRank";
 import CardSet from "./CardSet";
-import Round from "./Round";
+import Trick from "./Trick";
 import {includes, intersection} from "lodash";
 
 export default class PlayableMoves {
-    static canCallColor(cardsOnHand: CardEnum[], color: ColorEnum) {
-        let callAce: CardEnum = color + CardFaceEnum.ACE as CardEnum;
-        return color !== ColorEnum.HERZ && !CardSet.hasCard(cardsOnHand, callAce) && CardSet.hasColorNoTrump(cardsOnHand, color);
+    static canCallSuit(cardsOnHand: Card[], suit: Suit) {
+        let callAce: Card = suit + CardRank.ACE as Card;
+        return suit !== Suit.HERZ && !CardSet.hasCard(cardsOnHand, callAce) && CardSet.hasSuitNoTrump(cardsOnHand, suit);
     }
 
-    static canPlayCard(gameMode: GameMode, cardsOnHand: CardEnum[], card: CardEnum, round: Round): boolean {
+    static canPlayCard(gameMode: GameMode, cardsOnHand: Card[], card: Card, round: Trick): boolean {
         if(round.isEmpty()){
-            if(this.isCalledColorButNotAce(gameMode, cardsOnHand, card)){
+            if (this.isCalledSuitButNotAce(gameMode, cardsOnHand, card)) {
                 // console.log('ruffarbe gespielt');
                 return false;
             }else{
@@ -28,13 +28,13 @@ export default class PlayableMoves {
                 return true;
             }
         }else{
-            let roundColor = round.getRoundColor(gameMode);
+            let roundSuit = round.getRoundSuit(gameMode);
 
-            //  console.log(`round color:${roundColor}`);
+            //  console.log(`round suit:${roundSuit}`);
 
-            if (gameMode.getMode() === GameModeEnum.CALL_GAME && roundColor === gameMode.getColor() && Card.isOfColor(card, roundColor, gameMode)) {
+            if (gameMode.getMode() === GameModeEnum.CALL_GAME && roundSuit === gameMode.getSuitOfTheGame() && Cards.isOfSuit(card, roundSuit, gameMode)) {
                 //  console.log('ruffarbe gespielt');
-                if(this.isCalledColorButNotAce(gameMode, cardsOnHand, card)){
+                if (this.isCalledSuitButNotAce(gameMode, cardsOnHand, card)) {
                     return false;
                 }
             }
@@ -46,20 +46,20 @@ export default class PlayableMoves {
 
             //console.log('erste karte');
 
-            if (!CardSet.hasColor(cardsOnHand, roundColor, gameMode)) {
+            if (!CardSet.hasSuit(cardsOnHand, roundSuit, gameMode)) {
                 //console.log('farbe nicht auf der hand?');
                 return true;
             }else {
                 //console.log('gleiche farbe?');
-                return Card.isOfColor(card, roundColor, gameMode);
+                return Cards.isOfSuit(card, roundSuit, gameMode);
             }
         }
     }
 
-    static isCalledColorButNotAce(gameMode: GameMode, cardsOnHand: CardEnum[], card: CardEnum) {
+    static isCalledSuitButNotAce(gameMode: GameMode, cardsOnHand: Card[], card: Card) {
         if(gameMode.getMode() == GameModeEnum.CALL_GAME
-            && gameMode.getColor() === Card.getColor(card, gameMode)
-            && CardSet.hasColor(cardsOnHand, Card.getColor(card, gameMode), gameMode)
+            && gameMode.getSuitOfTheGame() === Cards.getSuit(card, gameMode)
+            && CardSet.hasSuit(cardsOnHand, Cards.getSuit(card, gameMode), gameMode)
             && card !== this.getCalledAce(gameMode)
             && CardSet.hasCard(cardsOnHand, this.getCalledAce(gameMode))) {
             return true
@@ -68,7 +68,7 @@ export default class PlayableMoves {
         }
     }
 
-    static getCalledAce(gameMode: GameMode): CardEnum {
-        return gameMode.getColor() + CardFaceEnum.ACE as CardEnum;
+    static getCalledAce(gameMode: GameMode): Card {
+        return gameMode.getSuitOfTheGame() + CardRank.ACE as Card;
     }
 }

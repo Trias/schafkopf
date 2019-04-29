@@ -1,4 +1,4 @@
-enum CardFaceEnum {
+enum CardRank {
     ACE = "A", // Ass
     KING = "K", // König
     OBER = "O", // Ober
@@ -9,4 +9,4 @@ enum CardFaceEnum {
     SEVEN = "7",
 }
 
-export default CardFaceEnum;
+export default CardRank;

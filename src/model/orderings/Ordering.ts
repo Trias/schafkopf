@@ -1,15 +1,15 @@
-import {CardEnum} from "../Card";
+import {Card} from "../Cards";
 import {intersection, sortBy} from "lodash";
 import CardDeck from "./CardDeck";
 
 export default class Ordering {
-    static sortAndFilterBy(allTrumpsSorted: CardEnum[], winnerCardSet: CardEnum[]): CardEnum[] {
-        let trumpsInHands: CardEnum[] = intersection(allTrumpsSorted, winnerCardSet);
+    static sortAndFilterBy(allTrumpsSorted: Card[], winnerCardSet: Card[]): Card[] {
+        let trumpsInHands: Card[] = intersection(allTrumpsSorted, winnerCardSet);
 
         return sortBy(trumpsInHands, (trump) => allTrumpsSorted.indexOf(trump));
     }
 
-    static sortByNaturalOrdering(cards: CardEnum[]): CardEnum[] {
+    static sortByNaturalOrdering(cards: Card[]): Card[] {
         return sortBy(cards, (card) => CardDeck.indexOf(card));
     }
 }

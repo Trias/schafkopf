@@ -3,9 +3,9 @@
  * information about the chosen game (Rufspiel, Solo, Wenz,...)
  */
 
-import {Colors} from "./orderings/DefaultColorOrdering";
-import {ColorEnum} from "./ColorEnum";
-import {Card, CardEnum} from "./Card";
+import {Suits} from "./orderings/DefaultSuitOrdering";
+import {Suit} from "./Suit";
+import {Card, Cards} from "./Cards";
 import Player from "./Player";
 import {includes} from "lodash";
 import OberAndUnter from "./orderings/OberAndUnter";
@@ -22,13 +22,13 @@ enum GameModeEnum {
 class GameMode {
 
     private readonly mode: GameModeEnum;
-    private readonly color?: ColorEnum;
+    private readonly suit?: Suit;
     private readonly callingPlayer?: Player;
-    private raises: number = 0;
+    private klopfer: number = 0;
 
-    constructor(mode: GameModeEnum, callingPlayer?: Player, color?: ColorEnum) {
+    constructor(mode: GameModeEnum, callingPlayer?: Player, suit?: Suit) {
         this.mode = mode;
-        this.color = color;
+        this.suit = suit;
         this.callingPlayer = callingPlayer;
     }
 
@@ -42,38 +42,38 @@ class GameMode {
         }
     }
 
-    isTrump(card: CardEnum) {
+    isTrump(card: Card) {
         return includes(this.getTrumpOrdering(), card);
     }
 
-    highestCard(card1: CardEnum, card2: CardEnum) {
+    highestCard(card1: Card, card2: Card) {
         if (this.isTrump(card1) && this.isTrump(card2)) {
             //console.log(`trump over trump: ${card1}, ${card2}  => ${this.highestCardTrumpOrdering(card1, card2)}`);
             return this.highestCardTrumpOrdering(card1, card2);
         } else if (this.isTrump(card1) && !this.isTrump(card2)) {
-            // console.log(`trump over color: ${card1}, ${card2} => ${card1}`);
+            // console.log(`trump over suit: ${card1}, ${card2} => ${card1}`);
             return card1
         } else if (!this.isTrump(card1) && this.isTrump(card2)) {
             // console.log(`not trump by trump: ${card1}, ${card2} => ${card2}`);
             return card2;
-        } else if (Card.getColor(card1, this) !== Card.getColor(card2, this)) {
+        } else if (Cards.getSuit(card1, this) !== Cards.getSuit(card2, this)) {
             // console.log(`stays at card1: ${card1}, ${card2} => ${card1}`);
             return card1;
-        } else if (Card.getColor(card1, this) === Card.getColor(card2, this)) {
-            //  console.log(`color over color: ${card1}, ${card2} => ${this.highestCardColorOrdering(card1, card2)}`);
-            return this.highestCardColorOrdering(card1, card2);
+        } else if (Cards.getSuit(card1, this) === Cards.getSuit(card2, this)) {
+            //  console.log(`suit over suit: ${card1}, ${card2} => ${this.highestCardSuitOrdering(card1, card2)}`);
+            return this.highestCardSuitOrdering(card1, card2);
         } else {
             //  console.log(`stays at card1: ${card1}, ${card2} => ${card1}`);
             return card1;
         }
     }
 
-    getTrumpOrdering(): CardEnum[] {
+    getTrumpOrdering(): Card[] {
         if (this.mode == GameModeEnum.CALL_GAME) {
             return DefaultTrumpOrdering;
         } else if (this.mode == GameModeEnum.SOLO) {
-            let color = this.color as ColorEnum;
-            return OberAndUnter.concat(Colors[color])
+            let suit = this.suit as Suit;
+            return OberAndUnter.concat(Suits[suit])
         } else if (this.mode == GameModeEnum.WENZ) {
             return Unter;
         } else {
@@ -81,12 +81,12 @@ class GameMode {
         }
     }
 
-    getColorOrdering(color: ColorEnum): CardEnum[] {
+    getSuitOrdering(suit: Suit): Card[] {
         if (this.mode == GameModeEnum.CALL_GAME || this.mode == GameModeEnum.SOLO) {
-            return Colors[color];
+            return Suits[suit];
         } else if (this.mode == GameModeEnum.WENZ) {
-            let ober = color + "O" as CardEnum;
-            return Colors[color].splice(3, 0, ober);
+            let ober = suit + "O" as Card;
+            return Suits[suit].splice(3, 0, ober);
         } else {
             throw Error('not implemented');
         }
@@ -96,23 +96,23 @@ class GameMode {
         return this.mode;
     }
 
-    getColor() {
-        return this.color;
+    getSuitOfTheGame() {
+        return this.suit;
     }
 
     getCallingPlayer() {
         return this.callingPlayer;
     }
 
-    setRaises(raises: number) {
-        this.raises = raises;
+    setKlopfer(klopfer: number) {
+        this.klopfer = klopfer;
     }
 
-    getRaises(): number {
-        return this.raises;
+    getKlopfer(): number {
+        return this.klopfer;
     }
 
-    private highestCardTrumpOrdering(card1: CardEnum, card2: CardEnum) {
+    private highestCardTrumpOrdering(card1: Card, card2: Card) {
         if (!this.isTrump(card1) || !this.isTrump(card2)) {
             throw Error('two trump cards required');
         }
@@ -124,15 +124,15 @@ class GameMode {
         }
     }
 
-    private highestCardColorOrdering(card1: CardEnum, card2: CardEnum) {
+    private highestCardSuitOrdering(card1: Card, card2: Card) {
         if (this.isTrump(card1) || this.isTrump(card2)) {
-            throw Error('two color cards required');
+            throw Error('two suit cards required');
         }
 
-        if (this.getColorOrdering(Card.getColor(card1, this)).indexOf(card1) > this.getColorOrdering(Card.getColor(card1, this)).indexOf(card2)) {
+        if (this.getSuitOrdering(Cards.getSuit(card1, this)).indexOf(card1) > this.getSuitOrdering(Cards.getSuit(card1, this)).indexOf(card2)) {
             return card2;
         } else {
-            // also if different color
+            // also if different suit
             return card1;
         }
     }
