@@ -1,6 +1,3 @@
-/**
- * hold the card set, calculates accrued points...
- */
 import CardSet from "./cards/CardSet";
 import {FinishedRound, Round} from "./Round";
 import {Card} from "./cards/Card";
@@ -31,7 +28,7 @@ export default class Player implements GameEventsReceiverInterface {
 
     onGameStart(players: Player[]) {
         this.players = players;
-        this.gamePhase = GamePhase.GAME_STARTED;
+        this.notifyGamePhase(GamePhase.GAME_STARTED);
     }
 
     onReceiveFirstBatchOfCards(cards: Card[]) {
@@ -120,6 +117,9 @@ export default class Player implements GameEventsReceiverInterface {
     }
 
     notifyGamePhase(gamePhase: GamePhase) {
+        if (gamePhase < this.gamePhase && gamePhase !== GamePhase.BEFORE_GAME) {
+            throw Error('invalid state transition!');
+        }
         this.gamePhase = gamePhase;
 
         if (gamePhase === GamePhase.BEFORE_GAME) {

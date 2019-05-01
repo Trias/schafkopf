@@ -11,7 +11,7 @@ import CardsOrdering from "./cards/CardsOrdering";
 import GamePhase from "./GamePhase";
 import {Card} from "./cards/Card";
 
-export default class Game {
+class Game {
     private readonly players: [Player, Player, Player, Player];
     // noinspection JSMismatchedCollectionQueryUpdate
     private rounds: Round[];
@@ -24,7 +24,7 @@ export default class Game {
         this.gamePhase = GamePhase.BEFORE_GAME;
     }
 
-    play(cardsInSets: Card[][]) {
+    play(cardsInSets: Card[][]): void {
         if (this.gamePhase != GamePhase.BEFORE_GAME) {
             throw Error('Invalid state transition');
         }
@@ -71,7 +71,16 @@ export default class Game {
         this.setGamePhase(GamePhase.AFTER_GAME);
     }
 
-    playRounds(): Round[] {
+
+    getGameResult() {
+        if (this.gamePhase !== GamePhase.AFTER_GAME) {
+            throw Error('gameResult not yet determined!');
+        }
+
+        return new GameResult(this.getGameMode(), this.rounds!, this.players);
+    }
+
+    private playRounds(): Round[] {
         let rounds: Round[] = [];
         let activePlayer = this.players[0];
 
@@ -101,7 +110,7 @@ export default class Game {
         return rounds;
     }
 
-    askPlayersWhatTheyWantToPlay(): GameMode {
+    private askPlayersWhatTheyWantToPlay(): GameMode {
         let currentGameMode = new GameMode(GameModeEnum.RETRY);
         for (let i = 0; i < 4; i++) {
             let newGameMode = this.players[i].whatDoYouWantToPlay(currentGameMode);
@@ -117,24 +126,16 @@ export default class Game {
         return this.players[(this.players.indexOf(player) + 1) % 4];
     }
 
-    notifyPlayersOfGameMode(gameMode: GameMode) {
+    private notifyPlayersOfGameMode(gameMode: GameMode) {
         for (let i = 0; i < 4; i++) {
             this.players[i].onGameModeDecided(gameMode);
         }
     }
 
-    notifyPlayersOfGamePhase(gamePhase: GamePhase) {
+    private notifyPlayersOfGamePhase(gamePhase: GamePhase) {
         for (let i = 0; i < 4; i++) {
             this.players[i].notifyGamePhase(gamePhase);
         }
-    }
-
-    getGameResult() {
-        if (this.gamePhase !== GamePhase.AFTER_GAME) {
-            throw Error('gameResult not yet determined!');
-        }
-
-        return new GameResult(this.getGameMode(), this.rounds!, this.players);
     }
 
     private getGameMode() {
@@ -173,3 +174,5 @@ export default class Game {
         }
     }
 }
+
+export {Game}

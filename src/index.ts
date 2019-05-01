@@ -1,4 +1,4 @@
-import Game from "./model/Game";
+import {Game} from "./model/Game";
 import Player from "./model/Player";
 import RandomStrategy from "./model/strategy/random/index";
 import Statistics from "./model/Statistics";
@@ -14,6 +14,7 @@ let player4 = new Player("Player 4", new RandomStrategy());
 let players: [Player, Player, Player, Player] = [player1, player2, player3, player4];
 
 let stats = new Statistics(players);
+
 for (let i = 0; i < runs; i++) {
     console.log(`========game ${i + 1}===========`);
     let game = new Game(players);
@@ -29,6 +30,10 @@ for (let i = 0; i < runs; i++) {
         `and ${gameResult.hasPlayingTeamWon() ? 'win' : 'loose'} ${Math.abs(gameResult.getGameMoneyValue())} cents each!`);
     reportCents(i);
 
+    rotateStartPlayer();
+}
+
+function rotateStartPlayer() {
     let nextSeats = [];
     for (let i = 1; i < 4; i++) {
         nextSeats.push(players[i]);
@@ -50,7 +55,6 @@ function reportCents(i: number) {
     console.log(`${player2.getName()} :${stats2.cents}`);
     console.log(`${player3.getName()} :${stats3.cents}`);
     console.log(`${player4.getName()} :${stats4.cents}`);
-
 }
 
 let {wins, cents, inPlayingTeam, retries} = stats.getStatsForPlayer(player1);
