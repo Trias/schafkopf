@@ -1,9 +1,6 @@
-/**
- * up to 8 cards hold by one player
- */
 import {Card} from "./Card";
 import {ColorWithTrump, PlainColor} from "./Color";
-import {includes, some, without} from "lodash";
+import {filter, includes, some, without} from "lodash";
 import {GameMode} from "../GameMode";
 import OberAndUnter from "./sets/OberAndUnter";
 import CardsOrdering from "./CardsOrdering";
@@ -29,6 +26,10 @@ namespace CardSet {
 
     export function hasColor(cardsOnHand: Card[], otherColor: ColorWithTrump, gameMode: GameMode) {
         return some(cardsOnHand, card => gameMode.getOrdering().getColor(card) === otherColor);
+    }
+
+    export function allOfColor(cards: Card[], color: ColorWithTrump, gameMode: GameMode) {
+        return filter(cards, card => gameMode.getOrdering().getColor(card) === color);
     }
 }
 

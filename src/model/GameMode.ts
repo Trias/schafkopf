@@ -6,6 +6,8 @@
 import {PlainColor} from "./cards/Color";
 import Player from "./Player";
 import CardsOrdering from "./cards/CardsOrdering";
+import CardRank from "./cards/CardRank";
+import {Card} from "./cards/Card";
 
 enum GameModeEnum {
     CALL_GAME = "CALL_GAME",
@@ -71,6 +73,13 @@ class GameMode {
 
     getOrdering() {
         return this.ordering;
+    }
+
+    getCalledAce() {
+        if (this.mode != GameModeEnum.CALL_GAME) {
+            throw Error('no call game, no called ace');
+        }
+        return this.color + CardRank.ACE as Card;
     }
 }
 

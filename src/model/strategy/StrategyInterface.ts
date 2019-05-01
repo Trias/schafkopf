@@ -1,6 +1,6 @@
 import {GameMode, GameModeEnum} from "../GameMode";
 import {Card} from "../cards/Card";
-import Round from "../Round";
+import {Round} from "../Round";
 import {PlainColor} from "../cards/Color";
 
 export default interface StrategyInterface {

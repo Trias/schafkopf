@@ -3,12 +3,15 @@ import {GameMode} from "./GameMode";
 import Player from "./Player";
 import cardRankToValue from "./cards/CardRankToValue";
 import CardsOrdering from "./cards/CardsOrdering";
+import {ColorWithTrump} from "./cards/Color";
 
-export default class Round {
+class Round {
     private playedCards: Card[];
     private readonly startPlayer: Player;
+    private readonly players: Player[];
 
-    constructor(startPlayer: Player) {
+    constructor(startPlayer: Player, players: Player[]) {
+        this.players = players;
         this.playedCards = [];
         this.startPlayer = startPlayer;
     }
@@ -37,7 +40,7 @@ export default class Round {
         return this.startPlayer;
     }
 
-    getWinnerIndex(gameMode: GameMode) {
+    getWinningCardIndex(gameMode: GameMode) {
         if (!this.isFinished()) {
             throw Error('round not finished');
         } else {
@@ -55,8 +58,19 @@ export default class Round {
         }
     }
 
-    getWinningPlayer(gameMode: GameMode, players: Player[]) {
-        return players[(this.getWinnerIndex(gameMode) + players.indexOf(this.getStartPlayer())) % 4];
+    getWinningPlayer(gameMode: GameMode) {
+        return this.players[(this.getWinningCardIndex(gameMode) + this.players.indexOf(this.getStartPlayer())) % 4];
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    getPlayerForCard(card: Card): Player {
+        let index = this.playedCards.indexOf(card);
+
+        if (index == -1) {
+            throw Error('card no included in round');
+        }
+        return this.players[(this.players.indexOf(this.getStartPlayer()) + index) % 4];
+
     }
 
     getPoints(): number {
@@ -73,4 +87,23 @@ export default class Round {
     getCards() {
         return this.playedCards;
     }
+
+    finish() {
+        if (!this.isFinished()) {
+            throw Error('game not yet finished');
+        }
+
+        return this as FinishedRound;
+    }
+}
+
+export {Round, FinishedRound};
+
+type FinishedRound = {
+    getCards(): Card[];
+    getPoints(): number;
+    getWinningPlayer(gameMode: GameMode): Player;
+    getStartPlayer(): Player;
+    getRoundColor(gameMode: GameMode): ColorWithTrump;
+    getPlayerForCard(card: Card): Player;
 }

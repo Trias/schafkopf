@@ -9,7 +9,7 @@ import {GameMode, GameModeEnum} from "./GameMode";
 import {Card} from "./cards/Card";
 import CardRank from "./cards/CardRank";
 import CardSet from "./cards/CardSet";
-import Round from "./Round";
+import {Round} from "./Round";
 import {includes, intersection} from "lodash";
 
 export default class PlayableMoves {

@@ -1,5 +1,5 @@
 import {Card} from "./Card";
-import {includes, intersection, sortBy} from "lodash";
+import {clone, includes, intersection, sortBy} from "lodash";
 import CardDeck from "./sets/CardDeck";
 import {GameModeEnum} from "../GameMode";
 import DefaultTrumpOrdering from "./sets/CallGameTrumps";
@@ -80,7 +80,9 @@ export default class CardsOrdering {
             return CardsByColor[color];
         } else if (this.gameModeEnum == GameModeEnum.WENZ) {
             let ober = color + "O" as Card;
-            return CardsByColor[color].splice(3, 0, ober);
+            let myClone = clone(CardsByColor[color]);
+            myClone.splice(3, 0, ober);
+            return myClone;
         } else {
             throw Error('not implemented');
         }

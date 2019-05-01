@@ -3,7 +3,7 @@ import PlayableMoves from "../../PlayableMoves";
 import {shuffle} from "lodash"
 import {Colors, PlainColor} from "../../cards/Color";
 import {GameMode, GameModeEnum} from "../../GameMode";
-import Round from "../../Round";
+import {Round} from "../../Round";
 import {Card} from "../../cards/Card";
 
 export default class RandomStrategy implements StrategyInterface {

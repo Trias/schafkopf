@@ -6,7 +6,7 @@
 import {GameMode, GameModeEnum} from "./GameMode";
 import GameResult from "./GameResult";
 import Player from "./Player";
-import Round from "./Round";
+import {FinishedRound, Round} from "./Round";
 import CardsOrdering from "./cards/CardsOrdering";
 import GamePhase from "./GamePhase";
 import {Card} from "./cards/Card";
@@ -30,10 +30,11 @@ export default class Game {
         }
 
         this.setGamePhase(GamePhase.BEFORE_GAME);
+        this.notifyPlayersOfGameStart();
 
         console.log(`-----deal first batch of cards ------`);
         for (let i = 0; i < this.players.length; i++) {
-            this.players[i].receiveFirstBatchOfCards(cardsInSets[i]);
+            this.players[i].onReceiveFirstBatchOfCards(cardsInSets[i]);
         }
         this.setGamePhase(GamePhase.FOUR_CARDS_DEALT);
 
@@ -50,7 +51,7 @@ export default class Game {
 
         console.log(`-----deal second batch of cards ------`);
         for (let i = 0; i < this.players.length; i++) {
-            this.players[i].receiveSecondBatchOfCards(cardsInSets[i + 4]);
+            this.players[i].onReceiveSecondBatchOfCards(cardsInSets[i + 4]);
         }
         this.setGamePhase(GamePhase.ALL_CARDS_DEALT);
 
@@ -76,10 +77,11 @@ export default class Game {
 
         for (let i = 0; i < 8; i++) {
             console.log(`------round ${i + 1} start-----`);
-            let round = new Round(activePlayer);
+            let round = new Round(activePlayer, this.players);
             for (let j = 0; j < 4; j++) {
                 let card = activePlayer.playCard(round);
                 round.addCard(card);
+                this.notifyPlayersOfCardPlayed(card, activePlayer, j);
                 console.log(`player ${activePlayer.getName()} played ${card} from set ${CardsOrdering.sortByNaturalOrdering(activePlayer.getCurrentCardSet().concat(card))}`);
 
                 activePlayer = this.nextPlayer(activePlayer);
@@ -87,9 +89,11 @@ export default class Game {
                 // console.log(`------pli ${j+1} finished-----`);
             }
             rounds.push(round);
-            activePlayer = round.getWinningPlayer(this.getGameMode(), this.players);
+            this.notifyPlayersOfRoundCompleted(round.finish());
 
-            console.log(`round winner: ${round.getWinningPlayer(this.getGameMode(), this.players).getName()} at position ${round.getWinnerIndex(this.getGameMode()) + 1}; round cards: ${round.getCards()}`);
+            activePlayer = round.getWinningPlayer(this.getGameMode());
+
+            console.log(`round winner: ${round.getWinningPlayer(this.getGameMode()).getName()} at position ${round.getWinningCardIndex(this.getGameMode()) + 1}; round cards: ${round.getCards()}`);
             console.log(`------round ${i + 1} finished-----`);
         }
         console.log(`=====game finished=======`);
@@ -115,7 +119,7 @@ export default class Game {
 
     notifyPlayersOfGameMode(gameMode: GameMode) {
         for (let i = 0; i < 4; i++) {
-            this.players[i].notifyGameMode(gameMode);
+            this.players[i].onGameModeDecided(gameMode);
         }
     }
 
@@ -149,6 +153,24 @@ export default class Game {
         this.notifyPlayersOfGamePhase(gamePhase);
         if (gamePhase === GamePhase.BEFORE_GAME) {
             this.gameMode = undefined;
+        }
+    }
+
+    private notifyPlayersOfGameStart() {
+        for (let i = 0; i < 4; i++) {
+            this.players[i].onGameStart(this.players);
+        }
+    }
+
+    private notifyPlayersOfCardPlayed(card: Card, activePlayer: Player, j: number) {
+        for (let i = 0; i < 4; i++) {
+            this.players[i].onCardPlayed(card, activePlayer, j);
+        }
+    }
+
+    private notifyPlayersOfRoundCompleted(finishedRound: FinishedRound) {
+        for (let i = 0; i < 4; i++) {
+            this.players[i].onRoundCompleted(finishedRound);
         }
     }
 }
