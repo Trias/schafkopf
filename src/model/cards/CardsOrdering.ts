@@ -114,7 +114,7 @@ export default class CardsOrdering {
             throw Error('two color cards required');
         }
 
-        if (this.getColorOrdering(this.getColor(card1) as PlainColor).indexOf(card1) > this.getColorOrdering(this.getColor(card2) as PlainColor).indexOf(card1)) {
+        if (this.getColorOrdering(this.getColor(card1) as PlainColor).indexOf(card1) > this.getColorOrdering(this.getColor(card2) as PlainColor).indexOf(card2)) {
             return card2;
         } else {
             // also if different color
