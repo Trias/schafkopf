@@ -133,16 +133,15 @@ export default class Game {
         if (this.gamePhase !== GamePhase.AFTER_GAME) {
             throw Error('gameResult not yet determined!');
         }
-        let rounds = this.rounds as Round[];
 
-        return new GameResult(this.getGameMode(), rounds, this.players);
+        return new GameResult(this.getGameMode(), this.rounds!, this.players);
     }
 
     private getGameMode() {
         if (this.gamePhase < GamePhase.IN_PLAY) {
             throw Error('gameMode not yet determined!');
         }
-        return this.gameMode as GameMode;
+        return this.gameMode!;
     }
 
     private setGamePhase(gamePhase: GamePhase) {

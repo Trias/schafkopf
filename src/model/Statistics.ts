@@ -25,7 +25,7 @@ export default class Statistics {
     }
 
     getStatsForPlayer(player: Player) {
-        return this.stats.get(player) as Stats;
+        return this.stats.get(player)!;
     }
 
     addResult(gameResult: GameResult) {
@@ -35,7 +35,7 @@ export default class Statistics {
 
     private updateStatistics(result: GameResult) {
         for (let player of this.players) {
-            let {wins, cents, inPlayingTeam, retries} = this.stats.get(player) as Stats;
+            let {wins, cents, inPlayingTeam, retries} = this.stats.get(player)!;
 
             if (result.getGameMode() === GameModeEnum.CALL_GAME) {
                 if (includes(result.getPlayingTeam(), player)) {

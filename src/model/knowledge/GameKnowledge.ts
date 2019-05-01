@@ -103,7 +103,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
             this.hasCalledAce = CardSet.hasCard(this.startHandCards, this.gameMode.getCalledAce());
             if (this.hasCalledAce) {
                 this.teamPartner = this.gameMode.getCallingPlayer();
-                this.ownTeam = [this.thisPlayer, this.teamPartner as Player];
+                this.ownTeam = [this.thisPlayer, this.teamPartner!];
                 this.otherTeam = difference(this.allPlayers, this.ownTeam);
             }
         } else if (this.gameMode.getMode() == GameModeEnum.WENZ || this.gameMode.getMode() == GameModeEnum.SOLO) {
@@ -111,7 +111,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
                 this.ownTeam = [this.thisPlayer];
                 this.otherTeam = difference(this.allPlayers, this.ownTeam);
             } else {
-                this.otherTeam = [this.gameMode.getCallingPlayer() as Player];
+                this.otherTeam = [this.gameMode.getCallingPlayer()!];
                 this.ownTeam = difference(this.allPlayers, this.otherTeam);
             }
         } else {
@@ -149,7 +149,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
 
         let points = 0;
         for (let player of this.ownTeam) {
-            points = points + (this.pointsForPlayer.get(player) as number)
+            points = points + this.pointsForPlayer.get(player)!
         }
 
         return points;
@@ -162,7 +162,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
 
         let points = 0;
         for (let player of this.otherTeam) {
-            points = points + (this.pointsForPlayer.get(player) as number)
+            points = points + this.pointsForPlayer.get(player)!
         }
 
         return points;
@@ -176,7 +176,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
         // this.rounds.push(round);
 
         let winningPlayer = round.getWinningPlayer(this.gameMode);
-        this.pointsForPlayer.set(winningPlayer, this.pointsForPlayer.get(winningPlayer) as number + round.getPoints());
+        this.pointsForPlayer.set(winningPlayer, this.pointsForPlayer.get(winningPlayer)! + round.getPoints());
 
         this.determineTeams(round);
 
@@ -188,10 +188,10 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
             let playingPlayer = round.getPlayerForCard(card);
             let cardColor = this.gameMode.getOrdering().getColor(card);
 
-            (this.playedCardsByPlayer.get(playingPlayer) as Card[]).push(card);
+            this.playedCardsByPlayer.get(playingPlayer)!.push(card);
 
             if (roundColor != cardColor) {
-                (this.colorFreeByPlayer.get(playingPlayer) as ColorInfoType)[roundColor] = true;
+                this.colorFreeByPlayer.get(playingPlayer)![roundColor] = true;
             }
         }
     }
@@ -269,7 +269,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
                     this.teamPartner = without(this.allPlayers, this.thisPlayer, this.gameMode.getCallingPlayer(), callAcePlayer).pop();
                 }
 
-                this.ownTeam = [this.thisPlayer, this.teamPartner as Player];
+                this.ownTeam = [this.thisPlayer, this.teamPartner!];
                 this.otherTeam = difference(this.allPlayers, this.ownTeam);
             }
         }

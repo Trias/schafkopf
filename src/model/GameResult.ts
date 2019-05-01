@@ -47,7 +47,7 @@ export default class GameResult{
 
     determinePlayingTeamPoints(): number {
         if(this.gameMode.getMode() === GameModeEnum.CALL_GAME){
-            let playingTeam = this.playingTeam as[Player, Player];
+            let playingTeam = this.playingTeam as [Player, Player];
             return this.getPoints(playingTeam[0]) + this.getPoints(playingTeam[1]);
         } else if (this.gameMode.getMode() === GameModeEnum.SOLO || this.gameMode.getMode() === GameModeEnum.WENZ) {
             let playingTeam = this.playingTeam as [Player];
@@ -68,7 +68,7 @@ export default class GameResult{
             let round = this.rounds[i];
             let roundWinner = round.getWinningPlayer(this.gameMode);
             let pointsAdded = round.getPoints();
-            let oldPoints = pointsByPlayer.get(roundWinner) as number;
+            let oldPoints = pointsByPlayer.get(roundWinner)!;
             let newPoints = pointsAdded + oldPoints;
             pointsByPlayer.set(roundWinner, newPoints);
         }
@@ -77,12 +77,12 @@ export default class GameResult{
     }
 
     getPoints(player: Player): number{
-        return this.pointsByPlayer.get(player) as number;
+        return this.pointsByPlayer.get(player)!;
     }
 
     determinePlayingTeam() :[Player?, Player?] {
         if (this.gameMode.getMode() === GameModeEnum.CALL_GAME) {
-            let callingPlayer = this.gameMode.getCallingPlayer() as Player;
+            let callingPlayer = this.gameMode.getCallingPlayer()!;
             let calledAce = this.gameMode.getColorOfTheGame() + CardRank.ACE as Card;
 
             for(let i = 0; i< 4;i++){
