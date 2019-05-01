@@ -1,13 +1,13 @@
 import StrategyInterface from "../StrategyInterface";
 import PlayableMoves from "../../PlayableMoves";
 import {shuffle} from "lodash"
-import {Suit, Suits} from "../../Suit";
+import {Colors, PlainColor} from "../../cards/Color";
 import {GameMode, GameModeEnum} from "../../GameMode";
-import Trick from "../../Trick";
-import {Card} from "../../Cards";
+import Round from "../../Round";
+import {Card} from "../../cards/Card";
 
 export default class RandomStrategy implements StrategyInterface {
-    chooseCardToPlay(round: Trick, cardSet: Card[], gameMode: GameMode): Card {
+    chooseCardToPlay(round: Round, cardSet: Card[], gameMode: GameMode): Card {
         let cards = shuffle(cardSet);
 
         let chosenCard = null;
@@ -25,30 +25,30 @@ export default class RandomStrategy implements StrategyInterface {
         }
     }
 
-    chooseGameToCall(cardSet: Card[], previousGameMode: GameMode): [GameModeEnum?, Suit?] {
+    chooseGameToCall(cardSet: Card[], previousGameMode: GameMode): [GameModeEnum?, PlainColor?] {
         if (Math.random() < 0.25) {
             return [];
         }
 
         if (Math.random() < 0.05) {
-            let callSuit = shuffle(Suits.asArray()).shift();
-            return [GameModeEnum.SOLO, callSuit];
+            let callColor = shuffle(Colors.plainColorsAsArray()).shift();
+            return [GameModeEnum.SOLO, callColor];
         }
 
         if (Math.random() < 0.05) {
             return [GameModeEnum.WENZ];
         }
 
-        let shuffledSuits = shuffle(Suits.callableSuitsAsArray());
-        let callSuit = null;
-        for (let suit of shuffledSuits) {
-            if (Math.random() < 0.8 && PlayableMoves.canCallSuit(cardSet, suit)) {
-                callSuit = suit;
+        let shuffledColors = shuffle(Colors.callableColorsAsArray());
+        let callColor = null;
+        for (let color of shuffledColors) {
+            if (Math.random() < 0.8 && PlayableMoves.canCallColor(cardSet, color)) {
+                callColor = color;
             }
         }
 
-        if (callSuit) {
-            return [GameModeEnum.CALL_GAME, callSuit];
+        if (callColor) {
+            return [GameModeEnum.CALL_GAME, callColor];
         } else {
             return [];
         }

@@ -4,23 +4,23 @@
  *
  */
 
-import {Suit} from "./Suit";
+import {CallableColor} from "./cards/Color";
 import {GameMode, GameModeEnum} from "./GameMode";
-import {Card, Cards} from "./Cards";
-import CardRank from "./CardRank";
-import CardSet from "./CardSet";
-import Trick from "./Trick";
+import {Card} from "./cards/Card";
+import CardRank from "./cards/CardRank";
+import CardSet from "./cards/CardSet";
+import Round from "./Round";
 import {includes, intersection} from "lodash";
 
 export default class PlayableMoves {
-    static canCallSuit(cardsOnHand: Card[], suit: Suit) {
-        let callAce: Card = suit + CardRank.ACE as Card;
-        return suit !== Suit.HERZ && !CardSet.hasCard(cardsOnHand, callAce) && CardSet.hasSuitNoTrump(cardsOnHand, suit);
+    static canCallColor(cardsOnHand: Card[], color: CallableColor) {
+        let callAce: Card = color + CardRank.ACE as Card;
+        return !CardSet.hasCard(cardsOnHand, callAce) && CardSet.hasPlainColorWithoutOberAndUnter(cardsOnHand, color);
     }
 
-    static canPlayCard(gameMode: GameMode, cardsOnHand: Card[], card: Card, round: Trick): boolean {
+    static canPlayCard(gameMode: GameMode, cardsOnHand: Card[], card: Card, round: Round): boolean {
         if(round.isEmpty()){
-            if (this.isCalledSuitButNotAce(gameMode, cardsOnHand, card)) {
+            if (this.isCalledColorButNotAce(gameMode, cardsOnHand, card)) {
                 // console.log('ruffarbe gespielt');
                 return false;
             }else{
@@ -28,38 +28,38 @@ export default class PlayableMoves {
                 return true;
             }
         }else{
-            let roundSuit = round.getRoundSuit(gameMode);
+            let roundColor = round.getRoundColor(gameMode);
 
-            //  console.log(`round suit:${roundSuit}`);
+            //  console.log(`round color:${roundColor}`);
 
-            if (gameMode.getMode() === GameModeEnum.CALL_GAME && roundSuit === gameMode.getSuitOfTheGame() && Cards.isOfSuit(card, roundSuit, gameMode)) {
+            if (gameMode.getMode() === GameModeEnum.CALL_GAME && roundColor === gameMode.getColorOfTheGame() && gameMode.getOrdering().isOfColor(card, roundColor)) {
                 //  console.log('ruffarbe gespielt');
-                if (this.isCalledSuitButNotAce(gameMode, cardsOnHand, card)) {
+                if (this.isCalledColorButNotAce(gameMode, cardsOnHand, card)) {
                     return false;
                 }
             }
 
-            if (gameMode.getMode() === GameModeEnum.CALL_GAME && includes(gameMode.getTrumpOrdering(), round.getCards()[0])) {
+            if (gameMode.getMode() === GameModeEnum.CALL_GAME && includes(gameMode.getOrdering().getTrumpOrdering(), round.getCards()[0])) {
                 //  console.log('trumpf gespielt');
-                return includes(gameMode.getTrumpOrdering(), card) || intersection(gameMode.getTrumpOrdering(), cardsOnHand).length == 0
+                return includes(gameMode.getOrdering().getTrumpOrdering(), card) || intersection(gameMode.getOrdering().getTrumpOrdering(), cardsOnHand).length == 0
             }
 
             //console.log('erste karte');
 
-            if (!CardSet.hasSuit(cardsOnHand, roundSuit, gameMode)) {
+            if (!CardSet.hasColor(cardsOnHand, roundColor, gameMode)) {
                 //console.log('farbe nicht auf der hand?');
                 return true;
             }else {
                 //console.log('gleiche farbe?');
-                return Cards.isOfSuit(card, roundSuit, gameMode);
+                return gameMode.getOrdering().isOfColor(card, roundColor);
             }
         }
     }
 
-    static isCalledSuitButNotAce(gameMode: GameMode, cardsOnHand: Card[], card: Card) {
+    static isCalledColorButNotAce(gameMode: GameMode, cardsOnHand: Card[], card: Card) {
         if(gameMode.getMode() == GameModeEnum.CALL_GAME
-            && gameMode.getSuitOfTheGame() === Cards.getSuit(card, gameMode)
-            && CardSet.hasSuit(cardsOnHand, Cards.getSuit(card, gameMode), gameMode)
+            && gameMode.getColorOfTheGame() === gameMode.getOrdering().getColor(card)
+            && CardSet.hasColor(cardsOnHand, gameMode.getOrdering().getColor(card), gameMode)
             && card !== this.getCalledAce(gameMode)
             && CardSet.hasCard(cardsOnHand, this.getCalledAce(gameMode))) {
             return true
@@ -69,6 +69,6 @@ export default class PlayableMoves {
     }
 
     static getCalledAce(gameMode: GameMode): Card {
-        return gameMode.getSuitOfTheGame() + CardRank.ACE as Card;
+        return gameMode.getColorOfTheGame() + CardRank.ACE as Card;
     }
 }

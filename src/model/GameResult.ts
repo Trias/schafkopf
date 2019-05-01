@@ -1,10 +1,10 @@
 import {GameMode, GameModeEnum} from "./GameMode";
-import CardRank from "./CardRank";
+import CardRank from "./cards/CardRank";
 import Player from "./Player";
-import Trick from "./Trick";
-import {Card} from "./Cards";
-import Ordering from "./orderings/Ordering";
-import CardSet from "./CardSet";
+import Round from "./Round";
+import {Card} from "./cards/Card";
+import CardsOrdering from "./cards/CardsOrdering";
+import CardSet from "./cards/CardSet";
 import {includes} from "lodash";
 
 /**
@@ -17,9 +17,9 @@ export default class GameResult{
     private readonly pointsByPlayer: Map<Player, number>;
     private readonly players: Player[];
     private readonly gameMode: GameMode;
-    private readonly rounds: Trick[];
+    private readonly rounds: Round[];
 
-    constructor(gameMode: GameMode, rounds: Trick[], players: Player[]) {
+    constructor(gameMode: GameMode, rounds: Round[], players: Player[]) {
         this.gameMode = gameMode;
         this.rounds = rounds;
         this.players = players;
@@ -83,7 +83,7 @@ export default class GameResult{
     determinePlayingTeam() :[Player?, Player?] {
         if (this.gameMode.getMode() === GameModeEnum.CALL_GAME) {
             let callingPlayer = this.gameMode.getCallingPlayer() as Player;
-            let calledAce = this.gameMode.getSuitOfTheGame() + CardRank.ACE as Card;
+            let calledAce = this.gameMode.getColorOfTheGame() + CardRank.ACE as Card;
 
             for(let i = 0; i< 4;i++){
                 if (CardSet.hasCard(this.players[i].getStartCardSet(), calledAce)) {
@@ -140,25 +140,25 @@ export default class GameResult{
                 throw Error('not Implemented');
             }
 
-            let sortedWinnerCardSet = Ordering.sortAndFilterBy(this.gameMode.getTrumpOrdering(), winnerCardSet);
+            let sortedWinnerCardSet = CardsOrdering.sortAndFilterBy(this.gameMode.getOrdering().getTrumpOrdering(), winnerCardSet);
 
             let laufende = 0;
 
             if (sortedWinnerCardSet.length === 0) {
-                return this.gameMode.getTrumpOrdering().length;
+                return this.gameMode.getOrdering().getTrumpOrdering().length;
             }
 
-            let positive = sortedWinnerCardSet[0] === this.gameMode.getTrumpOrdering()[0];
+            let positive = sortedWinnerCardSet[0] === this.gameMode.getOrdering().getTrumpOrdering()[0];
 
             if (positive) {
                 for (laufende; laufende < sortedWinnerCardSet.length; laufende++) {
 
-                    if (sortedWinnerCardSet[laufende] !== this.gameMode.getTrumpOrdering()[laufende]) {
+                    if (sortedWinnerCardSet[laufende] !== this.gameMode.getOrdering().getTrumpOrdering()[laufende]) {
                         break;
                     }
                 }
             } else {
-                laufende = this.gameMode.getTrumpOrdering().indexOf(sortedWinnerCardSet[0]);
+                laufende = this.gameMode.getOrdering().getTrumpOrdering().indexOf(sortedWinnerCardSet[0]);
                 if (laufende < 1) {
                     throw Error('laufende error in calculation');
                 }
@@ -168,7 +168,7 @@ export default class GameResult{
         }
     }
 
-    private getPlayingTeamRounds(): Trick[] {
+    private getPlayingTeamRounds(): Round[] {
         let playingTeam = this.getPlayingTeam();
         let playingTeamRounds = [];
 

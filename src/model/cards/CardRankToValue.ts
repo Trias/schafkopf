@@ -1,5 +1,9 @@
 import CardRank from "./CardRank";
 
+type CardRankToValueType = {
+    [index in CardRank]: number
+}
+
 export default {
     [CardRank.ACE]: 11,
     [CardRank.TEN]: 10,
@@ -9,4 +13,4 @@ export default {
     [CardRank.NINE]: 0,
     [CardRank.EIGHT]: 0,
     [CardRank.SEVEN]: 0,
-};
+} as CardRankToValueType;

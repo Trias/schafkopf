@@ -1,12 +1,12 @@
 /**
  * hold the card set, calculates accrued points...
  */
-import CardSet from "./CardSet";
-import Trick from "./Trick";
-import {Card} from "./Cards";
+import CardSet from "./cards/CardSet";
+import Round from "./Round";
+import {Card} from "./cards/Card";
 import {GameMode} from "./GameMode";
 import StrategyInterface from "./strategy/StrategyInterface";
-import Ordering from "./orderings/Ordering";
+import CardsOrdering from "./cards/CardsOrdering";
 import GamePhase from "./GamePhase";
 
 export default class Player {
@@ -57,7 +57,7 @@ export default class Player {
         return this.startCardSet as Card[];
     }
 
-    playCard(round: Trick): Card {
+    playCard(round: Round): Card {
         if (this.gamePhase !== GamePhase.IN_PLAY) {
             throw Error('function not available in this state');
         }
@@ -82,10 +82,10 @@ export default class Player {
         if (this.gamePhase !== GamePhase.ALL_CARDS_DEALT) {
             throw Error('function not available in this state');
         }
-        let [gameMode, suit] = this.strategy.chooseGameToCall(this.getStartCardSet(), currentGameMode);
+        let [gameMode, color] = this.strategy.chooseGameToCall(this.getStartCardSet(), currentGameMode);
 
         if (gameMode && gameMode !== currentGameMode.getMode()) {
-            return new GameMode(gameMode, this, suit);
+            return new GameMode(gameMode, this, color);
         } else {
             return currentGameMode;
         }
@@ -100,7 +100,7 @@ export default class Player {
             throw Error('function not available in this state');
         }
         let currentCardSet = this.currentCardSet as Card[];
-        return Ordering.sortByNaturalOrdering(currentCardSet);
+        return CardsOrdering.sortByNaturalOrdering(currentCardSet);
     }
 
     toString() {

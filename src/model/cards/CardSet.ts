@@ -1,19 +1,20 @@
 /**
  * up to 8 cards hold by one player
  */
-import {Card, Cards} from "./Cards";
-import {Suit} from "./Suit";
+import {Card} from "./Card";
+import {ColorWithTrump, PlainColor} from "./Color";
 import {includes, some, without} from "lodash";
-import {GameMode} from "./GameMode";
-import OberAndUnter from "./orderings/OberAndUnter";
+import {GameMode} from "../GameMode";
+import OberAndUnter from "./OberAndUnter";
+import CardsOrdering from "./CardsOrdering";
 
 namespace CardSet {
     export function hasCard(cards: Card[], otherCard: Card): boolean {
         return includes(cards, otherCard);
     }
 
-    export function hasSuitNoTrump(cards: Card[], otherSuit: Suit) {
-        return some(cards, card => !includes(OberAndUnter, card) && Cards.getSuitIgnoringTrump(card) === otherSuit);
+    export function hasPlainColorWithoutOberAndUnter(cards: Card[], otherColor: PlainColor) {
+        return some(cards, card => !includes(OberAndUnter, card) && CardsOrdering.getPlainColor(card) === otherColor);
     }
 
     export function removeCard(cards: Card[], card: Card): Card[] {
@@ -26,8 +27,8 @@ namespace CardSet {
         return without(cards, card);
     }
 
-    export function hasSuit(cardsOnHand: Card[], otherSuit: Suit, gameMode: GameMode) {
-        return some(cardsOnHand, card => Cards.getSuit(card, gameMode) === otherSuit);
+    export function hasColor(cardsOnHand: Card[], otherColor: ColorWithTrump, gameMode: GameMode) {
+        return some(cardsOnHand, card => gameMode.getOrdering().getColor(card) === otherColor);
     }
 }
 

@@ -3,17 +3,17 @@
  * inferred knowledge of the other player
  *
  */
-import {Suit} from "../../../Suit";
+import {PlainColor} from "../../../cards/Color";
 
 
 class PlayerKnowledge {
     /**
      *
-     * @param suit
+     * @param color
      *
      * fa
      */
-    isFreeOfSuit(suit: Suit) {
+    isFreeOfColor(color: PlainColor) {
     }
 
     isFreeOfTrump() {

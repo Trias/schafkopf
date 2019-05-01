@@ -6,15 +6,15 @@
 import {GameMode, GameModeEnum} from "./GameMode";
 import GameResult from "./GameResult";
 import Player from "./Player";
-import Trick from "./Trick";
-import Ordering from "./orderings/Ordering";
+import Round from "./Round";
+import CardsOrdering from "./cards/CardsOrdering";
 import GamePhase from "./GamePhase";
-import {Card} from "./Cards";
+import {Card} from "./cards/Card";
 
 export default class Game {
     private readonly players: [Player, Player, Player, Player];
     // noinspection JSMismatchedCollectionQueryUpdate
-    private rounds: Trick[];
+    private rounds: Round[];
     private gameMode?: GameMode;
     private gamePhase: GamePhase;
 
@@ -62,7 +62,7 @@ export default class Game {
             this.notifyPlayersOfGameMode(this.gameMode);
             this.setGamePhase(GamePhase.IN_PLAY);
 
-            console.log(`game mode decided: ${this.gameMode.getMode()}, by ${this.gameMode.getCallingPlayer()}, calling for ${this.gameMode.getSuitOfTheGame()}`);
+            console.log(`game mode decided: ${this.gameMode.getMode()}, by ${this.gameMode.getCallingPlayer()}, calling for ${this.gameMode.getColorOfTheGame()}`);
 
             this.rounds = this.playRounds();
         }
@@ -70,17 +70,17 @@ export default class Game {
         this.setGamePhase(GamePhase.AFTER_GAME);
     }
 
-    playRounds(): Trick[] {
-        let rounds: Trick[] = [];
+    playRounds(): Round[] {
+        let rounds: Round[] = [];
         let activePlayer = this.players[0];
 
         for (let i = 0; i < 8; i++) {
             console.log(`------round ${i + 1} start-----`);
-            let round = new Trick(activePlayer);
+            let round = new Round(activePlayer);
             for (let j = 0; j < 4; j++) {
                 let card = activePlayer.playCard(round);
                 round.addCard(card);
-                console.log(`player ${activePlayer.getName()} played ${card} from set ${Ordering.sortByNaturalOrdering(activePlayer.getCurrentCardSet().concat(card))}`);
+                console.log(`player ${activePlayer.getName()} played ${card} from set ${CardsOrdering.sortByNaturalOrdering(activePlayer.getCurrentCardSet().concat(card))}`);
 
                 activePlayer = this.nextPlayer(activePlayer);
 
@@ -129,7 +129,7 @@ export default class Game {
         if (this.gamePhase !== GamePhase.AFTER_GAME) {
             throw Error('gameResult not yet determined!');
         }
-        let rounds = this.rounds as Trick[];
+        let rounds = this.rounds as Round[];
 
         return new GameResult(this.getGameMode(), rounds, this.players);
     }
@@ -142,6 +142,9 @@ export default class Game {
     }
 
     private setGamePhase(gamePhase: GamePhase) {
+        if (this.gamePhase > gamePhase && gamePhase != GamePhase.BEFORE_GAME) {
+            throw Error('invalid state transition');
+        }
         this.gamePhase = gamePhase;
         this.notifyPlayersOfGamePhase(gamePhase);
         if (gamePhase === GamePhase.BEFORE_GAME) {

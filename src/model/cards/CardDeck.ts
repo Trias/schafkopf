@@ -1,8 +1,4 @@
-/**
- * shuffle it to receive 4 card Sets..
- *
- */
-import {Card} from "../Cards";
+import {Card} from "./Card";
 
 export default [
     "EO", "GO", "HO", "SO",

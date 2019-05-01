@@ -1,13 +1,13 @@
 import {GameMode, GameModeEnum} from "../GameMode";
-import {Card} from "../Cards";
-import Trick from "../Trick";
-import {Suit} from "../Suit";
+import {Card} from "../cards/Card";
+import Round from "../Round";
+import {PlainColor} from "../cards/Color";
 
 export default interface StrategyInterface {
 
-    chooseCardToPlay(round: Trick, cardSet: Card[], gameMode: GameMode): Card
+    chooseCardToPlay(round: Round, cardSet: Card[], gameMode: GameMode): Card
 
-    chooseGameToCall(cardSet: Card[], gameMode: GameMode): [GameModeEnum?, Suit?];
+    chooseGameToCall(cardSet: Card[], gameMode: GameMode): [GameModeEnum?, PlainColor?];
 
     chooseToRaise(cardSet: Card[]): boolean;
 }
