@@ -1,5 +1,5 @@
-import {PlainColor} from "./Color";
-import {Card} from "./Card";
+import {PlainColor} from "../Color";
+import {Card} from "../Card";
 
 function inColor(color: PlainColor): Card[] {
     return [
@@ -16,11 +16,11 @@ type ColorsType = {
     [index in PlainColor]: Card[];
 }
 
-let DefaultColorOrdering: ColorsType = {
+let CardsByColor: ColorsType = {
     [PlainColor.EICHEL]: inColor(PlainColor.EICHEL),
     [PlainColor.GRAS]: inColor(PlainColor.GRAS),
     [PlainColor.SCHELLE]: inColor(PlainColor.SCHELLE),
     [PlainColor.HERZ]: inColor(PlainColor.HERZ),
 };
 
-export {DefaultColorOrdering};
+export {CardsByColor};

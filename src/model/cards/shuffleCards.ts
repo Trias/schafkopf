@@ -1,4 +1,4 @@
-import CardDeck from "./CardDeck";
+import CardDeck from "./sets/CardDeck";
 import {chunk, shuffle} from "lodash";
 
 export default function shuffleCards() {

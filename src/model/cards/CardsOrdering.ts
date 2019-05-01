@@ -1,12 +1,12 @@
 import {Card} from "./Card";
 import {includes, intersection, sortBy} from "lodash";
-import CardDeck from "./CardDeck";
+import CardDeck from "./sets/CardDeck";
 import {GameModeEnum} from "../GameMode";
-import DefaultTrumpOrdering from "./DefaultTrumpOrdering";
+import DefaultTrumpOrdering from "./sets/CallGameTrumps";
 import {ColorWithTrump, PlainColor} from "./Color";
-import OberAndUnter from "./OberAndUnter";
-import {DefaultColorOrdering} from "./DefaultColorOrdering";
-import Unter from "./Unter";
+import OberAndUnter from "./sets/OberAndUnter";
+import {CardsByColor} from "./sets/CardsByColor";
+import Unter from "./sets/Unter";
 import CardRank from "./CardRank";
 
 export default class CardsOrdering {
@@ -67,7 +67,7 @@ export default class CardsOrdering {
             return DefaultTrumpOrdering;
         } else if (this.gameModeEnum == GameModeEnum.SOLO) {
             let color = this.color as PlainColor;
-            return OberAndUnter.concat(DefaultColorOrdering[color])
+            return OberAndUnter.concat(CardsByColor[color])
         } else if (this.gameModeEnum == GameModeEnum.WENZ) {
             return Unter;
         } else {
@@ -77,10 +77,10 @@ export default class CardsOrdering {
 
     getColorOrdering(color: PlainColor): Card[] {
         if (this.gameModeEnum == GameModeEnum.CALL_GAME || this.gameModeEnum == GameModeEnum.SOLO) {
-            return DefaultColorOrdering[color];
+            return CardsByColor[color];
         } else if (this.gameModeEnum == GameModeEnum.WENZ) {
             let ober = color + "O" as Card;
-            return DefaultColorOrdering[color].splice(3, 0, ober);
+            return CardsByColor[color].splice(3, 0, ober);
         } else {
             throw Error('not implemented');
         }

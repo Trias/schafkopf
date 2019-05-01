@@ -3,7 +3,7 @@
  * inferred knowledge of the other player
  *
  */
-import {PlainColor} from "../../../cards/Color";
+import {PlainColor} from "../cards/Color";
 
 
 class PlayerKnowledge {

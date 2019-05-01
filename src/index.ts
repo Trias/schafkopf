@@ -2,7 +2,7 @@ import Game from "./model/Game";
 import Player from "./model/Player";
 import RandomStrategy from "./model/strategy/random/index";
 import Statistics from "./model/Statistics";
-import shuffleCards from "./model/shuffleCards";
+import shuffleCards from "./model/cards/shuffleCards";
 
 let runs = 120;
 
