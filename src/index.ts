@@ -57,5 +57,10 @@ function reportCents(i: number) {
     console.log(`${player4.getName()} :${stats4.cents}`);
 }
 
-let {wins, cents, inPlayingTeam, retries} = stats.getStatsForPlayer(player1);
-console.log(`In Total: Out of ${runs} games, Player 1 wins ${Math.round(wins / runs * 100)}% of the games with a balance of ${cents} cents being in the playing team ${Math.round(inPlayingTeam / runs * 100)}% of the time and ${Math.round(retries / runs * 100)}% retries`);
+let {wins, cents, inPlayingTeam, retries, ownPlays, ownWins, ownSoloWins, ownSoloPlays} = stats.getStatsForPlayer(player1);
+console.log(`In Total: Out of ${runs} games, Player 1 wins ${Math.round(wins / runs * 100)}% of the games `
+    + `with a balance of ${cents} cents `
+    + `being in the playing team ${Math.round(inPlayingTeam / runs * 100)}% of the time `
+    + (ownPlays ? `calling ${Math.round(ownPlays / runs * 100)}% of the time; winning own games ${Math.round(ownWins / ownPlays * 100)}% of the time; ` : '')
+    + (ownSoloPlays ? `winning solos ${Math.round(ownSoloWins / ownSoloPlays * 100)}% of the time ` : '')
+    + `and ${Math.round(retries / runs * 100)}% retries for all players`);

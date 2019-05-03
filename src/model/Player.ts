@@ -97,7 +97,7 @@ export default class Player implements GameEventsReceiverInterface {
         }
     }
 
-    doYouWantToRaise() {
+    doYouWantToKlopf() {
         return this.strategy.chooseToRaise(this.getCurrentCardSet());
     }
 

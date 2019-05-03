@@ -42,10 +42,16 @@ class GameMode {
     }
 
     static compareGameModes(gameModeNext: GameMode, gameModePrev: GameMode): number {
-        if (gameModePrev.getMode() === GameModeEnum.SOLO || gameModePrev.getMode() === GameModeEnum.WENZ) {
-            return -1;
-        } else if (gameModeNext.getMode() === gameModePrev.getMode()) {
+        if (gameModeNext.getMode() === gameModePrev.getMode()) {
             return 0;
+        } else if (gameModePrev.getMode() === GameModeEnum.SOLO) {
+            return -1;
+        } else if (gameModePrev.getMode() === GameModeEnum.WENZ) {
+            if (gameModeNext.getMode() == GameModeEnum.SOLO) {
+                return 1;
+            } else {
+                return -1;
+            }
         } else {
             return 1;
         }
@@ -65,6 +71,10 @@ class GameMode {
 
     setKlopfer(klopfer: number) {
         this.klopfer = klopfer;
+
+        Object.defineProperty(this, "klopfer", {
+            "writable": false,
+        });
     }
 
     getKlopfer(): number {

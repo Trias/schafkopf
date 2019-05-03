@@ -34,7 +34,7 @@ export default class GameResult{
     }
 
     getGameMode() {
-        return this.gameMode.getMode();
+        return this.gameMode;
     }
 
     getPlayingTeamPoints(){
@@ -119,53 +119,67 @@ export default class GameResult{
         let laufende = this.getLaufende();
         let schneider = this.getPlayingTeamPoints() > 90 || this.getPlayingTeamPoints() <= 30;
         let schwarz = this.getPlayingTeamRounds().length == 0 || this.getPlayingTeamRounds().length == 8;
-        return (laufende > 2 ? laufende : 0) * 10 + (schneider ? 10 : 0) + (schwarz ? 10 : 0);
+        return laufende * 10 + (schneider ? 10 : 0) + (schwarz ? 10 : 0);
     }
 
     private getLaufende(): number {
-        let playingTeam = this.getPlayingTeam();
         if (this.gameMode.getMode() == GameModeEnum.RETRY) {
             return 0;
         } else {
-            let winnerCardSet;
-            if (this.gameMode.getMode() == GameModeEnum.CALL_GAME) {
-                let playingTeamCallGame = playingTeam as [Player, Player];
+            let trumpOrdering = this.gameMode.getOrdering().getTrumpOrdering();
 
-                winnerCardSet = playingTeamCallGame[0].getStartCardSet().concat(playingTeamCallGame[1].getStartCardSet());
-            } else if (this.gameMode.getMode() == GameModeEnum.SOLO || this.gameMode.getMode() == GameModeEnum.WENZ) {
-                let playingTeamCallGame = playingTeam as [Player];
-
-                winnerCardSet = playingTeamCallGame[0].getStartCardSet();
-            } else {
-                throw Error('not Implemented');
+            if (this.gameMode.getMode() == GameModeEnum.SOLO) {
+                // as per official rules, solo can only have 8 laufende...
+                trumpOrdering = trumpOrdering.slice(0, 8);
             }
+            let sortedWinnerTrumpSet = this.getSortedWinnerTrumpSet(trumpOrdering);
 
-            let sortedWinnerCardSet = CardsOrdering.sortAndFilterBy(this.gameMode.getOrdering().getTrumpOrdering(), winnerCardSet);
+            if (sortedWinnerTrumpSet.length === 0) {
+                return trumpOrdering.length;
+            }
 
             let laufende = 0;
+            let mitLaufenden = sortedWinnerTrumpSet[0] === trumpOrdering[0];
 
-            if (sortedWinnerCardSet.length === 0) {
-                return this.gameMode.getOrdering().getTrumpOrdering().length;
-            }
-
-            let positive = sortedWinnerCardSet[0] === this.gameMode.getOrdering().getTrumpOrdering()[0];
-
-            if (positive) {
-                for (laufende; laufende < sortedWinnerCardSet.length; laufende++) {
-
-                    if (sortedWinnerCardSet[laufende] !== this.gameMode.getOrdering().getTrumpOrdering()[laufende]) {
+            if (mitLaufenden) {
+                for (laufende; laufende < sortedWinnerTrumpSet.length; laufende++) {
+                    if (sortedWinnerTrumpSet[laufende] !== trumpOrdering[laufende]) {
                         break;
                     }
                 }
             } else {
-                laufende = this.gameMode.getOrdering().getTrumpOrdering().indexOf(sortedWinnerCardSet[0]);
+                laufende = trumpOrdering.indexOf(sortedWinnerTrumpSet[0]);
                 if (laufende < 1) {
                     throw Error('laufende error in calculation');
                 }
             }
 
-            return laufende;
+            if ((this.gameMode.getMode() == GameModeEnum.SOLO || this.gameMode.getMode() == GameModeEnum.CALL_GAME) && laufende > 2) {
+                return laufende;
+            } else if (this.gameMode.getMode() == GameModeEnum.WENZ && laufende > 1) {
+                return laufende;
+            } else {
+                return 0;
+            }
         }
+    }
+
+    private getSortedWinnerTrumpSet(trumpSet: Card[]) {
+        let playingTeam = this.getPlayingTeam();
+        let winnerTrumpSet;
+        if (this.gameMode.getMode() == GameModeEnum.CALL_GAME) {
+            let playingTeamCallGame = playingTeam as [Player, Player];
+
+            winnerTrumpSet = playingTeamCallGame[0].getStartCardSet().concat(playingTeamCallGame[1].getStartCardSet());
+        } else if (this.gameMode.getMode() == GameModeEnum.SOLO || this.gameMode.getMode() == GameModeEnum.WENZ) {
+            let playingTeamSolo = playingTeam as [Player];
+
+            winnerTrumpSet = playingTeamSolo[0].getStartCardSet();
+        } else {
+            throw Error('not Implemented');
+        }
+
+        return CardsOrdering.sortAndFilterBy(trumpSet, winnerTrumpSet);
     }
 
     private getPlayingTeamRounds(): Round[] {

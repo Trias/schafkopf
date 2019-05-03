@@ -33,31 +33,17 @@ class Game {
         this.notifyPlayersOfGameStart();
 
         console.log(`-----deal first batch of cards ------`);
-        for (let i = 0; i < this.players.length; i++) {
-            this.players[i].onReceiveFirstBatchOfCards(cardsInSets[i]);
-        }
+        this.dealFirstBatchOfCards(cardsInSets);
         this.setGamePhase(GamePhase.FOUR_CARDS_DEALT);
 
-        let raises = 0;
-
-        for (let i = 0; i < this.players.length; i++) {
-            let raise = this.players[i].doYouWantToRaise();
-
-            if (raise) {
-                console.log(`${this.players[i]} raises with cards: ${this.players[i].getCurrentCardSet()}!`);
-                raises = raises + 1;
-            }
-        }
+        let klopfer = this.askPlayerForKlopfer();
 
         console.log(`-----deal second batch of cards ------`);
-        for (let i = 0; i < this.players.length; i++) {
-            this.players[i].onReceiveSecondBatchOfCards(cardsInSets[i + 4]);
-        }
+        this.dealSecondBatchOfCard(cardsInSets);
         this.setGamePhase(GamePhase.ALL_CARDS_DEALT);
 
         this.gameMode = this.askPlayersWhatTheyWantToPlay();
-
-        this.gameMode.setKlopfer(raises);
+        this.gameMode.setKlopfer(klopfer);
 
         if (this.gameMode.getCallingPlayer()) {
             this.notifyPlayersOfGameMode(this.gameMode);
@@ -71,6 +57,31 @@ class Game {
         this.setGamePhase(GamePhase.AFTER_GAME);
     }
 
+
+    private dealSecondBatchOfCard(cardsInSets: Card[][]) {
+        for (let i = 0; i < this.players.length; i++) {
+            this.players[i].onReceiveSecondBatchOfCards(cardsInSets[i + 4]);
+        }
+    }
+
+    private dealFirstBatchOfCards(cardsInSets: Card[][]) {
+        for (let i = 0; i < this.players.length; i++) {
+            this.players[i].onReceiveFirstBatchOfCards(cardsInSets[i]);
+        }
+    }
+
+    private askPlayerForKlopfer() {
+        let klopfer = 0;
+        for (let i = 0; i < this.players.length; i++) {
+            let raise = this.players[i].doYouWantToKlopf();
+
+            if (raise) {
+                console.log(`${this.players[i]} klopfes with cards: ${this.players[i].getCurrentCardSet()}!`);
+                klopfer = klopfer + 1;
+            }
+        }
+        return klopfer;
+    }
 
     getGameResult() {
         if (this.gamePhase !== GamePhase.AFTER_GAME) {

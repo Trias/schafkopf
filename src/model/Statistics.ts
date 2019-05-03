@@ -8,6 +8,10 @@ type Stats = {
     cents: number;
     inPlayingTeam: number;
     retries: number;
+    ownWins: number;
+    ownSoloWins: number;
+    ownSoloPlays: number;
+    ownPlays: number;
 }
 
 export default class Statistics {
@@ -20,7 +24,16 @@ export default class Statistics {
         //this.results = [];
         this.stats = new Map<Player, Stats>();
         for (let player of players) {
-            this.stats.set(player, {wins: 0, cents: 0, inPlayingTeam: 0, retries: 0});
+            this.stats.set(player, {
+                wins: 0,
+                cents: 0,
+                inPlayingTeam: 0,
+                retries: 0,
+                ownWins: 0,
+                ownSoloWins: 0,
+                ownSoloPlays: 0,
+                ownPlays: 0
+            });
         }
     }
 
@@ -35,12 +48,29 @@ export default class Statistics {
 
     private updateStatistics(result: GameResult) {
         for (let player of this.players) {
-            let {wins, cents, inPlayingTeam, retries} = this.stats.get(player)!;
+            let {wins, cents, inPlayingTeam, retries, ownPlays, ownWins, ownSoloWins, ownSoloPlays} = this.stats.get(player)!;
 
-            if (result.getGameMode() === GameModeEnum.CALL_GAME) {
+            if (player == result.getGameMode().getCallingPlayer()) {
+                ownPlays = ownPlays + 1;
+
+                if (result.hasPlayingTeamWon()) {
+                    ownWins = ownWins + 1;
+                }
+
+                if (result.getGameMode().getMode() === GameModeEnum.SOLO || result.getGameMode().getMode() === GameModeEnum.WENZ) {
+                    if (result.hasPlayingTeamWon()) {
+                        ownSoloWins = ownSoloWins + 1;
+                    }
+
+                    ownSoloPlays = ownSoloPlays + 1;
+                }
+            }
+
+            if (result.getGameMode().getMode() === GameModeEnum.CALL_GAME) {
                 if (includes(result.getPlayingTeam(), player)) {
                     inPlayingTeam = inPlayingTeam + 1;
                 }
+
                 if (result.hasPlayingTeamWon() && includes(result.getPlayingTeam(), player)) {
                     wins = wins + 1;
                     cents = cents + result.getGameMoneyValue();
@@ -50,7 +80,7 @@ export default class Statistics {
                 } else {
                     cents = cents - result.getGameMoneyValue();
                 }
-            } else if (result.getGameMode() === GameModeEnum.SOLO || result.getGameMode() === GameModeEnum.WENZ) {
+            } else if (result.getGameMode().getMode() === GameModeEnum.SOLO || result.getGameMode().getMode() === GameModeEnum.WENZ) {
                 if (includes(result.getPlayingTeam(), player)) {
                     inPlayingTeam = inPlayingTeam + 1;
                 }
@@ -65,12 +95,12 @@ export default class Statistics {
                 } else {
                     cents = cents - result.getGameMoneyValue() * 3;
                 }
-            } else if (result.getGameMode() === GameModeEnum.RETRY) {
+            } else if (result.getGameMode().getMode() === GameModeEnum.RETRY) {
                 retries = retries + 1;
             } else {
                 throw Error('not implemented');
             }
-            this.stats.set(player, {wins, cents, inPlayingTeam, retries});
+            this.stats.set(player, {wins, cents, inPlayingTeam, retries, ownWins, ownSoloWins, ownSoloPlays, ownPlays});
         }
     }
 }
