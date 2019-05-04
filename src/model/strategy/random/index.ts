@@ -7,7 +7,7 @@ import {Round} from "../../Round";
 import {Card} from "../../cards/Card";
 
 export default class RandomStrategy implements StrategyInterface {
-    chooseCardToPlay(round: Round, cardSet: Card[], gameMode: GameMode): Card {
+    chooseCardToPlay(round: Round, cardSet: readonly Card[], gameMode: GameMode): Card {
         let cards = shuffle(cardSet);
 
         let chosenCard = null;
@@ -25,7 +25,7 @@ export default class RandomStrategy implements StrategyInterface {
         }
     }
 
-    chooseGameToCall(cardSet: Card[], previousGameMode: GameMode): [GameModeEnum?, PlainColor?] {
+    chooseGameToCall(cardSet: readonly Card[], previousGameMode: GameMode): [GameModeEnum?, PlainColor?] {
         if (Math.random() < 0.25) {
             return [];
         }
@@ -54,7 +54,7 @@ export default class RandomStrategy implements StrategyInterface {
         }
     }
 
-    chooseToRaise(cardSet: Card[]): boolean {
+    chooseToRaise(cardSet: readonly Card[]): boolean {
         return Math.random() < 0.1;
     }
 }

@@ -10,12 +10,13 @@ import CardSet from "../cards/CardSet";
 import Player from "../Player";
 import {clone, difference, eq, without} from "lodash";
 import {CallableColor, ColorWithTrump} from "../cards/Color";
+import Writable from "../../helper/Writeable";
 
 type ColorInfoType = { [index in ColorWithTrump]: boolean };
-type CardsInfoType = { [index in ColorWithTrump]: Card[] };
+type CardsInfoType = { [index in ColorWithTrump]: readonly Card[] };
 
 export default class GameKnowledge implements GameEventsReceiverInterface {
-    private readonly startHandCards: Card[];
+    private readonly startHandCards: readonly Card[];
     // private playedCards: Card[];
     //  private knownCards: Card[];
     // private rounds: FinishedRound[];
@@ -23,7 +24,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
     private hasCalledAce: boolean;
     private teamPartner: Player | undefined;
     private readonly thisPlayer: Player;
-    private readonly allPlayers: Player[];
+    private readonly allPlayers: readonly Player[];
     private pointsForPlayer: Map<Player, number>;
     private otherTeam: Player[];
     private ownTeam: Player[];
@@ -38,9 +39,9 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
     private unplayedCardsByColor: CardsInfoType;
     private currentHandCards: Card[];
 
-    constructor(startHandCards: Card[], self: Player, allPlayer: Player[]) {
-        this.startHandCards = clone(startHandCards);
-        this.currentHandCards = clone(startHandCards);
+    constructor(startHandCards: readonly Card[], self: Player, allPlayer: readonly Player[]) {
+        this.startHandCards = startHandCards;
+        this.currentHandCards = <Writable<Card[]>>clone(startHandCards);
         // this.knownCards = clone(startHandCards);
         this.thisPlayer = self;
         this.allPlayers = allPlayer;
@@ -90,7 +91,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
         this.unplayedCardsByColor[cardColor] = CardSet.removeCard(this.unplayedCardsByColor[cardColor], card);
 
         if (player == this.thisPlayer) {
-            this.currentHandCards = CardSet.removeCard(this.currentHandCards, card);
+            this.currentHandCards = <Writable<Card[]>>CardSet.removeCard(this.currentHandCards, card);
         } else {
             this.remainingCardsByColor[cardColor] = CardSet.removeCard(this.remainingCardsByColor[cardColor], card);
         }

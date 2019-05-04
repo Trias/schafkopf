@@ -7,4 +7,4 @@ export default [
     "EA", "EX", "EK", "E9", "E8", "E7",
     "GA", "GX", "GK", "G9", "G8", "G7",
     "SA", "SX", "SK", "S9", "S8", "S7"
-] as Card[];
+] as readonly Card[];

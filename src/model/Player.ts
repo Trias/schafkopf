@@ -11,14 +11,14 @@ import {CallableColor, ColorWithTrump} from "./cards/Color";
 
 export default class Player implements GameEventsReceiverInterface {
     // noinspection JSMismatchedCollectionQueryUpdate
-    private startCardSet?: Card[];
+    private startCardSet?: readonly Card[];
     private readonly name: string;
     private readonly strategy: StrategyInterface;
     private gameMode?: GameMode;
-    private currentCardSet?: Card[];
+    private currentCardSet?: readonly Card[];
     private gamePhase: GamePhase;
     private gameKnowledge?: GameKnowledge;
-    private players: Player[] | undefined;
+    private players: readonly Player[] | undefined;
 
     constructor(name: string, strategy: StrategyInterface) {
         this.strategy = strategy;
@@ -26,12 +26,12 @@ export default class Player implements GameEventsReceiverInterface {
         this.name = name;
     }
 
-    onGameStart(players: Player[]) {
+    onGameStart(players: readonly Player[]) {
         this.players = players;
         this.notifyGamePhase(GamePhase.GAME_STARTED);
     }
 
-    onReceiveFirstBatchOfCards(cards: Card[]) {
+    onReceiveFirstBatchOfCards(cards: readonly Card[]) {
         if (this.gamePhase != GamePhase.GAME_STARTED) {
             throw Error('function not available in this state');
         }
@@ -56,7 +56,7 @@ export default class Player implements GameEventsReceiverInterface {
         this.gameKnowledge = new GameKnowledge(this.startCardSet, this, this.players!);
     }
 
-    getStartCardSet(): Card[] {
+    getStartCardSet(): readonly Card[] {
         if (this.gamePhase < GamePhase.ALL_CARDS_DEALT) {
             throw Error('function not available in this state');
         }

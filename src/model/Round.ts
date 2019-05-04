@@ -6,11 +6,11 @@ import CardsOrdering from "./cards/CardsOrdering";
 import {ColorWithTrump} from "./cards/Color";
 
 class Round {
-    private playedCards: Card[];
+    private readonly playedCards: Card[];
     private readonly startPlayer: Player;
-    private readonly players: Player[];
+    private readonly players: readonly Player[];
 
-    constructor(startPlayer: Player, players: Player[]) {
+    constructor(startPlayer: Player, players: readonly Player[]) {
         this.players = players;
         this.playedCards = [];
         this.startPlayer = startPlayer;
@@ -84,7 +84,7 @@ class Round {
         return points;
     }
 
-    getCards() {
+    getCards(): readonly Card[] {
         return this.playedCards;
     }
 
@@ -100,7 +100,7 @@ class Round {
 export {Round, FinishedRound};
 
 type FinishedRound = {
-    getCards(): Card[];
+    getCards(): readonly Card[];
     getPoints(): number;
     getWinningPlayer(gameMode: GameMode): Player;
     getStartPlayer(): Player;

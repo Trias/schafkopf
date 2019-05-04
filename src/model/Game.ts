@@ -12,19 +12,19 @@ import GamePhase from "./GamePhase";
 import {Card} from "./cards/Card";
 
 class Game {
-    private readonly players: [Player, Player, Player, Player];
+    private readonly players: readonly [Player, Player, Player, Player];
     // noinspection JSMismatchedCollectionQueryUpdate
-    private rounds: Round[];
+    private rounds: readonly Round[];
     private gameMode?: GameMode;
     private gamePhase: GamePhase;
 
-    constructor(players: [Player, Player, Player, Player]) {
+    constructor(players: readonly [Player, Player, Player, Player]) {
         this.rounds = [];
         this.players = players;
         this.gamePhase = GamePhase.BEFORE_GAME;
     }
 
-    play(cardsInSets: Card[][]): void {
+    play(cardsInSets: readonly Card[][]): void {
         if (this.gamePhase != GamePhase.BEFORE_GAME) {
             throw Error('Invalid state transition');
         }
@@ -58,13 +58,13 @@ class Game {
     }
 
 
-    private dealSecondBatchOfCard(cardsInSets: Card[][]) {
+    private dealSecondBatchOfCard(cardsInSets: readonly Card[][]) {
         for (let i = 0; i < this.players.length; i++) {
             this.players[i].onReceiveSecondBatchOfCards(cardsInSets[i + 4]);
         }
     }
 
-    private dealFirstBatchOfCards(cardsInSets: Card[][]) {
+    private dealFirstBatchOfCards(cardsInSets: readonly Card[][]) {
         for (let i = 0; i < this.players.length; i++) {
             this.players[i].onReceiveFirstBatchOfCards(cardsInSets[i]);
         }
@@ -91,7 +91,7 @@ class Game {
         return new GameResult(this.getGameMode(), this.rounds!, this.players);
     }
 
-    private playRounds(): Round[] {
+    private playRounds(): readonly Round[] {
         let rounds: Round[] = [];
         let activePlayer = this.players[0];
 

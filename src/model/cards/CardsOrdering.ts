@@ -8,6 +8,7 @@ import OberAndUnter from "./sets/OberAndUnter";
 import {CardsByColor} from "./sets/CardsByColor";
 import Unter from "./sets/Unter";
 import CardRank from "./CardRank";
+import Writeable from "../../helper/Writeable";
 
 export default class CardsOrdering {
     private readonly gameModeEnum: GameModeEnum;
@@ -18,13 +19,13 @@ export default class CardsOrdering {
         this.color = color;
     }
 
-    static sortAndFilterBy(allTrumpsSorted: Card[], winnerCardSet: Card[]): Card[] {
+    static sortAndFilterBy(allTrumpsSorted: readonly Card[], winnerCardSet: readonly Card[]): readonly Card[] {
         let trumpsInHands: Card[] = intersection(allTrumpsSorted, winnerCardSet);
 
         return sortBy(trumpsInHands, (trump) => allTrumpsSorted.indexOf(trump));
     }
 
-    static sortByNaturalOrdering(cards: Card[]): Card[] {
+    static sortByNaturalOrdering(cards: readonly Card[]): readonly Card[] {
         return sortBy(cards, (card) => CardDeck.indexOf(card));
     }
 
@@ -62,7 +63,7 @@ export default class CardsOrdering {
         }
     }
 
-    getTrumpOrdering(): Card[] {
+    getTrumpOrdering(): readonly Card[] {
         if (this.gameModeEnum == GameModeEnum.CALL_GAME) {
             return DefaultTrumpOrdering;
         } else if (this.gameModeEnum == GameModeEnum.SOLO) {
@@ -75,12 +76,12 @@ export default class CardsOrdering {
         }
     }
 
-    getColorOrdering(color: PlainColor): Card[] {
+    getColorOrdering(color: PlainColor): readonly Card[] {
         if (this.gameModeEnum == GameModeEnum.CALL_GAME || this.gameModeEnum == GameModeEnum.SOLO) {
             return CardsByColor[color];
         } else if (this.gameModeEnum == GameModeEnum.WENZ) {
             let ober = color + "O" as Card;
-            let myClone = clone(CardsByColor[color]);
+            let myClone = <Writeable<Card[]>>clone(CardsByColor[color]);
             myClone.splice(3, 0, ober);
             return myClone;
         } else {

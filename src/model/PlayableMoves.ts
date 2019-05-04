@@ -13,12 +13,12 @@ import {Round} from "./Round";
 import {includes, intersection} from "lodash";
 
 export default class PlayableMoves {
-    static canCallColor(cardsOnHand: Card[], color: CallableColor) {
+    static canCallColor(cardsOnHand: readonly Card[], color: CallableColor) {
         let callAce: Card = color + CardRank.ACE as Card;
         return !CardSet.hasCard(cardsOnHand, callAce) && CardSet.hasPlainColorWithoutOberAndUnter(cardsOnHand, color);
     }
 
-    static canPlayCard(gameMode: GameMode, cardsOnHand: Card[], card: Card, round: Round): boolean {
+    static canPlayCard(gameMode: GameMode, cardsOnHand: readonly Card[], card: Card, round: Round): boolean {
         if(round.isEmpty()){
             if (this.isCalledColorButNotAce(gameMode, cardsOnHand, card)) {
                 // console.log('ruffarbe gespielt');
@@ -56,7 +56,7 @@ export default class PlayableMoves {
         }
     }
 
-    static isCalledColorButNotAce(gameMode: GameMode, cardsOnHand: Card[], card: Card) {
+    static isCalledColorButNotAce(gameMode: GameMode, cardsOnHand: readonly Card[], card: Card) {
         if(gameMode.getMode() == GameModeEnum.CALL_GAME
             && gameMode.getColorOfTheGame() === gameMode.getOrdering().getColor(card)
             && CardSet.hasColor(cardsOnHand, gameMode.getOrdering().getColor(card), gameMode)

@@ -5,9 +5,9 @@ import {PlainColor} from "../cards/Color";
 
 export default interface StrategyInterface {
 
-    chooseCardToPlay(round: Round, cardSet: Card[], gameMode: GameMode): Card
+    chooseCardToPlay(round: Round, cardSet: readonly Card[], gameMode: GameMode): Card
 
-    chooseGameToCall(cardSet: Card[], gameMode: GameMode): [GameModeEnum?, PlainColor?];
+    chooseGameToCall(cardSet: readonly Card[], gameMode: GameMode): [GameModeEnum?, PlainColor?];
 
-    chooseToRaise(cardSet: Card[]): boolean;
+    chooseToRaise(cardSet: readonly Card[]): boolean;
 }

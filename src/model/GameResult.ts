@@ -15,11 +15,11 @@ export default class GameResult{
     private readonly playingTeamPoints: number;
     private readonly playingTeam: [Player?, Player?];
     private readonly pointsByPlayer: Map<Player, number>;
-    private readonly players: Player[];
+    private readonly players: readonly Player[];
     private readonly gameMode: GameMode;
-    private readonly rounds: Round[];
+    private readonly rounds: readonly Round[];
 
-    constructor(gameMode: GameMode, rounds: Round[], players: Player[]) {
+    constructor(gameMode: GameMode, rounds: readonly Round[], players: readonly Player[]) {
         this.gameMode = gameMode;
         this.rounds = rounds;
         this.players = players;
@@ -164,7 +164,7 @@ export default class GameResult{
         }
     }
 
-    private getSortedWinnerTrumpSet(trumpSet: Card[]) {
+    private getSortedWinnerTrumpSet(trumpSet: readonly Card[]) {
         let playingTeam = this.getPlayingTeam();
         let winnerTrumpSet;
         if (this.gameMode.getMode() == GameModeEnum.CALL_GAME) {

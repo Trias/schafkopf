@@ -6,15 +6,15 @@ import OberAndUnter from "./sets/OberAndUnter";
 import CardsOrdering from "./CardsOrdering";
 
 namespace CardSet {
-    export function hasCard(cards: Card[], otherCard: Card): boolean {
+    export function hasCard(cards: readonly Card[], otherCard: Card): boolean {
         return includes(cards, otherCard);
     }
 
-    export function hasPlainColorWithoutOberAndUnter(cards: Card[], otherColor: PlainColor) {
+    export function hasPlainColorWithoutOberAndUnter(cards: readonly Card[], otherColor: PlainColor) {
         return some(cards, card => !includes(OberAndUnter, card) && CardsOrdering.getPlainColor(card) === otherColor);
     }
 
-    export function removeCard(cards: Card[], card: Card): Card[] {
+    export function removeCard(cards: readonly Card[], card: Card): readonly Card[] {
         if (cards.length == 0) {
             throw Error(`cannot remove card from empty set.`);
         }
@@ -24,11 +24,11 @@ namespace CardSet {
         return without(cards, card);
     }
 
-    export function hasColor(cardsOnHand: Card[], otherColor: ColorWithTrump, gameMode: GameMode) {
+    export function hasColor(cardsOnHand: readonly Card[], otherColor: ColorWithTrump, gameMode: GameMode) {
         return some(cardsOnHand, card => gameMode.getOrdering().getColor(card) === otherColor);
     }
 
-    export function allOfColor(cards: Card[], color: ColorWithTrump, gameMode: GameMode) {
+    export function allOfColor(cards: readonly Card[], color: ColorWithTrump, gameMode: GameMode) {
         return filter(cards, card => gameMode.getOrdering().getColor(card) === color);
     }
 }
