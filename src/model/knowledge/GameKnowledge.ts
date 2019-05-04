@@ -25,8 +25,8 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
     private readonly thisPlayer: Player;
     private readonly allPlayers: readonly Player[];
     private pointsForPlayer: Map<Player, number>;
-    private otherTeam: Player[];
-    private ownTeam: Player[];
+    private otherTeam: readonly Player[];
+    private ownTeam: readonly Player[];
     private angespieltByColor: ColorInfoType;
     private playedCardsByPlayer: Map<Player, Card[]>;
     private colorFreeByPlayer: Map<Player, ColorInfoType>;
@@ -143,21 +143,24 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
     }
 
     getOwnTeamPoints(): number {
-        if (!this.ownTeam.length) {
-            throw Error('dont know team partners yet')
+        let myTeam;
+        if (this.ownTeam) {
+            myTeam = this.ownTeam
+        } else {
+            myTeam = [this.thisPlayer];
         }
 
         let points = 0;
-        for (let player of this.ownTeam) {
+        for (let player of myTeam) {
             points = points + this.pointsForPlayer.get(player)!
         }
 
         return points;
     }
 
-    getOtherTeamPoints(): number {
+    getOtherTeamPoints(): number | null {
         if (!this.otherTeam.length) {
-            throw Error('dont know team partners yet')
+            return null;
         }
 
         let points = 0;
@@ -172,7 +175,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
         return this.angespieltByColor[color];
     }
 
-    onRoundCompleted(round: FinishedRound): void {
+    onRoundCompleted(round: FinishedRound, roundIndex: number): void {
         // this.rounds.push(round);
 
         let winningPlayer = round.getWinningPlayer(this.gameMode);
@@ -205,14 +208,18 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
 
     highestUnplayedCardForColor(color: ColorWithTrump) {
         if (this.unplayedCardsByColor[color].length == 0) {
-            throw Error('color no longer in play!');
+            return null;
         }
         return this.unplayedCardsByColor[color][0];
     }
 
     doIHaveTheHighestCardForColor(color: ColorWithTrump) {
         let highestCard = this.highestUnplayedCardForColor(color);
-        return CardSet.hasCard(this.currentHandCards, highestCard);
+        if (highestCard) {
+            return CardSet.hasCard(this.currentHandCards, highestCard);
+        } else {
+            return false;
+        }
     }
 
     isTeamPartnerKnown() {
@@ -273,5 +280,9 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
                 this.otherTeam = difference(this.allPlayers, this.ownTeam);
             }
         }
+    }
+
+    getTeamPartner() {
+        return without(this.ownTeam, this.thisPlayer).pop()!;
     }
 }

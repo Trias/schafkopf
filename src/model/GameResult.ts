@@ -1,7 +1,7 @@
 import {GameMode, GameModeEnum} from "./GameMode";
 import CardRank from "./cards/CardRank";
 import Player from "./Player";
-import {Round} from "./Round";
+import {FinishedRound} from "./Round";
 import {Card} from "./cards/Card";
 import CardsOrdering from "./cards/CardsOrdering";
 import CardSet from "./cards/CardSet";
@@ -17,9 +17,9 @@ export default class GameResult{
     private readonly pointsByPlayer: Map<Player, number>;
     private readonly players: readonly Player[];
     private readonly gameMode: GameMode;
-    private readonly rounds: readonly Round[];
+    private readonly rounds: readonly FinishedRound[];
 
-    constructor(gameMode: GameMode, rounds: readonly Round[], players: readonly Player[]) {
+    constructor(gameMode: GameMode, rounds: readonly FinishedRound[], players: readonly Player[]) {
         this.gameMode = gameMode;
         this.rounds = rounds;
         this.players = players;
@@ -182,7 +182,7 @@ export default class GameResult{
         return CardsOrdering.sortAndFilterBy(trumpSet, winnerTrumpSet);
     }
 
-    private getPlayingTeamRounds(): Round[] {
+    private getPlayingTeamRounds(): FinishedRound[] {
         let playingTeam = this.getPlayingTeam();
         let playingTeamRounds = [];
 

@@ -1,16 +1,16 @@
 import CardSet from "./cards/CardSet";
 import {FinishedRound, Round} from "./Round";
 import {Card} from "./cards/Card";
-import {GameMode} from "./GameMode";
+import {GameMode, GameModeEnum} from "./GameMode";
 import StrategyInterface from "./strategy/StrategyInterface";
 import CardsOrdering from "./cards/CardsOrdering";
 import GamePhase from "./GamePhase";
 import GameKnowledge from "./knowledge/GameKnowledge";
 import GameEventsReceiverInterface from "./knowledge/GameEventsReceiverInterface";
 import {CallableColor, ColorWithTrump} from "./cards/Color";
+import GameAssumptionsInCallGame from "./knowledge/GameAssumptionsInCallGame";
 
 export default class Player implements GameEventsReceiverInterface {
-    // noinspection JSMismatchedCollectionQueryUpdate
     private startCardSet?: readonly Card[];
     private readonly name: string;
     private readonly strategy: StrategyInterface;
@@ -18,7 +18,9 @@ export default class Player implements GameEventsReceiverInterface {
     private currentCardSet?: readonly Card[];
     private gamePhase: GamePhase;
     private gameKnowledge?: GameKnowledge;
-    private players: readonly Player[] | undefined;
+    // noinspection JSMismatchedCollectionQueryUpdate
+    private players?: readonly [Player, Player, Player, Player];
+    private gameAssumptions?: GameAssumptionsInCallGame;
 
     constructor(name: string, strategy: StrategyInterface) {
         this.strategy = strategy;
@@ -26,7 +28,7 @@ export default class Player implements GameEventsReceiverInterface {
         this.name = name;
     }
 
-    onGameStart(players: readonly Player[]) {
+    onGameStart(players: readonly [Player, Player, Player, Player]) {
         this.players = players;
         this.notifyGamePhase(GamePhase.GAME_STARTED);
     }
@@ -82,6 +84,11 @@ export default class Player implements GameEventsReceiverInterface {
 
         this.gameMode = gameMode;
         this.gameKnowledge!.onGameModeDecided(gameMode);
+
+        if (this.gameMode.getMode() === GameModeEnum.CALL_GAME) {
+            this.gameAssumptions = new GameAssumptionsInCallGame(this.gameKnowledge!, this, this.players!);
+            this.gameAssumptions.onGameModeDecided(gameMode);
+        }
     }
 
     whatDoYouWantToPlay(currentGameMode: GameMode): GameMode {
@@ -132,22 +139,27 @@ export default class Player implements GameEventsReceiverInterface {
 
     onCardPlayed(card: Card, player: Player, index: number): void {
         this.gameKnowledge!.onCardPlayed(card, player, index);
+        if (this.gameAssumptions) {
+            this.gameAssumptions!.onCardPlayed(card, player, index);
+        }
     }
 
-    onRoundCompleted(round: FinishedRound): void {
-        this.gameKnowledge!.onRoundCompleted(round);
+    onRoundCompleted(round: FinishedRound, roundIndex: number): void {
+        this.gameKnowledge!.onRoundCompleted(round, roundIndex);
+        if (this.gameAssumptions) {
+            this.gameAssumptions.onRoundCompleted(round, roundIndex);
+        }
         console.log(`Player: ${this.toString()}`);
         console.log(`teampartner known: ${this.gameKnowledge!.isTeamPartnerKnown()}; `);
-        try {
-            console.log(`highestUnplayed card for Eichel: ${this.gameKnowledge!.highestUnplayedCardForColor(CallableColor.EICHEL)}, Gras: ${this.gameKnowledge!.highestUnplayedCardForColor(CallableColor.GRAS)},  Schelle: ${this.gameKnowledge!.highestUnplayedCardForColor(CallableColor.SCHELLE)},  Trump: ${this.gameKnowledge!.highestUnplayedCardForColor(ColorWithTrump.TRUMP)}`);
-        } catch (e) {
+        console.log(`highestUnplayed card for Eichel: ${this.gameKnowledge!.highestUnplayedCardForColor(CallableColor.EICHEL)}, Gras: ${this.gameKnowledge!.highestUnplayedCardForColor(CallableColor.GRAS)},  Schelle: ${this.gameKnowledge!.highestUnplayedCardForColor(CallableColor.SCHELLE)},  Trump: ${this.gameKnowledge!.highestUnplayedCardForColor(ColorWithTrump.TRUMP)}`);
+        console.log(`teamPoints: own:${this.gameKnowledge!.getOwnTeamPoints()} other: ${this.gameKnowledge!.getOtherTeamPoints()}`);
+        console.log(`farbe Angespielt: Eichel: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.EICHEL)}, Gras: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.GRAS)}, Schelle: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.SCHELLE)}, Trump: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.TRUMP)}`);
+
+        if (this.gameAssumptions) {
+            let {player, confidence, reasons} = this.gameAssumptions.getPossibleTeamPartner();
+            console.log(`possible Partner: ${player} with confidence ${confidence} because ${reasons}`);
         }
 
-        try {
-            console.log(`teamPoints: own:${this.gameKnowledge!.getOwnTeamPoints()} other: ${this.gameKnowledge!.getOtherTeamPoints()}`);
-        } catch (e) {
-        }
-        console.log(`farbe Angespielt: Eichel: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.EICHEL)}, Gras: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.GRAS)}, Schelle: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.SCHELLE)}, Trump: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.TRUMP)}`);
         console.log(`-----`);
     }
 }

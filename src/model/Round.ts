@@ -2,8 +2,10 @@ import {Card} from "./cards/Card";
 import {GameMode} from "./GameMode";
 import Player from "./Player";
 import cardRankToValue from "./cards/CardRankToValue";
+import CardRankToValue from "./cards/CardRankToValue";
 import CardsOrdering from "./cards/CardsOrdering";
 import {ColorWithTrump} from "./cards/Color";
+import CardRank from "./cards/CardRank";
 
 class Round {
     private readonly playedCards: Card[];
@@ -95,6 +97,55 @@ class Round {
 
         return this as FinishedRound;
     }
+
+    hasOffColorSchmier(gameMode: GameMode) {
+        for (let card of this.playedCards) {
+            if (gameMode.getOrdering().getColor(card) !== this.getRoundColor(gameMode) && CardRankToValue[card[1] as CardRank] >= 10) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    hasSchmier() {
+        for (let card of this.playedCards) {
+            if (CardRankToValue[card[1] as CardRank] >= 10) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    getSchmierPlayer() {
+        let schmierPlayer = [];
+        for (let card of this.playedCards) {
+            if (CardRankToValue[card[1] as CardRank] >= 10) {
+                schmierPlayer.push(this.getPlayerForCard(card));
+            }
+        }
+
+        return schmierPlayer as readonly Player[];
+    }
+
+    getOffColorSchmierPlayer(gameMode: GameMode) {
+        for (let card of this.playedCards) {
+            if (gameMode.getOrdering().getColor(card) !== this.getRoundColor(gameMode) && CardRankToValue[card[1] as CardRank] >= 10) {
+                return this.getPlayerForCard(card);
+            }
+        }
+
+        return null;
+    }
+
+    getWinningCard(gameMode: GameMode) {
+        return this.playedCards[this.getWinningCardIndex(gameMode)];
+    }
+
+    getPlayerIndex(player: Player) {
+        return this.players.indexOf(player);
+    }
 }
 
 export {Round, FinishedRound};
@@ -106,4 +157,10 @@ type FinishedRound = {
     getStartPlayer(): Player;
     getRoundColor(gameMode: GameMode): ColorWithTrump;
     getPlayerForCard(card: Card): Player;
+    hasOffColorSchmier(gameMode: GameMode): boolean;
+    getOffColorSchmierPlayer(gameMode: GameMode): Player | null;
+    hasSchmier(): boolean;
+    getSchmierPlayer(): readonly Player[];
+    getPlayerIndex(player: Player): number;
+    getWinningCard(gameMode: GameMode): Card;
 }

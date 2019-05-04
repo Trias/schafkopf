@@ -14,7 +14,7 @@ import {Card} from "./cards/Card";
 class Game {
     private readonly players: readonly [Player, Player, Player, Player];
     // noinspection JSMismatchedCollectionQueryUpdate
-    private rounds: readonly Round[];
+    private rounds: readonly FinishedRound[];
     private gameMode?: GameMode;
     private gamePhase: GamePhase;
 
@@ -91,8 +91,8 @@ class Game {
         return new GameResult(this.getGameMode(), this.rounds!, this.players);
     }
 
-    private playRounds(): readonly Round[] {
-        let rounds: Round[] = [];
+    private playRounds(): readonly FinishedRound[] {
+        let rounds: FinishedRound[] = [];
         let activePlayer = this.players[0];
 
         for (let i = 0; i < 8; i++) {
@@ -108,8 +108,8 @@ class Game {
 
                 // console.log(`------pli ${j+1} finished-----`);
             }
-            rounds.push(round);
             this.notifyPlayersOfRoundCompleted(round.finish());
+            rounds.push(round);
 
             activePlayer = round.getWinningPlayer(this.getGameMode());
 
@@ -181,7 +181,7 @@ class Game {
 
     private notifyPlayersOfRoundCompleted(finishedRound: FinishedRound) {
         for (let i = 0; i < 4; i++) {
-            this.players[i].onRoundCompleted(finishedRound);
+            this.players[i].onRoundCompleted(finishedRound, this.rounds.length);
         }
     }
 }
