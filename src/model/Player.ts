@@ -7,7 +7,7 @@ import CardsOrdering from "./cards/CardsOrdering";
 import GamePhase from "./GamePhase";
 import GameKnowledge from "./knowledge/GameKnowledge";
 import GameEventsReceiverInterface from "./knowledge/GameEventsReceiverInterface";
-import {CallableColor, ColorWithTrump} from "./cards/Color";
+import {ColorWithTrump} from "./cards/Color";
 import GameAssumptionsInCallGame from "./knowledge/GameAssumptionsInCallGame";
 
 export default class Player implements GameEventsReceiverInterface {
@@ -149,17 +149,20 @@ export default class Player implements GameEventsReceiverInterface {
         if (this.gameAssumptions) {
             this.gameAssumptions.onRoundCompleted(round, roundIndex);
         }
-        console.log(`Player: ${this.toString()}`);
-        console.log(`teampartner known: ${this.gameKnowledge!.isTeamPartnerKnown()}; `);
-        console.log(`highestUnplayed card for Eichel: ${this.gameKnowledge!.highestUnplayedCardForColor(CallableColor.EICHEL)}, Gras: ${this.gameKnowledge!.highestUnplayedCardForColor(CallableColor.GRAS)},  Schelle: ${this.gameKnowledge!.highestUnplayedCardForColor(CallableColor.SCHELLE)},  Trump: ${this.gameKnowledge!.highestUnplayedCardForColor(ColorWithTrump.TRUMP)}`);
-        console.log(`teamPoints: own:${this.gameKnowledge!.getOwnTeamPoints()} other: ${this.gameKnowledge!.getOtherTeamPoints()}`);
-        console.log(`farbe Angespielt: Eichel: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.EICHEL)}, Gras: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.GRAS)}, Schelle: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.SCHELLE)}, Trump: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.TRUMP)}`);
 
-        if (this.gameAssumptions) {
-            let {player, confidence, reasons} = this.gameAssumptions.getPossibleTeamPartner();
-            console.log(`possible Partner: ${player} with confidence ${confidence} because ${reasons}`);
+        if (this.getName() == "Player 1") {
+            console.log(`Player: ${this.toString()}`);
+            console.log(`teampartner known: ${this.gameKnowledge!.isTeamPartnerKnown()}; `);
+            console.log(`highestUnplayed card for Eichel: ${this.gameKnowledge!.highestUnplayedCardForColor(ColorWithTrump.EICHEL)}, Gras: ${this.gameKnowledge!.highestUnplayedCardForColor(ColorWithTrump.GRAS)}, Herz: ${this.gameKnowledge!.highestUnplayedCardForColor(ColorWithTrump.HERZ)},  Schelle: ${this.gameKnowledge!.highestUnplayedCardForColor(ColorWithTrump.SCHELLE)},  Trump: ${this.gameKnowledge!.highestUnplayedCardForColor(ColorWithTrump.TRUMP)}`);
+            console.log(`teamPoints: own:${this.gameKnowledge!.getOwnTeamPoints()} other: ${this.gameKnowledge!.getOtherTeamPoints()}`);
+            console.log(`farbe Angespielt: Eichel: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.EICHEL)}, Gras: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.GRAS)}, Herz: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.HERZ)}, Schelle: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.SCHELLE)}, Trump: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.TRUMP)}`);
+
+            if (this.gameAssumptions) {
+                let {player, confidence, reasons} = this.gameAssumptions.getPossibleTeamPartner();
+                console.log(`possible Partner: ${player} with confidence ${Math.round(confidence * 100)}% because ${reasons}`);
+            }
+
+            console.log(`-----`);
         }
-
-        console.log(`-----`);
     }
 }

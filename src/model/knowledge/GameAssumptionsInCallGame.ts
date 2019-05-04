@@ -105,7 +105,7 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
             if (round.getWinningPlayer(this.gameMode) == this.gameMode.getCallingPlayer()
                 && round.hasOffColorSchmier(this.gameMode)) {
                 let player = round.getOffColorSchmierPlayer(this.gameMode);
-                if (player) {
+                if (player && player != this.thisPlayer) {
                     this.markPlayerAsPossiblePartnerBySchmier(player, roundIndex);
                     tell = true;
                 }
@@ -140,19 +140,19 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
     private markPlayerAsPossiblePartnerByTrump(round: FinishedRound, roundIndex: number) {
         if (this.thisPlayer === this.gameMode!.getCallingPlayer()) {
             let player = round.getStartPlayer();
-            this.markPlayerAsPartner(player, (roundIndex > 5 ? 0 : 1), `${player} begins with trump in round ${roundIndex}`);
+            this.markPlayerAsPartner(player, (roundIndex > 5 ? 0 : 0.9), `${player} begins with trump in round ${roundIndex}`);
         } else {
             let potentialPartner = difference(this.otherPlayersWithoutCaller, [round.getStartPlayer()]).pop()!;
-            this.markPlayerAsPartner(potentialPartner, (roundIndex > 5 ? 0 : 1), `${round.getStartPlayer()} begins with trump in round ${roundIndex}`);
+            this.markPlayerAsPartner(potentialPartner, (roundIndex > 5 ? 0 : 0.9), `${round.getStartPlayer()} begins with trump in round ${roundIndex}`);
         }
     }
 
     private markPlayerAsPossiblePartnerBySchmier(schmierer: Player, roundIndex: number) {
         if (this.thisPlayer === this.gameMode!.getCallingPlayer()) {
-            this.markPlayerAsPartner(schmierer, (roundIndex > 5 ? 0 : 1), `${schmierer} schmiers calling player in round ${roundIndex}`);
+            this.markPlayerAsPartner(schmierer, (roundIndex > 5 ? 0 : 0.9), `${schmierer} schmiers calling player in round ${roundIndex}`);
         } else {
             let potentialPartner = difference(this.otherPlayersWithoutCaller, [schmierer]).pop()!;
-            this.markPlayerAsPartner(potentialPartner, (roundIndex > 5 ? 0 : 1), `${schmierer} schmiers calling player in round ${roundIndex}`);
+            this.markPlayerAsPartner(potentialPartner, (roundIndex > 5 ? 0 : 0.9), `${schmierer} schmiers calling player in round ${roundIndex}`);
         }
     }
 

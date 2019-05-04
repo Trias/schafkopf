@@ -37,6 +37,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
     // includes cards on Hand
     private unplayedCardsByColor: CardsInfoType;
     private currentHandCards: readonly Card[];
+    private readonly otherPlayers: Player[];
 
     constructor(startHandCards: readonly Card[], self: Player, allPlayer: readonly Player[]) {
         this.startHandCards = startHandCards;
@@ -44,6 +45,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
         // this.knownCards = clone(startHandCards);
         this.thisPlayer = self;
         this.allPlayers = allPlayer;
+        this.otherPlayers = without(allPlayer, self);
         // this.playedCards = [];
         // this.rounds = [];
         this.gameMode = new GameMode(GameModeEnum.RETRY);
@@ -194,13 +196,26 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
             this.playedCardsByPlayer.get(playingPlayer)!.push(card);
 
             if (roundColor != cardColor) {
+                if (this.thisPlayer.getName() == "Player 1") {
+                    console.log(`player ${playingPlayer} marked color free of ${roundColor} because did not bedien`);
+                }
                 this.colorFreeByPlayer.get(playingPlayer)![roundColor] = true;
+            }
+
+            if (this.doIHaveAllCardsOfColor(cardColor)) {
+                // TODO debug: does this reallly work?
+                for (let otherPlayer of this.otherPlayers) {
+                    if (this.thisPlayer.getName() == "Player 1") {
+                        console.log(`player ${otherPlayer} marked color free of ${roundColor} because all color cards played or held by player are played`);
+                    }
+                    this.colorFreeByPlayer.get(otherPlayer)![cardColor] = true;
+                }
             }
         }
     }
 
     doIHaveAllCardsOfColor(color: ColorWithTrump) {
-        if (this.colorFreeByPlayer.get(this.thisPlayer)) {
+        if (this.colorFreeByPlayer.get(this.thisPlayer)![color]) {
             return false;
         }
         return eq(this.unplayedCardsByColor[color], CardSet.allOfColor(this.currentHandCards, color, this.gameMode));

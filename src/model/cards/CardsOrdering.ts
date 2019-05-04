@@ -77,7 +77,12 @@ export default class CardsOrdering {
 
     getColorOrdering(color: PlainColor): readonly Card[] {
         if (this.gameModeEnum == GameModeEnum.CALL_GAME || this.gameModeEnum == GameModeEnum.SOLO) {
-            return CardsByColor[color];
+            if (color == ColorWithTrump.HERZ && this.gameModeEnum == GameModeEnum.CALL_GAME
+                || this.gameModeEnum == GameModeEnum.SOLO && color === this.color) {
+                return [];
+            } else {
+                return CardsByColor[color];
+            }
         } else if (this.gameModeEnum == GameModeEnum.WENZ) {
             let ober = color + "O" as Card;
             let myClone = clone(CardsByColor[color]) as Card[];
