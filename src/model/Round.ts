@@ -7,7 +7,7 @@ import CardsOrdering from "./cards/CardsOrdering";
 import {ColorWithTrump} from "./cards/Color";
 import CardRank from "./cards/CardRank";
 
-class Round {
+class Round implements FinishedRound {
     private readonly playedCards: Card[];
     private readonly startPlayer: Player;
     private readonly players: readonly Player[];
@@ -64,7 +64,6 @@ class Round {
         return this.players[(this.getWinningCardIndex(gameMode) + this.players.indexOf(this.getStartPlayer())) % 4];
     }
 
-    // noinspection JSUnusedGlobalSymbols
     getPlayerForCard(card: Card): Player {
         let index = this.playedCards.indexOf(card);
 

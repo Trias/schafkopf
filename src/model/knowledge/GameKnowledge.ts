@@ -195,20 +195,20 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
 
             this.playedCardsByPlayer.get(playingPlayer)!.push(card);
 
-            if (roundColor != cardColor) {
-                if (this.thisPlayer.getName() == "Player 1") {
-                    console.log(`player ${playingPlayer} marked color free of ${roundColor} because did not bedien`);
-                }
-                this.colorFreeByPlayer.get(playingPlayer)![roundColor] = true;
-            }
-
-            if (this.doIHaveAllCardsOfColor(cardColor)) {
-                // TODO debug: does this reallly work?
-                for (let otherPlayer of this.otherPlayers) {
+            if (!this.colorFreeByPlayer.get(playingPlayer)![roundColor]) {
+                if (roundColor != cardColor) {
                     if (this.thisPlayer.getName() == "Player 1") {
-                        console.log(`player ${otherPlayer} marked color free of ${roundColor} because all color cards played or held by player are played`);
+                        console.log(`player ${playingPlayer} marked color free of ${roundColor} because did not bedien`);
                     }
-                    this.colorFreeByPlayer.get(otherPlayer)![cardColor] = true;
+                    this.colorFreeByPlayer.get(playingPlayer)![roundColor] = true;
+                }
+                if (this.doIHaveAllCardsOfColor(cardColor) || this.unplayedCardsByColor[cardColor].length == 0) {
+                    for (let otherPlayer of this.otherPlayers) {
+                        if (this.thisPlayer.getName() == "Player 1") {
+                            console.log(`player ${otherPlayer} marked color free of ${roundColor} because all color cards played or held by player are played`);
+                        }
+                        this.colorFreeByPlayer.get(otherPlayer)![cardColor] = true;
+                    }
                 }
             }
         }
