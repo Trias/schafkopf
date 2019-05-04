@@ -66,7 +66,7 @@ export default class GameResult{
         }
         for (let i = 0; i < this.rounds.length; i++) {
             let round = this.rounds[i];
-            let roundWinner = round.getWinningPlayer(this.gameMode);
+            let roundWinner = round.getWinningPlayer();
             let pointsAdded = round.getPoints();
             let oldPoints = pointsByPlayer.get(roundWinner)!;
             let newPoints = pointsAdded + oldPoints;
@@ -187,7 +187,7 @@ export default class GameResult{
         let playingTeamRounds = [];
 
         for (let round of this.rounds) {
-            if (includes(playingTeam, round.getWinningPlayer(this.gameMode))) {
+            if (includes(playingTeam, round.getWinningPlayer())) {
                 playingTeamRounds.push(round);
             }
         }

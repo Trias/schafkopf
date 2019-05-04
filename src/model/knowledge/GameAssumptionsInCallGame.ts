@@ -95,16 +95,21 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
             let tell = false;
             // if another player plays trump this is a good indication she has the ace.
             if (round.getStartPlayer() !== this.thisPlayer) {
-                if (round.getRoundColor(this.gameMode) == ColorWithTrump.TRUMP && round.getStartPlayer() !== this.gameMode.getCallingPlayer()) {
+                if (round.getRoundColor() == ColorWithTrump.TRUMP
+                    && round.getStartPlayer() !== this.gameMode.getCallingPlayer()
+                    && roundIndex <= 5
+                ) {
                     this.markPlayerAsPossiblePartnerByTrump(round, roundIndex);
                     tell = true;
                 }
             }
 
             // if another player schmiers the calling player this is a good indication she has the ace
-            if (round.getWinningPlayer(this.gameMode) == this.gameMode.getCallingPlayer()
-                && round.hasOffColorSchmier(this.gameMode)) {
-                let player = round.getOffColorSchmierPlayer(this.gameMode);
+            if (round.getWinningPlayer() == this.gameMode.getCallingPlayer()
+                && round.hasOffColorSchmier()
+                && roundIndex <= 5
+            ) {
+                let player = round.getOffColorSchmierPlayer();
                 if (player && player != this.thisPlayer) {
                     this.markPlayerAsPossiblePartnerBySchmier(player, roundIndex);
                     tell = true;
@@ -112,18 +117,23 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
             }
 
             // if another player begins with color this is a somewhat good indication she does not have the ace
-            if (round.getRoundColor(this.gameMode) !== ColorWithTrump.TRUMP
+            if (round.getRoundColor() !== ColorWithTrump.TRUMP
                 && round.getStartPlayer() !== this.gameMode.getCallingPlayer()
-                && round.getStartPlayer() !== this.thisPlayer) {
+                && round.getStartPlayer() !== this.thisPlayer
+                && roundIndex <= 5
+            ) {
                 let player = round.getStartPlayer();
                 this.markPlayerAsPossiblePartnerByColorPlay(player, roundIndex);
                 tell = true;
             }
 
             // if another player wins a round and gets schmier this is a weak indication she does not have the ace
-            if (round.getWinningPlayer(this.gameMode) !== this.gameMode.getCallingPlayer()
-                && round.hasSchmier()) {
-                let players = difference(round.getSchmierPlayer(), [this.thisPlayer, round.getWinningPlayer(this.gameMode), this.gameMode.getCallingPlayer()!]);
+            if (round.getWinningPlayer() !== this.gameMode.getCallingPlayer()
+                && round.hasSchmier()
+                && <number>round.getSchmierCardIndex() > round.getWinningCardIndex()
+                && roundIndex <= 5
+            ) {
+                let players = difference(round.getSchmierPlayer(), [this.thisPlayer, round.getWinningPlayer(), this.gameMode.getCallingPlayer()!]);
 
                 for (let player of players) {
                     this.markPlayerAsPossiblePartnerBySchmierToOtherPlayer(player, roundIndex);
@@ -140,23 +150,41 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
     private markPlayerAsPossiblePartnerByTrump(round: FinishedRound, roundIndex: number) {
         if (this.thisPlayer === this.gameMode!.getCallingPlayer()) {
             let player = round.getStartPlayer();
-            this.markPlayerAsPartner(player, (roundIndex > 5 ? 0 : 0.9), `${player} begins with trump in round ${roundIndex}`);
+            this.scorePlayer(player, 0.9, `${player} begins with trump in round ${roundIndex}`);
         } else {
             let potentialPartner = difference(this.otherPlayersWithoutCaller, [round.getStartPlayer()]).pop()!;
-            this.markPlayerAsPartner(potentialPartner, (roundIndex > 5 ? 0 : 0.9), `${round.getStartPlayer()} begins with trump in round ${roundIndex}`);
+            this.scorePlayer(potentialPartner, 0.9, `${round.getStartPlayer()} begins with trump in round ${roundIndex}`);
         }
     }
 
     private markPlayerAsPossiblePartnerBySchmier(schmierer: Player, roundIndex: number) {
         if (this.thisPlayer === this.gameMode!.getCallingPlayer()) {
-            this.markPlayerAsPartner(schmierer, (roundIndex > 5 ? 0 : 0.9), `${schmierer} schmiers calling player in round ${roundIndex}`);
+            this.scorePlayer(schmierer, 0.8, `${schmierer} schmiers calling player in round ${roundIndex}`);
         } else {
             let potentialPartner = difference(this.otherPlayersWithoutCaller, [schmierer]).pop()!;
-            this.markPlayerAsPartner(potentialPartner, (roundIndex > 5 ? 0 : 0.9), `${schmierer} schmiers calling player in round ${roundIndex}`);
+            this.scorePlayer(potentialPartner, 0.8, `${schmierer} schmiers calling player in round ${roundIndex}`);
         }
     }
 
-    private markPlayerAsPartner(player: Player, scoreAdd: number, reason: string) {
+    private markPlayerAsPossiblePartnerByColorPlay(player: Player, roundIndex: number) {
+        let reason = `${player} plays color calling player in round ${roundIndex}`;
+        if (this.thisPlayer === this.gameMode!.getCallingPlayer()) {
+            this.scorePlayer(player, -0.5, reason);
+        } else {
+            this.scorePlayer(player, 0.5, reason);
+        }
+    }
+
+    private markPlayerAsPossiblePartnerBySchmierToOtherPlayer(player: Player, roundIndex: number) {
+        let reason = `${player} schmiers color in round ${roundIndex} to other player`;
+        if (this.thisPlayer === this.gameMode!.getCallingPlayer()) {
+            this.scorePlayer(player, -0.25, reason);
+        } else {
+            this.scorePlayer(player, 0.25, reason);
+        }
+    }
+
+    private scorePlayer(player: Player, scoreAdd: number, reason: string) {
         let {score, reasons} = this.possibleTeamPartnerScores.get(player)!;
 
         reasons.push(reason);
@@ -167,23 +195,5 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
             reasons
         };
         this.possibleTeamPartnerScores.set(player, teampartnerScore);
-    }
-
-    private markPlayerAsPossiblePartnerByColorPlay(player: Player, roundIndex: number) {
-        let reason = `${player} plays color calling player in round ${roundIndex}`;
-        if (this.thisPlayer === this.gameMode!.getCallingPlayer()) {
-            this.markPlayerAsPartner(player, roundIndex < 5 ? -0.5 : 0, reason);
-        } else {
-            this.markPlayerAsPartner(player, roundIndex < 5 ? 0.5 : 0, reason);
-        }
-    }
-
-    private markPlayerAsPossiblePartnerBySchmierToOtherPlayer(player: Player, roundIndex: number) {
-        let reason = `${player} schmiers color in round ${roundIndex} to other player`;
-        if (this.thisPlayer === this.gameMode!.getCallingPlayer()) {
-            this.markPlayerAsPartner(player, roundIndex < 5 ? -0.25 : 0, reason);
-        } else {
-            this.markPlayerAsPartner(player, roundIndex < 5 ? 0.25 : 0, reason);
-        }
     }
 }

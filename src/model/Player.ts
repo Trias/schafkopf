@@ -134,6 +134,8 @@ export default class Player implements GameEventsReceiverInterface {
             this.startCardSet = undefined;
             this.gameMode = undefined;
             this.players = undefined;
+            this.gameAssumptions = undefined;
+            this.gameKnowledge = undefined;
         }
     }
 

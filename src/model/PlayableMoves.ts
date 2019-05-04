@@ -28,7 +28,7 @@ export default class PlayableMoves {
                 return true;
             }
         }else{
-            let roundColor = round.getRoundColor(gameMode);
+            let roundColor = round.getRoundColor();
 
             //  console.log(`round color:${roundColor}`);
 

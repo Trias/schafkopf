@@ -180,12 +180,12 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
     onRoundCompleted(round: FinishedRound, roundIndex: number): void {
         // this.rounds.push(round);
 
-        let winningPlayer = round.getWinningPlayer(this.gameMode);
+        let winningPlayer = round.getWinningPlayer();
         this.pointsForPlayer.set(winningPlayer, this.pointsForPlayer.get(winningPlayer)! + round.getPoints());
 
         this.determineTeams(round);
 
-        let roundColor = round.getRoundColor(this.gameMode);
+        let roundColor = round.getRoundColor();
         this.angespieltByColor[roundColor] = true;
 
         // todo: better in onCard..?

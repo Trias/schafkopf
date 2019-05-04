@@ -11,9 +11,11 @@ class Round implements FinishedRound {
     private readonly playedCards: Card[];
     private readonly startPlayer: Player;
     private readonly players: readonly Player[];
+    private readonly gameMode: GameMode;
 
-    constructor(startPlayer: Player, players: readonly Player[]) {
+    constructor(startPlayer: Player, players: readonly Player[], gameMode: GameMode) {
         this.players = players;
+        this.gameMode = gameMode;
         this.playedCards = [];
         this.startPlayer = startPlayer;
     }
@@ -26,11 +28,11 @@ class Round implements FinishedRound {
         return this.playedCards.length === 4;
     }
 
-    getRoundColor(gameMode: GameMode) {
+    getRoundColor() {
         if (this.isEmpty()) {
             throw Error('no card played');
         } else {
-            return gameMode.getOrdering().getColor(this.playedCards[0]);
+            return this.gameMode.getOrdering().getColor(this.playedCards[0]);
         }
     }
 
@@ -42,14 +44,14 @@ class Round implements FinishedRound {
         return this.startPlayer;
     }
 
-    getWinningCardIndex(gameMode: GameMode) {
+    getWinningCardIndex() {
         if (!this.isFinished()) {
             throw Error('round not finished');
         } else {
             let highestCard = this.playedCards[0];
             let highestCardIndex = 0;
             for (let i = 1; i < this.playedCards.length; i++) {
-                let newHighestCardCandidate = gameMode.getOrdering().highestCard(highestCard, this.playedCards[i]);
+                let newHighestCardCandidate = this.gameMode.getOrdering().highestCard(highestCard, this.playedCards[i]);
                 if (highestCard !== newHighestCardCandidate) {
                     // console.log(`new highest card: ${newHighestCardCandidate}`);
                     highestCardIndex = i;
@@ -60,8 +62,8 @@ class Round implements FinishedRound {
         }
     }
 
-    getWinningPlayer(gameMode: GameMode) {
-        return this.players[(this.getWinningCardIndex(gameMode) + this.players.indexOf(this.getStartPlayer())) % 4];
+    getWinningPlayer() {
+        return this.players[(this.getWinningCardIndex() + this.players.indexOf(this.getStartPlayer())) % 4];
     }
 
     getPlayerForCard(card: Card): Player {
@@ -97,9 +99,9 @@ class Round implements FinishedRound {
         return this as FinishedRound;
     }
 
-    hasOffColorSchmier(gameMode: GameMode) {
+    hasOffColorSchmier() {
         for (let card of this.playedCards) {
-            if (gameMode.getOrdering().getColor(card) !== this.getRoundColor(gameMode) && CardRankToValue[card[1] as CardRank] >= 10) {
+            if (this.gameMode.getOrdering().getColor(card) !== this.getRoundColor() && CardRankToValue[card[1] as CardRank] >= 10) {
                 return true;
             }
         }
@@ -128,9 +130,21 @@ class Round implements FinishedRound {
         return schmierPlayer as readonly Player[];
     }
 
-    getOffColorSchmierPlayer(gameMode: GameMode) {
+    getSchmierCardIndex() {
+        for (let i = 0; i < this.playedCards.length; i++) {
+            let card = this.playedCards[i];
+            if (CardRankToValue[card[1] as CardRank] >= 10) {
+                if (i != this.getWinningCardIndex()) {
+                    return i;
+                }
+            }
+        }
+        return null;
+    }
+
+    getOffColorSchmierPlayer() {
         for (let card of this.playedCards) {
-            if (gameMode.getOrdering().getColor(card) !== this.getRoundColor(gameMode) && CardRankToValue[card[1] as CardRank] >= 10) {
+            if (this.gameMode.getOrdering().getColor(card) !== this.getRoundColor() && CardRankToValue[card[1] as CardRank] >= 10) {
                 return this.getPlayerForCard(card);
             }
         }
@@ -138,8 +152,8 @@ class Round implements FinishedRound {
         return null;
     }
 
-    getWinningCard(gameMode: GameMode) {
-        return this.playedCards[this.getWinningCardIndex(gameMode)];
+    getWinningCard() {
+        return this.playedCards[this.getWinningCardIndex()];
     }
 
     getPlayerIndex(player: Player) {
@@ -152,14 +166,16 @@ export {Round, FinishedRound};
 type FinishedRound = {
     getCards(): readonly Card[];
     getPoints(): number;
-    getWinningPlayer(gameMode: GameMode): Player;
+    getWinningPlayer(): Player;
     getStartPlayer(): Player;
-    getRoundColor(gameMode: GameMode): ColorWithTrump;
+    getRoundColor(): ColorWithTrump;
     getPlayerForCard(card: Card): Player;
-    hasOffColorSchmier(gameMode: GameMode): boolean;
-    getOffColorSchmierPlayer(gameMode: GameMode): Player | null;
+    hasOffColorSchmier(): boolean;
+    getOffColorSchmierPlayer(): Player | null;
     hasSchmier(): boolean;
     getSchmierPlayer(): readonly Player[];
+    getSchmierCardIndex(): number | null;
     getPlayerIndex(player: Player): number;
-    getWinningCard(gameMode: GameMode): Card;
+    getWinningCard(): Card;
+    getWinningCardIndex(): number;
 }

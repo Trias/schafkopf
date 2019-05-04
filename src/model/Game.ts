@@ -97,7 +97,7 @@ class Game {
 
         for (let i = 0; i < 8; i++) {
             console.log(`------round ${i + 1} start-----`);
-            let round = new Round(activePlayer, this.players);
+            let round = new Round(activePlayer, this.players, this.gameMode!);
             for (let j = 0; j < 4; j++) {
                 let card = activePlayer.playCard(round);
                 round.addCard(card);
@@ -111,9 +111,9 @@ class Game {
             this.notifyPlayersOfRoundCompleted(round.finish());
             rounds.push(round);
 
-            activePlayer = round.getWinningPlayer(this.getGameMode());
+            activePlayer = round.getWinningPlayer();
 
-            console.log(`round winner: ${round.getWinningPlayer(this.getGameMode()).getName()} at position ${round.getWinningCardIndex(this.getGameMode()) + 1}; round cards: ${round.getCards()}`);
+            console.log(`round winner: ${round.getWinningPlayer().getName()} at position ${round.getWinningCardIndex() + 1}; round cards: ${round.getCards()}`);
             console.log(`------round ${i + 1} finished-----`);
         }
         console.log(`=====game finished=======`);
