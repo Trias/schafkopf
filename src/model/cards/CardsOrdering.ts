@@ -8,7 +8,6 @@ import OberAndUnter from "./sets/OberAndUnter";
 import {CardsByColor} from "./sets/CardsByColor";
 import Unter from "./sets/Unter";
 import CardRank from "./CardRank";
-import Writeable from "../../helper/Writeable";
 
 export default class CardsOrdering {
     private readonly gameModeEnum: GameModeEnum;
@@ -81,7 +80,7 @@ export default class CardsOrdering {
             return CardsByColor[color];
         } else if (this.gameModeEnum == GameModeEnum.WENZ) {
             let ober = color + "O" as Card;
-            let myClone = <Writeable<Card[]>>clone(CardsByColor[color]);
+            let myClone = clone(CardsByColor[color]) as Card[];
             myClone.splice(3, 0, ober);
             return myClone;
         } else {
