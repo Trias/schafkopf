@@ -207,7 +207,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
             if (!this.colorFreeByPlayer.get(playingPlayer)![roundColor]) {
                 if (roundColor != cardColor) {
                     if (this.thisPlayer.getName() == "Player 1") {
-                        console.log(`player ${playingPlayer} marked color free of ${roundColor} because did not bedien`);
+                        console.log(`player ${playingPlayer} marked color free of ${roundColor} because did not follow suit`);
                     }
                     this.colorFreeByPlayer.get(playingPlayer)![roundColor] = true;
                 }
@@ -362,6 +362,19 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
 
                 this.ownTeam = [this.thisPlayer, this.teamPartner!];
                 this.otherTeam = difference(this.allPlayers, this.ownTeam);
+
+                // davongelaufen
+            } else if (round.getRoundColor() == this.gameMode.getColorOfTheGame()
+                && !CardSet.hasCard(round.getCards(), this.gameMode.getCalledAce())
+            ) {
+                if (this.gameMode.getCallingPlayer() == this.thisPlayer) {
+                    this.teamPartner = round.getStartPlayer();
+                    this.thisPlayerIsPlaying = true;
+                } else {
+                    let callAcePlayer = round.getStartPlayer();
+                    this.teamPartner = without(this.allPlayers, this.thisPlayer, this.gameMode.getCallingPlayer(), callAcePlayer).pop();
+                    this.thisPlayerIsPlaying = false;
+                }
             }
         }
     }

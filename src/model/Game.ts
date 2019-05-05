@@ -109,6 +109,12 @@ class Game {
                 // console.log(`------pli ${j+1} finished-----`);
             }
             this.notifyPlayersOfRoundCompleted(round.finish());
+            if (this.gameMode!.isCallGame()
+                && !this.gameMode!.getHasAceBeenCalled()
+                && round.getRoundColor() == this.gameMode!.getColorOfTheGame()
+            ) {
+                this.gameMode!.setHasAceBeenCalled();
+            }
             rounds.push(round);
 
             activePlayer = round.getWinningPlayer() as Player;

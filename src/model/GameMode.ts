@@ -23,6 +23,7 @@ class GameMode {
     private readonly callingPlayer?: PlayerWithNameOnly;
     private klopfer: number = 0;
     private readonly ordering: CardsOrdering;
+    private hasAceBeenCalled = false;
 
     constructor(mode: GameModeEnum, callingPlayer?: PlayerWithNameOnly, color?: PlainColor) {
         if (mode == GameModeEnum.SOLO && !color) {
@@ -77,6 +78,14 @@ class GameMode {
         });
     }
 
+    setHasAceBeenCalled() {
+        this.hasAceBeenCalled = true;
+
+        Object.defineProperty(this, "hasAceBeenCalled", {
+            "writable": false,
+        });
+    }
+
     getKlopfer(): number {
         return this.klopfer;
     }
@@ -98,6 +107,10 @@ class GameMode {
 
     isCallGame() {
         return this.getMode() == GameModeEnum.CALL_GAME;
+    }
+
+    getHasAceBeenCalled() {
+        return this.hasAceBeenCalled;
     }
 }
 

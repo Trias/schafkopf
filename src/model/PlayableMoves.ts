@@ -19,10 +19,20 @@ export default class PlayableMoves {
     }
 
     static canPlayCard(gameMode: GameMode, cardsOnHand: readonly Card[], card: Card, round: Round): boolean {
+        if (cardsOnHand.length === 1) {
+            // hole in the schafkopfregeln: rufsau may not be played until 8. round... also a convenient shortcut..
+            return true;
+        }
         if(round.isEmpty()){
-            if (this.isCalledColorButNotAce(gameMode, cardsOnHand, card)) {
+            if (gameMode.getMode() == GameModeEnum.CALL_GAME
+                && this.isCalledColorButNotAce(gameMode, cardsOnHand, card)) {
                 // console.log('ruffarbe gespielt');
-                return false;
+                if (CardSet.allOfColor(cardsOnHand, gameMode.getColorOfTheGame()!, gameMode).length > 3) {
+                    // davongelaufen
+                    return true;
+                } else {
+                    return false;
+                }
             }else{
                 //  console.log('erste karte');
                 return true;
@@ -30,6 +40,15 @@ export default class PlayableMoves {
         }else{
             let roundColor = round.getRoundColor();
 
+
+            if (gameMode.getMode() === GameModeEnum.CALL_GAME
+                && card == this.getCalledAce(gameMode)
+                && roundColor !== gameMode.getColorOfTheGame()
+                && !gameMode.getHasAceBeenCalled()
+            ) {
+                // rufsau nicht schmieren.
+                return false;
+            }
             //  console.log(`round color:${roundColor}`);
 
             if (gameMode.getMode() === GameModeEnum.CALL_GAME && roundColor === gameMode.getColorOfTheGame() && gameMode.getOrdering().isOfColor(card, roundColor)) {
@@ -57,8 +76,7 @@ export default class PlayableMoves {
     }
 
     static isCalledColorButNotAce(gameMode: GameMode, cardsOnHand: readonly Card[], card: Card) {
-        if(gameMode.getMode() == GameModeEnum.CALL_GAME
-            && gameMode.getColorOfTheGame() === gameMode.getOrdering().getColor(card)
+        if (gameMode.getColorOfTheGame() === gameMode.getOrdering().getColor(card)
             && CardSet.hasColor(cardsOnHand, gameMode.getOrdering().getColor(card), gameMode)
             && card !== this.getCalledAce(gameMode)
             && CardSet.hasCard(cardsOnHand, this.getCalledAce(gameMode))) {

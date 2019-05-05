@@ -172,7 +172,9 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
                     ) {
                         let player = round.getPlayerForCard(card);
 
-                        if (round.getWinningPlayer() == this.gameMode.getCallingPlayer()) {
+                        if (round.getWinningPlayer() == this.gameMode.getCallingPlayer()
+                            && player != this.thisPlayer
+                        ) {
                             this.markPlayerAsPossiblePartnerByGivingUpOberToOtherPlayer(player, roundIndex);
                             tell = true;
                         }
