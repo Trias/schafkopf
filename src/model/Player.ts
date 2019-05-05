@@ -171,6 +171,11 @@ export default class Player implements GameEventsReceiverInterface {
                         }
                     }
                 }
+
+                for (let color of Colors.colorsWithTrumpAsArray()) {
+                    let cardRanks = this.gameKnowledge!.getCurrentRankWithEqualRanksOfCardInColor(this.currentCardSet!, color);
+                    console.log(`current hand card ranks for ${color}: ${JSON.stringify(cardRanks)}:`)
+                }
             }
 
             console.log(`-----`);

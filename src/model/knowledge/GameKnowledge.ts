@@ -321,6 +321,33 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
         return this.colorFreeByPlayer.get(player)![color];
     }
 
+    getCurrentRankOfCardInColor(card: Card) {
+        let color = this.gameMode.getOrdering().getColor(card);
+
+        return this.remainingCardsByColor[color].indexOf(card);
+    }
+
+    getCurrentRankWithEqualRanksOfCardInColor(cards: readonly Card[], color: ColorWithTrump): { [index in Card]?: number } {
+        let cardsInColor = CardSet.allOfColor(cards, color, this.gameMode);
+        let currentRank = 0;
+        let result: { [index in Card]?: number } = {};
+        let lastCard;
+        for (let i = 0; i < this.unplayedCardsByColor[color].length; i++) {
+            let card = this.unplayedCardsByColor[color][i];
+            if (cardsInColor.indexOf(card) !== -1) {
+                if (lastCard && result[lastCard] === currentRank - 1) {
+                    currentRank = currentRank - 1;
+                }
+                result[card] = currentRank;
+            }
+
+            lastCard = card;
+            currentRank = currentRank + 1;
+        }
+
+        return result;
+    }
+
     private determineTeams(round: FinishedRound) {
         if (this.gameMode.getMode() == GameModeEnum.CALL_GAME && !this.isTeamPartnerKnown()) {
             if (CardSet.hasCard(round.getCards(), this.gameMode.getCalledAce())) {
