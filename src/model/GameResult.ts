@@ -1,6 +1,6 @@
 import {GameMode, GameModeEnum} from "./GameMode";
 import CardRank from "./cards/CardRank";
-import Player from "./Player";
+import {Player} from "./Player";
 import {FinishedRound} from "./Round";
 import {Card} from "./cards/Card";
 import CardsOrdering from "./cards/CardsOrdering";
@@ -66,7 +66,7 @@ export default class GameResult{
         }
         for (let i = 0; i < this.rounds.length; i++) {
             let round = this.rounds[i];
-            let roundWinner = round.getWinningPlayer();
+            let roundWinner = round.getWinningPlayer() as Player;
             let pointsAdded = round.getPoints();
             let oldPoints = pointsByPlayer.get(roundWinner)!;
             let newPoints = pointsAdded + oldPoints;
@@ -82,7 +82,7 @@ export default class GameResult{
 
     determinePlayingTeam() :[Player?, Player?] {
         if (this.gameMode.getMode() === GameModeEnum.CALL_GAME) {
-            let callingPlayer = this.gameMode.getCallingPlayer()!;
+            let callingPlayer = this.gameMode.getCallingPlayer()! as Player;
             let calledAce = this.gameMode.getColorOfTheGame() + CardRank.ACE as Card;
 
             for(let i = 0; i< 4;i++){
@@ -94,7 +94,7 @@ export default class GameResult{
             throw Error('invalid call');
         } else {
             if(this.gameMode.getCallingPlayer()){
-                return [this.gameMode.getCallingPlayer()];
+                return [this.gameMode.getCallingPlayer()! as Player];
             }else{
                 return [];
             }
@@ -187,7 +187,7 @@ export default class GameResult{
         let playingTeamRounds = [];
 
         for (let round of this.rounds) {
-            if (includes(playingTeam, round.getWinningPlayer())) {
+            if (includes(playingTeam, round.getWinningPlayer() as Player)) {
                 playingTeamRounds.push(round);
             }
         }

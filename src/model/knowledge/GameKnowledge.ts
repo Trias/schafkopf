@@ -7,7 +7,7 @@ import GameEventsReceiverInterface from "./GameEventsReceiverInterface";
 import {GameMode, GameModeEnum} from "../GameMode";
 import {FinishedRound} from "../Round";
 import CardSet from "../cards/CardSet";
-import Player from "../Player";
+import {PlayerWithNameOnly} from "../Player";
 import {difference, eq, without} from "lodash";
 import {CallableColor, ColorWithTrump} from "../cards/Color";
 
@@ -21,15 +21,15 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
     // private rounds: FinishedRound[];
     private gameMode: GameMode;
     private hasCalledAce: boolean;
-    private teamPartner: Player | undefined;
-    private readonly thisPlayer: Player;
-    private readonly allPlayers: readonly Player[];
-    private pointsForPlayer: Map<Player, number>;
-    private otherTeam: readonly Player[];
-    private ownTeam: readonly Player[];
+    private teamPartner: PlayerWithNameOnly | undefined;
+    private readonly thisPlayer: PlayerWithNameOnly;
+    private readonly allPlayers: readonly PlayerWithNameOnly[];
+    private pointsForPlayer: Map<PlayerWithNameOnly, number>;
+    private otherTeam: readonly PlayerWithNameOnly[];
+    private ownTeam: readonly PlayerWithNameOnly[];
     private angespieltByColor: ColorInfoType;
-    private playedCardsByPlayer: Map<Player, Card[]>;
-    private colorFreeByPlayer: Map<Player, ColorInfoType>;
+    private playedCardsByPlayer: Map<PlayerWithNameOnly, Card[]>;
+    private colorFreeByPlayer: Map<PlayerWithNameOnly, ColorInfoType>;
     private hasCalledAceBeenPlayed = false;
     private thisPlayerIsPlaying?: boolean;
 
@@ -39,9 +39,9 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
     // includes cards on Hand
     private unplayedCardsByColor: CardsInfoType;
     private currentHandCards: readonly Card[];
-    private readonly otherPlayers: Player[];
+    private readonly otherPlayers: PlayerWithNameOnly[];
 
-    constructor(startHandCards: readonly Card[], self: Player, allPlayer: readonly Player[]) {
+    constructor(startHandCards: readonly Card[], self: PlayerWithNameOnly, allPlayer: readonly PlayerWithNameOnly[]) {
         this.startHandCards = startHandCards;
         this.currentHandCards = startHandCards;
         // this.knownCards = clone(startHandCards);
@@ -56,9 +56,9 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
         this.otherTeam = [];
         this.ownTeam = [];
 
-        this.pointsForPlayer = new Map<Player, number>();
-        this.playedCardsByPlayer = new Map<Player, Card[]>();
-        this.colorFreeByPlayer = new Map<Player, { [index in ColorWithTrump]: boolean }>();
+        this.pointsForPlayer = new Map<PlayerWithNameOnly, number>();
+        this.playedCardsByPlayer = new Map<PlayerWithNameOnly, Card[]>();
+        this.colorFreeByPlayer = new Map<PlayerWithNameOnly, { [index in ColorWithTrump]: boolean }>();
         for (let player of allPlayer) {
             this.pointsForPlayer.set(player, 0);
             this.playedCardsByPlayer.set(player, []);
@@ -85,7 +85,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
         this.unplayedCardsByColor = {E: [], G: [], H: [], S: [], T: []};
     }
 
-    onCardPlayed(card: Card, player: Player, index: number): void {
+    onCardPlayed(card: Card, player: PlayerWithNameOnly, index: number): void {
         //  this.knownCards.push(card);
         //   this.playedCards.push(card);
 
@@ -317,7 +317,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
         }
     }
 
-    isPlayerColorFree(player: Player, color: ColorWithTrump) {
+    isPlayerColorFree(player: PlayerWithNameOnly, color: ColorWithTrump) {
         return this.colorFreeByPlayer.get(player)![color];
     }
 
@@ -366,7 +366,33 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
         }
     }
 
-    private isThisPlayerPlaying() {
+    isThisPlayerPlaying() {
         return this.thisPlayerIsPlaying;
+    }
+
+    isTeamPartnerPublicallyKnown() {
+        return this.hasCalledAceBeenPlayed;
+    }
+
+    getTeamPartnerForPlayer(player: PlayerWithNameOnly): PlayerWithNameOnly | null {
+        if (player == this.thisPlayer) {
+            return this.getTeamPartner();
+        } else if (this.startHandCards.indexOf(this.gameMode.getCalledAce()) !== -1) {
+            if (player == this.gameMode.getCallingPlayer()) {
+                return this.thisPlayer;
+            } else {
+                return without(this.allPlayers, player, this.gameMode.getCallingPlayer(), this.thisPlayer).pop()!;
+            }
+        } else {
+            if (this.isTeamPartnerPublicallyKnown()) {
+                if (this.getPlayingTeam().indexOf(player) !== -1) {
+                    return without(this.getPlayingTeam(), player).pop()!;
+                } else {
+                    return without(this.getNonPlayingTeam(), player).pop()!;
+                }
+            } else {
+                return null;
+            }
+        }
     }
 }

@@ -1,6 +1,6 @@
 import GameResult from "./GameResult";
 import {GameModeEnum} from "./GameMode";
-import Player from "./Player";
+import {Player} from "./Player";
 import {includes} from "lodash";
 
 type Stats = {

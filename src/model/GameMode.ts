@@ -4,7 +4,7 @@
  */
 
 import {PlainColor} from "./cards/Color";
-import Player from "./Player";
+import {PlayerWithNameOnly} from "./Player";
 import CardsOrdering from "./cards/CardsOrdering";
 import CardRank from "./cards/CardRank";
 import {Card} from "./cards/Card";
@@ -20,11 +20,11 @@ class GameMode {
 
     private readonly mode: GameModeEnum;
     private readonly color?: PlainColor;
-    private readonly callingPlayer?: Player;
+    private readonly callingPlayer?: PlayerWithNameOnly;
     private klopfer: number = 0;
     private readonly ordering: CardsOrdering;
 
-    constructor(mode: GameModeEnum, callingPlayer?: Player, color?: PlainColor) {
+    constructor(mode: GameModeEnum, callingPlayer?: PlayerWithNameOnly, color?: PlainColor) {
         if (mode == GameModeEnum.SOLO && !color) {
             throw Error('color must be set for solo');
         }

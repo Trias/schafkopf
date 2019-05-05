@@ -1,6 +1,6 @@
 import {Card} from "./cards/Card";
 import {GameMode} from "./GameMode";
-import Player from "./Player";
+import {PlayerWithNameOnly} from "./Player";
 import cardRankToValue from "./cards/CardRankToValue";
 import CardRankToValue from "./cards/CardRankToValue";
 import CardsOrdering from "./cards/CardsOrdering";
@@ -9,11 +9,11 @@ import CardRank from "./cards/CardRank";
 
 class Round implements FinishedRound {
     private readonly playedCards: Card[];
-    private readonly startPlayer: Player;
-    private readonly players: readonly Player[];
+    private readonly startPlayer: PlayerWithNameOnly;
+    private readonly players: readonly PlayerWithNameOnly[];
     private readonly gameMode: GameMode;
 
-    constructor(startPlayer: Player, players: readonly Player[], gameMode: GameMode) {
+    constructor(startPlayer: PlayerWithNameOnly, players: readonly PlayerWithNameOnly[], gameMode: GameMode) {
         this.players = players;
         this.gameMode = gameMode;
         this.playedCards = [];
@@ -66,7 +66,7 @@ class Round implements FinishedRound {
         return this.players[(this.getWinningCardIndex() + this.players.indexOf(this.getStartPlayer())) % 4];
     }
 
-    getPlayerForCard(card: Card): Player {
+    getPlayerForCard(card: Card): PlayerWithNameOnly {
         let index = this.playedCards.indexOf(card);
 
         if (index == -1) {
@@ -130,7 +130,7 @@ class Round implements FinishedRound {
             }
         }
 
-        return schmierPlayer as readonly Player[];
+        return schmierPlayer as readonly PlayerWithNameOnly[];
     }
 
     getSchmierCardIndex() {
@@ -159,7 +159,7 @@ class Round implements FinishedRound {
         return this.playedCards[this.getWinningCardIndex()];
     }
 
-    getPlayerIndex(player: Player) {
+    getPlayerIndex(player: PlayerWithNameOnly) {
         return this.players.indexOf(player);
     }
 }
@@ -169,16 +169,16 @@ export {Round, FinishedRound};
 type FinishedRound = {
     getCards(): readonly Card[];
     getPoints(): number;
-    getWinningPlayer(): Player;
-    getStartPlayer(): Player;
+    getWinningPlayer(): PlayerWithNameOnly;
+    getStartPlayer(): PlayerWithNameOnly;
     getRoundColor(): ColorWithTrump;
-    getPlayerForCard(card: Card): Player;
+    getPlayerForCard(card: Card): PlayerWithNameOnly;
     hasOffColorSchmier(): boolean;
-    getOffColorSchmierPlayer(): Player | null;
+    getOffColorSchmierPlayer(): PlayerWithNameOnly | null;
     hasSchmier(): boolean;
-    getSchmierPlayer(): readonly Player[];
+    getSchmierPlayer(): readonly PlayerWithNameOnly[];
     getSchmierCardIndex(): number | null;
-    getPlayerIndex(player: Player): number;
+    getPlayerIndex(player: PlayerWithNameOnly): number;
     getWinningCard(): Card;
     getWinningCardIndex(): number;
 }

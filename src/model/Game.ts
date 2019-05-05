@@ -5,7 +5,7 @@
 
 import {GameMode, GameModeEnum} from "./GameMode";
 import GameResult from "./GameResult";
-import Player from "./Player";
+import {Player} from "./Player";
 import {FinishedRound, Round} from "./Round";
 import CardsOrdering from "./cards/CardsOrdering";
 import GamePhase from "./GamePhase";
@@ -111,7 +111,7 @@ class Game {
             this.notifyPlayersOfRoundCompleted(round.finish());
             rounds.push(round);
 
-            activePlayer = round.getWinningPlayer();
+            activePlayer = round.getWinningPlayer() as Player;
 
             console.log(`round winner: ${round.getWinningPlayer().getName()} at position ${round.getWinningCardIndex() + 1}; round cards: ${round.getCards()}`);
             console.log(`------round ${i + 1} finished-----`);

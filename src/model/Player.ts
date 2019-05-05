@@ -10,7 +10,12 @@ import GameEventsReceiverInterface from "./knowledge/GameEventsReceiverInterface
 import {Colors, ColorWithTrump} from "./cards/Color";
 import GameAssumptionsInCallGame from "./knowledge/GameAssumptionsInCallGame";
 
-export default class Player implements GameEventsReceiverInterface {
+type PlayerWithNameOnly = {
+    getName(): string,
+    toString(): string,
+};
+
+class Player implements GameEventsReceiverInterface, PlayerWithNameOnly {
     private startCardSet?: readonly Card[];
     private readonly name: string;
     private readonly strategy: StrategyInterface;
@@ -19,7 +24,7 @@ export default class Player implements GameEventsReceiverInterface {
     private gamePhase: GamePhase;
     private gameKnowledge?: GameKnowledge;
     // noinspection JSMismatchedCollectionQueryUpdate
-    private players?: readonly [Player, Player, Player, Player];
+    private players?: readonly [PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly];
     private gameAssumptions?: GameAssumptionsInCallGame;
 
     constructor(name: string, strategy: StrategyInterface) {
@@ -28,7 +33,7 @@ export default class Player implements GameEventsReceiverInterface {
         this.name = name;
     }
 
-    onGameStart(players: readonly [Player, Player, Player, Player]) {
+    onGameStart(players: readonly [PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly]) {
         this.players = players;
         this.notifyGamePhase(GamePhase.GAME_STARTED);
     }
@@ -139,7 +144,7 @@ export default class Player implements GameEventsReceiverInterface {
         }
     }
 
-    onCardPlayed(card: Card, player: Player, index: number): void {
+    onCardPlayed(card: Card, player: PlayerWithNameOnly, index: number): void {
         this.gameKnowledge!.onCardPlayed(card, player, index);
         if (this.gameAssumptions) {
             this.gameAssumptions!.onCardPlayed(card, player, index);
@@ -160,7 +165,7 @@ export default class Player implements GameEventsReceiverInterface {
             console.log(`farbe Angespielt: Eichel: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.EICHEL)}, Gras: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.GRAS)}, Herz: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.HERZ)}, Schelle: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.SCHELLE)}, Trump: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.TRUMP)}`);
 
             if (this.gameAssumptions) {
-                let {player, confidence, reasons} = this.gameAssumptions.getPossibleTeamPartner();
+                let {player, confidence, reasons} = this.gameAssumptions.getPossibleTeamPartnerForPlayer(this);
                 console.log(`possible Partner: ${player} with confidence ${Math.round(confidence * 100)}% because ${reasons}`);
 
                 for (let player of this.players!) {
@@ -182,3 +187,5 @@ export default class Player implements GameEventsReceiverInterface {
         }
     }
 }
+
+export {Player, PlayerWithNameOnly}
