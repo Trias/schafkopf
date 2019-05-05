@@ -5,14 +5,14 @@ import Player from "../Player";
 import {GameMode, GameModeEnum} from "../GameMode";
 import {FinishedRound} from "../Round";
 import {ColorWithTrump} from "../cards/Color";
-import {difference} from "lodash";
+import {difference, intersection} from "lodash";
 
 type TeamPartnerScore = {
     score: number, reasons: string[]
 };
 
-type ColorFreeScore = {
-    score: number, reasons: string[]
+type ColorFreeAssumption = {
+    assumption: boolean, reasons: string[]
 };
 
 type PlayerConfidence = {
@@ -25,7 +25,7 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
     private possibleTeamPartnerScores: Map<Player, TeamPartnerScore>;
     private readonly thisPlayer: Player;
     private readonly players: readonly Player[];
-    private possiblyColorFreeScores: Map<Player, ColorFreeScore>;
+    private possiblyColorFreeScores: { [index in string]: ColorFreeAssumption };
     private roundsWithTell: number;
     private otherPlayersWithoutCaller?: Player[];
 
@@ -36,7 +36,7 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
         this.thisPlayer = thisPlayer;
         this.players = players;
         this.possibleTeamPartnerScores = new Map<Player, TeamPartnerScore>();
-        this.possiblyColorFreeScores = new Map<Player, ColorFreeScore>();
+        this.possiblyColorFreeScores = {};
         this.roundsWithTell = 0;
     }
 
@@ -70,6 +70,16 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
         return {player, confidence, reasons};
     }
 
+    isPlayerPossiblyColorFree(player: Player, color: ColorWithTrump): ColorFreeAssumption {
+        if (this.gameKnowledge.isPlayerColorFree(player, color)) {
+            let reasons = ['knowledge'];
+            reasons = reasons.concat((this.possiblyColorFreeScores[player + color] || {reasons: []}).reasons);
+            return {assumption: true, reasons};
+        } else {
+            return this.possiblyColorFreeScores[player + color] || {assumption: false, reasons: []};
+        }
+    }
+
     onCardPlayed(card: Card, player: Player, index: number): void {
     }
 
@@ -83,10 +93,6 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
 
         for (let player of this.otherPlayersWithoutCaller) {
             this.possibleTeamPartnerScores.set(player, {score: 0, reasons: []});
-        }
-
-        for (let player of this.otherPlayersWithoutCaller) {
-            this.possiblyColorFreeScores.set(player, {score: 0, reasons: []});
         }
     }
 
@@ -143,6 +149,27 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
 
             if (tell) {
                 this.roundsWithTell = this.roundsWithTell + 1;
+            }
+        }
+
+        // detect color frees before partner assignment??
+        if ((this.gameKnowledge.isTeamPartnerKnown()
+            && this.gameKnowledge.getHasCalledAceBeenPlayed() || this.gameMode.isSinglePlay())
+            && roundIndex <= 5
+        ) {
+            let schmierPlayer = round.getSchmierPlayer();
+
+            let opponentSchmiers;
+            if (this.gameKnowledge.getNonPlayingTeam().indexOf(round.getWinningPlayer()) !== -1) {
+                opponentSchmiers = intersection(this.gameKnowledge.getPlayingTeam(), schmierPlayer);
+            } else {
+                opponentSchmiers = intersection(this.gameKnowledge.getNonPlayingTeam(), schmierPlayer);
+            }
+
+            for (let player of opponentSchmiers) {
+                let {reasons} = this.possiblyColorFreeScores[player + round.getRoundColor()] || {reasons: []};
+                reasons.push(`player ${player} schmiers opponent in round ${roundIndex}`);
+                this.possiblyColorFreeScores[player + round.getRoundColor()] = {assumption: true, reasons};
             }
         }
     }

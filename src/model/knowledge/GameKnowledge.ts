@@ -30,6 +30,8 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
     private angespieltByColor: ColorInfoType;
     private playedCardsByPlayer: Map<Player, Card[]>;
     private colorFreeByPlayer: Map<Player, ColorInfoType>;
+    private hasCalledAceBeenPlayed = false;
+    private thisPlayerIsPlaying?: boolean;
 
     // without cards on hand, iE public knowledge
     private remainingCardsByColor: CardsInfoType;
@@ -96,25 +98,32 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
         } else {
             this.remainingCardsByColor[cardColor] = CardSet.removeCard(this.remainingCardsByColor[cardColor], card);
         }
+
+        if (this.gameMode.isCallGame() && card === this.gameMode.getCalledAce()) {
+            this.hasCalledAceBeenPlayed = true;
+        }
     }
 
     onGameModeDecided(gameMode: GameMode): void {
         this.gameMode = gameMode;
 
-        if (this.gameMode.getMode() == GameModeEnum.CALL_GAME) {
+        if (this.gameMode.isCallGame()) {
             this.hasCalledAce = CardSet.hasCard(this.startHandCards, this.gameMode.getCalledAce());
             if (this.hasCalledAce) {
                 this.teamPartner = this.gameMode.getCallingPlayer();
                 this.ownTeam = [this.thisPlayer, this.teamPartner!];
                 this.otherTeam = difference(this.allPlayers, this.ownTeam);
+                this.thisPlayerIsPlaying = true;
             }
-        } else if (this.gameMode.getMode() == GameModeEnum.WENZ || this.gameMode.getMode() == GameModeEnum.SOLO) {
+        } else if (this.gameMode.isSinglePlay()) {
             if (this.gameMode.getCallingPlayer() == this.thisPlayer) {
                 this.ownTeam = [this.thisPlayer];
                 this.otherTeam = difference(this.allPlayers, this.ownTeam);
+                this.thisPlayerIsPlaying = true;
             } else {
                 this.otherTeam = [this.gameMode.getCallingPlayer()!];
                 this.ownTeam = difference(this.allPlayers, this.otherTeam);
+                this.thisPlayerIsPlaying = false;
             }
         } else {
             throw Error('not implemented');
@@ -281,14 +290,47 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
         return CardSet.allOfColor(this.startHandCards, CallableColor.SCHELLE, this.gameMode);
     }
 
+    getHasCalledAceBeenPlayed() {
+        if (this.gameMode.isSinglePlay()) {
+            throw Error('no called ace in single play..');
+        }
+        return this.hasCalledAceBeenPlayed;
+    }
+
+    getTeamPartner() {
+        return without(this.ownTeam, this.thisPlayer).pop()!;
+    }
+
+    getNonPlayingTeam() {
+        if (this.isThisPlayerPlaying()) {
+            return this.otherTeam;
+        } else {
+            return this.ownTeam;
+        }
+    }
+
+    getPlayingTeam() {
+        if (this.isThisPlayerPlaying()) {
+            return this.ownTeam;
+        } else {
+            return this.otherTeam;
+        }
+    }
+
+    isPlayerColorFree(player: Player, color: ColorWithTrump) {
+        return this.colorFreeByPlayer.get(player)![color];
+    }
+
     private determineTeams(round: FinishedRound) {
         if (this.gameMode.getMode() == GameModeEnum.CALL_GAME && !this.isTeamPartnerKnown()) {
             if (CardSet.hasCard(round.getCards(), this.gameMode.getCalledAce())) {
                 if (this.gameMode.getCallingPlayer() == this.thisPlayer) {
                     this.teamPartner = round.getPlayerForCard(this.gameMode.getCalledAce());
+                    this.thisPlayerIsPlaying = true;
                 } else {
                     let callAcePlayer = round.getPlayerForCard(this.gameMode.getCalledAce());
                     this.teamPartner = without(this.allPlayers, this.thisPlayer, this.gameMode.getCallingPlayer(), callAcePlayer).pop();
+                    this.thisPlayerIsPlaying = false;
                 }
 
                 this.ownTeam = [this.thisPlayer, this.teamPartner!];
@@ -297,7 +339,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
         }
     }
 
-    getTeamPartner() {
-        return without(this.ownTeam, this.thisPlayer).pop()!;
+    private isThisPlayerPlaying() {
+        return this.thisPlayerIsPlaying;
     }
 }

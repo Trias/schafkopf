@@ -7,7 +7,7 @@ import CardsOrdering from "./cards/CardsOrdering";
 import GamePhase from "./GamePhase";
 import GameKnowledge from "./knowledge/GameKnowledge";
 import GameEventsReceiverInterface from "./knowledge/GameEventsReceiverInterface";
-import {ColorWithTrump} from "./cards/Color";
+import {Colors, ColorWithTrump} from "./cards/Color";
 import GameAssumptionsInCallGame from "./knowledge/GameAssumptionsInCallGame";
 
 export default class Player implements GameEventsReceiverInterface {
@@ -162,6 +162,15 @@ export default class Player implements GameEventsReceiverInterface {
             if (this.gameAssumptions) {
                 let {player, confidence, reasons} = this.gameAssumptions.getPossibleTeamPartner();
                 console.log(`possible Partner: ${player} with confidence ${Math.round(confidence * 100)}% because ${reasons}`);
+
+                for (let player of this.players!) {
+                    for (let color of Colors.colorsWithTrumpAsArray()) {
+                        let {assumption, reasons} = this.gameAssumptions.isPlayerPossiblyColorFree(player, color);
+                        if (assumption) {
+                            console.log(`player ${player} assumed Color free of ${color} because of ${reasons}`);
+                        }
+                    }
+                }
             }
 
             console.log(`-----`);

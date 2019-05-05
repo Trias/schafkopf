@@ -101,7 +101,10 @@ class Round implements FinishedRound {
 
     hasOffColorSchmier() {
         for (let card of this.playedCards) {
-            if (this.gameMode.getOrdering().getColor(card) !== this.getRoundColor() && CardRankToValue[card[1] as CardRank] >= 10) {
+            if (this.gameMode.getOrdering().getColor(card) !== this.getRoundColor()
+                && CardRankToValue[card[1] as CardRank] >= 10
+                && card != this.getWinningCard()
+            ) {
                 return true;
             }
         }
@@ -111,7 +114,7 @@ class Round implements FinishedRound {
 
     hasSchmier() {
         for (let card of this.playedCards) {
-            if (CardRankToValue[card[1] as CardRank] >= 10) {
+            if (CardRankToValue[card[1] as CardRank] >= 10 && card != this.getWinningCard()) {
                 return true;
             }
         }
@@ -122,7 +125,7 @@ class Round implements FinishedRound {
     getSchmierPlayer() {
         let schmierPlayer = [];
         for (let card of this.playedCards) {
-            if (CardRankToValue[card[1] as CardRank] >= 10) {
+            if (CardRankToValue[card[1] as CardRank] >= 10 && card != this.getWinningCard()) {
                 schmierPlayer.push(this.getPlayerForCard(card));
             }
         }

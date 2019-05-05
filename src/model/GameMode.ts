@@ -91,6 +91,14 @@ class GameMode {
         }
         return this.color + CardRank.ACE as Card;
     }
+
+    isSinglePlay() {
+        return this.getMode() == GameModeEnum.SOLO || this.getMode() == GameModeEnum.WENZ;
+    }
+
+    isCallGame() {
+        return this.getMode() == GameModeEnum.CALL_GAME;
+    }
 }
 
 export {GameMode, GameModeEnum};
