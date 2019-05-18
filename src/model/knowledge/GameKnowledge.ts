@@ -6,7 +6,7 @@ import {Card} from "../cards/Card";
 import GameEventsReceiverInterface from "./GameEventsReceiverInterface";
 import {GameMode, GameModeEnum} from "../GameMode";
 import {FinishedRound} from "../Round";
-import CardSet from "../cards/CardSet";
+import {allOfColor, hasCard, removeCard} from "../cards/CardSet";
 import {PlayerWithNameOnly} from "../Player";
 import {difference, eq, without} from "lodash";
 import {CallableColor, ColorWithTrump} from "../cards/Color";
@@ -24,12 +24,12 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
     private teamPartner: PlayerWithNameOnly | undefined;
     private readonly thisPlayer: PlayerWithNameOnly;
     private readonly allPlayers: readonly PlayerWithNameOnly[];
-    private pointsForPlayer: Map<PlayerWithNameOnly, number>;
+    private readonly pointsForPlayer: { [index in string]: number };
     private otherTeam: readonly PlayerWithNameOnly[];
     private ownTeam: readonly PlayerWithNameOnly[];
-    private angespieltByColor: ColorInfoType;
-    private playedCardsByPlayer: Map<PlayerWithNameOnly, Card[]>;
-    private colorFreeByPlayer: Map<PlayerWithNameOnly, ColorInfoType>;
+    private readonly angespieltByColor: ColorInfoType;
+    private readonly playedCardsByPlayer: { [index in string]: Card[] };
+    private readonly colorFreeByPlayer: { [index in string]: ColorInfoType };
     private hasCalledAceBeenPlayed = false;
     private thisPlayerIsPlaying?: boolean;
 
@@ -56,20 +56,20 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
         this.otherTeam = [];
         this.ownTeam = [];
 
-        this.pointsForPlayer = new Map<PlayerWithNameOnly, number>();
-        this.playedCardsByPlayer = new Map<PlayerWithNameOnly, Card[]>();
-        this.colorFreeByPlayer = new Map<PlayerWithNameOnly, { [index in ColorWithTrump]: boolean }>();
+        this.pointsForPlayer = {};
+        this.playedCardsByPlayer = {};
+        this.colorFreeByPlayer = {};
         for (let player of allPlayer) {
-            this.pointsForPlayer.set(player, 0);
-            this.playedCardsByPlayer.set(player, []);
+            this.pointsForPlayer[player.getName()] = 0;
+            this.playedCardsByPlayer[player.getName()] = [];
             if (player != this.thisPlayer) {
-                this.colorFreeByPlayer.set(player, {
+                this.colorFreeByPlayer[player.getName()] = {
                     [ColorWithTrump.EICHEL]: false,
                     [ColorWithTrump.GRAS]: false,
                     [ColorWithTrump.HERZ]: false,
                     [ColorWithTrump.SCHELLE]: false,
                     [ColorWithTrump.TRUMP]: false,
-                });
+                };
             }
         }
 
@@ -136,15 +136,15 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
             [ColorWithTrump.HERZ]: difference(this.allHerzCardsInGame(), this.myHerzCards()),
             [ColorWithTrump.TRUMP]: difference(this.allTrumpCardsInGame(), this.myTrumpCards()),
         };
-        this.colorFreeByPlayer.set(this.thisPlayer, {
+        this.colorFreeByPlayer[this.thisPlayer.getName()] = {
             [ColorWithTrump.EICHEL]: this.myEichelCards().length === 0,
             [ColorWithTrump.GRAS]: this.myGrasCards().length === 0,
             [ColorWithTrump.HERZ]: this.myHerzCards().length === 0,
             [ColorWithTrump.SCHELLE]: this.mySchelleCards().length === 0,
             [ColorWithTrump.TRUMP]: this.myTrumpCards().length === 0,
-        });
+        };
 
-        this.unplayedCardsByColor = {
+        this.remainingCardsByColorWithHandCards = {
             [CallableColor.EICHEL]: this.allEichelCardsInGame(),
             [CallableColor.GRAS]: this.allGrasCardsInGame(),
             [CallableColor.SCHELLE]: this.allSchelleCardsInGame(),
@@ -163,7 +163,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
 
         let points = 0;
         for (let player of myTeam) {
-            points = points + this.pointsForPlayer.get(player)!
+            points = points + this.pointsForPlayer[player.getName()]!
         }
 
         return points;
@@ -176,7 +176,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
 
         let points = 0;
         for (let player of this.otherTeam) {
-            points = points + this.pointsForPlayer.get(player)!
+            points = points + this.pointsForPlayer[player.getName()]!
         }
 
         return points;
@@ -190,7 +190,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
         // this.rounds.push(round);
 
         let winningPlayer = round.getWinningPlayer();
-        this.pointsForPlayer.set(winningPlayer, this.pointsForPlayer.get(winningPlayer)! + round.getPoints());
+        this.pointsForPlayer[winningPlayer.getName()] = this.pointsForPlayer[winningPlayer.getName()]! + round.getPoints();
 
         this.determineTeams(round);
 
@@ -224,7 +224,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
     }
 
     doIHaveAllCardsOfColor(color: ColorWithTrump) {
-        if (this.colorFreeByPlayer.get(this.thisPlayer)![color]) {
+        if (this.colorFreeByPlayer[this.thisPlayer.getName()]![color]) {
             return false;
         }
         return eq(this.unplayedCardsByColor[color], CardSet.allOfColor(this.currentHandCards, color, this.gameMode));
@@ -318,13 +318,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
     }
 
     isPlayerColorFree(player: PlayerWithNameOnly, color: ColorWithTrump) {
-        return this.colorFreeByPlayer.get(player)![color];
-    }
-
-    getCurrentRankOfCardInColor(card: Card) {
-        let color = this.gameMode.getOrdering().getColor(card);
-
-        return this.remainingCardsByColor[color].indexOf(card);
+        return this.colorFreeByPlayer[player.getName()]![color];
     }
 
     getCurrentRankWithEqualRanksOfCardInColor(cards: readonly Card[], color: ColorWithTrump): { [index in Card]?: number } {

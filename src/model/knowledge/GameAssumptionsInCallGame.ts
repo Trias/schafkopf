@@ -22,7 +22,7 @@ type PlayerConfidence = {
 export default class GameAssumptionsInCallGame implements GameEventsReceiverInterface {
     private gameKnowledge: GameKnowledge;
     private gameMode!: GameMode;
-    private possibleTeamPartnerScores: Map<PlayerWithNameOnly, TeamPartnerScore>;
+    private possibleTeamPartnerScores: { [index in string]: TeamPartnerScore };
     private readonly thisPlayer: PlayerWithNameOnly;
     private readonly players: readonly PlayerWithNameOnly[];
     private possiblyColorFreeScores: { [index in string]: ColorFreeAssumption };
@@ -36,7 +36,7 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
         this.gameKnowledge = gameKnowledge;
         this.thisPlayer = thisPlayer;
         this.players = players;
-        this.possibleTeamPartnerScores = new Map<PlayerWithNameOnly, TeamPartnerScore>();
+        this.possibleTeamPartnerScores = {};
         this.possiblyColorFreeScores = {};
         this.roundsWithTell = 0;
     }
@@ -46,8 +46,8 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
             if (this.gameKnowledge.isTeamPartnerKnown()) {
                 let partner = this.gameKnowledge.getTeamPartner()!;
                 let reasons = ['knowledge: i have the ace'];
-                if (this.possibleTeamPartnerScores.get(partner)) {
-                    reasons = reasons.concat(this.possibleTeamPartnerScores.get(partner)!.reasons)
+                if (this.possibleTeamPartnerScores[partner.getName()]) {
+                    reasons = reasons.concat(this.possibleTeamPartnerScores[partner.getName()]!.reasons)
                 }
                 return {player: partner, confidence: 1, reasons: reasons}
             }
@@ -55,8 +55,8 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
         if (this.gameKnowledge.isTeamPartnerPublicallyKnown()) {
             let partner = this.gameKnowledge.getTeamPartnerForPlayer(player)!;
             let reasons = ['knowledge: publically known'];
-            if (this.possibleTeamPartnerScores.get(partner)) {
-                reasons = reasons.concat(this.possibleTeamPartnerScores.get(partner)!.reasons)
+            if (this.possibleTeamPartnerScores[partner.getName()]) {
+                reasons = reasons.concat(this.possibleTeamPartnerScores[partner.getName()]!.reasons)
             }
             return {player: partner, confidence: 1, reasons: reasons}
         }
@@ -65,16 +65,20 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
         let reasons = ["no tells"];
         let confidence = 0;
 
-        for (let [playerCandidate, scoreWithReasons] of this.possibleTeamPartnerScores) {
-            if (scoreWithReasons.score > highestScore) {
-                partner = playerCandidate;
-                highestScore = scoreWithReasons.score;
-                reasons = scoreWithReasons.reasons;
-                confidence = highestScore / this.roundsWithTell;
-            } else if (scoreWithReasons.score == highestScore && highestScore > 0) {
-                reasons = [`equal score of player ${player} and ${playerCandidate}`].concat(scoreWithReasons.reasons).concat(reasons);
-                partner = undefined;
-                confidence = 0;
+
+        for (let playerCandidate of this.players) {
+            if (playerCandidate.getName() in this.possibleTeamPartnerScores) {
+                let scoreWithReasons = this.possibleTeamPartnerScores[playerCandidate.getName()];
+                if (scoreWithReasons.score > highestScore) {
+                    partner = playerCandidate;
+                    highestScore = scoreWithReasons.score;
+                    reasons = scoreWithReasons.reasons;
+                    confidence = highestScore / this.roundsWithTell;
+                } else if (scoreWithReasons.score == highestScore && highestScore > 0) {
+                    reasons = [`equal score of player ${player} and ${playerCandidate}`].concat(scoreWithReasons.reasons).concat(reasons);
+                    partner = undefined;
+                    confidence = 0;
+                }
             }
         }
 
@@ -107,7 +111,7 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
         this.otherPlayersWithoutCaller = difference(this.players, [this.thisPlayer, this.gameMode.getCallingPlayer()!]);
 
         for (let player of this.otherPlayersWithoutCaller) {
-            this.possibleTeamPartnerScores.set(player, {score: 0, reasons: []});
+            this.possibleTeamPartnerScores[player.getName()] = {score: 0, reasons: []};
         }
     }
 
@@ -279,7 +283,7 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
     }
 
     private scorePlayer(player: PlayerWithNameOnly, scoreAdd: number, reason: string) {
-        let {score, reasons} = this.possibleTeamPartnerScores.get(player)!;
+        let {score, reasons} = this.possibleTeamPartnerScores[player.getName()]!;
 
         reasons.push(reason);
         score = score + scoreAdd;
@@ -288,7 +292,7 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
             score,
             reasons
         };
-        this.possibleTeamPartnerScores.set(player, teampartnerScore);
+        this.possibleTeamPartnerScores[player.getName()] = teampartnerScore;
     }
 
     private isPlayerLikelyMitspieler(otherPlayer: PlayerWithNameOnly) {
