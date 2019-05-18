@@ -4,19 +4,22 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha --recursive test/**/*.ts",
     "dev": "ts-node src/index.ts",
-    "start": "node build/src/index.js",
+    "start": "node build/index.js",
     "build": "tsc"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/mocha": "^5.2.6",
+    "@types/node": "^12.0.0",
     "lodash": "^4.17.11"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.123",
+    "mocha": "^6.1.4",
     "ts-node": "^8.1.0",
     "typescript": "^3.4.5"
   }
