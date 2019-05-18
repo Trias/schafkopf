@@ -17,7 +17,7 @@ type PlayerWithNameOnly = {
 class Player implements GameEventsReceiverInterface, PlayerWithNameOnly {
     private startCardSet?: readonly Card[];
     private readonly name: string;
-    private strategy: StrategyInterface;
+    private readonly strategy: StrategyInterface;
     private gameMode?: GameMode;
     private currentCardSet?: readonly Card[];
     private gamePhase: GamePhase;
@@ -26,15 +26,11 @@ class Player implements GameEventsReceiverInterface, PlayerWithNameOnly {
     private players?: readonly [PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly];
     private gameAssumptions?: GameAssumptionsInCallGame;
 
-    constructor(name: string, strategy: new (player: Player) => StrategyInterface) {
+    constructor(name: string, strategy: new (player: Player) => (StrategyInterface)) {
         this.gamePhase = GamePhase.BEFORE_GAME;
         this.name = name;
 
         this.strategy = new strategy(this);
-    }
-
-    setStrategy(strategy: StrategyInterface) {
-        this.strategy = strategy;
     }
 
     onGameStart(players: readonly [PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly]) {
@@ -74,12 +70,12 @@ class Player implements GameEventsReceiverInterface, PlayerWithNameOnly {
         return this.startCardSet!;
     }
 
-    playCard(round: Round): Card {
+    async playCard(round: Round) {
         if (this.gamePhase !== GamePhase.IN_PLAY) {
             throw Error('function not available in this state');
         }
 
-        let card = this.strategy.chooseCardToPlay(round, this.getCurrentCardSet(), this.gameMode!);
+        let card = await this.strategy.chooseCardToPlay(round, this.getCurrentCardSet(), this.gameMode!);
 
         this.currentCardSet = removeCard(this.getCurrentCardSet(), card);
 
@@ -100,11 +96,11 @@ class Player implements GameEventsReceiverInterface, PlayerWithNameOnly {
         }
     }
 
-    whatDoYouWantToPlay(currentGameMode: GameMode, playerIndex: number): GameMode {
+    async whatDoYouWantToPlay(currentGameMode: GameMode, playerIndex: number) {
         if (this.gamePhase !== GamePhase.ALL_CARDS_DEALT) {
             throw Error('function not available in this state');
         }
-        let [gameMode, color] = this.strategy.chooseGameToCall(this.getStartCardSet(), currentGameMode, playerIndex);
+        let [gameMode, color] = await this.strategy.chooseGameToCall(this.getStartCardSet(), currentGameMode, playerIndex);
 
         if (gameMode && gameMode !== currentGameMode.getMode()) {
             return new GameMode(gameMode, this, color);
@@ -114,7 +110,7 @@ class Player implements GameEventsReceiverInterface, PlayerWithNameOnly {
     }
 
     doYouWantToKlopf() {
-        return this.strategy.chooseToRaise(this.getCurrentCardSet());
+        return this.strategy.chooseToRaise(this.getCurrentCardSet())
     }
 
     getCurrentCardSet() {

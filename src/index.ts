@@ -4,11 +4,12 @@ import Statistics from "./model/Statistics";
 import shuffleCards from "./model/cards/shuffleCards";
 import SimpleStrategy from "./model/strategy/simple";
 import {GameModeEnum} from "./model/GameMode";
+import RandomStrategy from "./model/strategy/random";
 
 let runs = 120;
 
 let player1 = new Player("Player 1", SimpleStrategy);
-let player2 = new Player("Player 2", SimpleStrategy);
+let player2 = new Player("Player 2", RandomStrategy);
 let player3 = new Player("Player 3", SimpleStrategy);
 let player4 = new Player("Player 4", SimpleStrategy);
 
@@ -16,27 +17,37 @@ let players: [Player, Player, Player, Player] = [player1, player2, player3, play
 
 let stats = new Statistics(players);
 
-for (let i = 0; i < runs; i++) {
-    console.log(`========game ${i + 1}===========`);
-    let game = new Game(players);
+(async () => {
+    for (let i = 0; i < runs; i++) {
+        console.log(`========game ${i + 1}===========`);
+        let game = new Game(players);
 
-    let cards = shuffleCards();
-    game.play(cards);
-    let gameResult = game.getGameResult();
+        let cards = shuffleCards();
+        await game.play(cards);
+        let gameResult = game.getGameResult();
 
-    stats.addResult(gameResult);
+        stats.addResult(gameResult);
 
-    if (game.getGameResult().getGameMode().getMode() != GameModeEnum.RETRY) {
-        console.log(`Team (${gameResult.getPlayingTeam()}) ${gameResult.hasPlayingTeamWon() ? 'wins' : 'looses'} ` +
-            `with ${gameResult.getPlayingTeamPoints()} points ` +
-            `and ${gameResult.hasPlayingTeamWon() ? 'win' : 'loose'} ${Math.abs(gameResult.getGameMoneyValue())} cents each!`);
-        reportCents(i);
-    } else {
-        console.log(`retry with cards:${players.map(p => '\n' + p.getName() + ': ' + JSON.stringify(p.getStartCardSet()))}`)
+        if (game.getGameResult().getGameMode().getMode() != GameModeEnum.RETRY) {
+            console.log(`Team (${gameResult.getPlayingTeam()}) ${gameResult.hasPlayingTeamWon() ? 'wins' : 'looses'} ` +
+                `with ${gameResult.getPlayingTeamPoints()} points ` +
+                `and ${gameResult.hasPlayingTeamWon() ? 'win' : 'loose'} ${Math.abs(gameResult.getGameMoneyValue())} cents each!`);
+            reportCents(i);
+        } else {
+            console.log(`retry with cards:${players.map(p => '\n' + p.getName() + ': ' + JSON.stringify(p.getStartCardSet()))}`)
+        }
+
+        rotateStartPlayer();
     }
 
-    rotateStartPlayer();
-}
+    let {wins, cents, inPlayingTeam, retries, ownPlays, ownWins, ownSoloWins, ownSoloPlays} = stats.getStatsForPlayer(player1);
+    console.log(`In Total: Out of ${runs} games, Player 1 wins ${Math.round(wins / runs * 100)}% of the games `
+        + `with a balance of ${cents} cents `
+        + `being in the playing team ${Math.round(inPlayingTeam / runs * 100)}% of the time `
+        + (ownPlays ? `calling ${Math.round(ownPlays / runs * 100)}% of the time; winning own games ${Math.round(ownWins / ownPlays * 100)}% of the time; ` : '')
+        + (ownSoloPlays ? `winning solos ${Math.round(ownSoloWins / ownSoloPlays * 100)}% of the time ` : '')
+        + `and ${Math.round(retries / runs * 100)}% retries for all players`);
+})();
 
 function rotateStartPlayer() {
     let nextSeats = [];
@@ -61,11 +72,3 @@ function reportCents(i: number) {
     console.log(`${player3.getName()} :${stats3.cents}`);
     console.log(`${player4.getName()} :${stats4.cents}`);
 }
-
-let {wins, cents, inPlayingTeam, retries, ownPlays, ownWins, ownSoloWins, ownSoloPlays} = stats.getStatsForPlayer(player1);
-console.log(`In Total: Out of ${runs} games, Player 1 wins ${Math.round(wins / runs * 100)}% of the games `
-    + `with a balance of ${cents} cents `
-    + `being in the playing team ${Math.round(inPlayingTeam / runs * 100)}% of the time `
-    + (ownPlays ? `calling ${Math.round(ownPlays / runs * 100)}% of the time; winning own games ${Math.round(ownWins / ownPlays * 100)}% of the time; ` : '')
-    + (ownSoloPlays ? `winning solos ${Math.round(ownSoloWins / ownSoloPlays * 100)}% of the time ` : '')
-    + `and ${Math.round(retries / runs * 100)}% retries for all players`);

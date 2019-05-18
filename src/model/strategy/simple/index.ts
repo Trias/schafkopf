@@ -12,7 +12,11 @@ import {Player} from "../../Player";
 import {CardToWeights} from "../rules/CardToWeights";
 
 export default class SimpleStrategy implements StrategyInterface {
-    private player?: Player;
+    private readonly player: Player;
+
+    constructor(player: Player) {
+        this.player = player;
+    }
 
     chooseCardToPlay(round: Round, cardSet: readonly Card[], gameMode: GameMode): Card {
         let playableCards = filter(cardSet, card => {
@@ -62,10 +66,6 @@ export default class SimpleStrategy implements StrategyInterface {
 
     chooseToRaise(cardSet: readonly Card[]): boolean {
         return false;
-    }
-
-    setPlayer(player: Player): void {
-        this.player = player;
     }
 
     private declareGame(bestCallColorCard: Card | null, cardSet: readonly Card[], highTrumps: Card[]): [GameModeEnum?, CallableColor?] {

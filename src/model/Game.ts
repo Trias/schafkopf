@@ -24,7 +24,7 @@ class Game {
         this.gamePhase = GamePhase.BEFORE_GAME;
     }
 
-    play(cardsInSets: readonly Card[][]): void {
+    async play(cardsInSets: readonly Card[][]) {
         if (this.gamePhase != GamePhase.BEFORE_GAME) {
             throw Error('Invalid state transition');
         }
@@ -36,13 +36,13 @@ class Game {
         this.dealFirstBatchOfCards(cardsInSets);
         this.setGamePhase(GamePhase.FOUR_CARDS_DEALT);
 
-        let klopfer = this.askPlayerForKlopfer();
+        let klopfer = await this.askPlayerForKlopfer();
 
         console.log(`-----deal second batch of cards ------`);
         this.dealSecondBatchOfCard(cardsInSets);
         this.setGamePhase(GamePhase.ALL_CARDS_DEALT);
 
-        this.gameMode = this.askPlayersWhatTheyWantToPlay();
+        this.gameMode = await this.askPlayersWhatTheyWantToPlay();
         this.gameMode.setKlopfer(klopfer);
 
         if (this.gameMode.getCallingPlayer()) {
@@ -51,12 +51,11 @@ class Game {
 
             console.log(`game mode decided: ${this.gameMode.getMode()}, by ${this.gameMode.getCallingPlayer()}, calling for ${this.gameMode.getColorOfTheGame()}`);
 
-            this.rounds = this.playRounds();
+            this.rounds = await this.playRounds();
         }
 
         this.setGamePhase(GamePhase.AFTER_GAME);
     }
-
 
     private dealSecondBatchOfCard(cardsInSets: readonly Card[][]) {
         for (let i = 0; i < this.players.length; i++) {
@@ -70,10 +69,10 @@ class Game {
         }
     }
 
-    private askPlayerForKlopfer() {
+    private async askPlayerForKlopfer() {
         let klopfer = 0;
         for (let i = 0; i < this.players.length; i++) {
-            let raise = this.players[i].doYouWantToKlopf();
+            let raise = await this.players[i].doYouWantToKlopf();
 
             if (raise) {
                 console.log(`${this.players[i]} klopfes with cards: ${this.players[i].getCurrentCardSet()}!`);
@@ -91,7 +90,7 @@ class Game {
         return new GameResult(this.getGameMode(), this.rounds!, this.players);
     }
 
-    private playRounds(): readonly FinishedRound[] {
+    private async playRounds(): Promise<readonly FinishedRound[]> {
         let rounds: FinishedRound[] = [];
         let activePlayer = this.players[0];
 
@@ -99,7 +98,7 @@ class Game {
             console.log(`------round ${i + 1} start-----`);
             let round = new Round(activePlayer, this.players, this.gameMode!);
             for (let j = 0; j < 4; j++) {
-                let card = activePlayer.playCard(round);
+                let card = await activePlayer.playCard(round);
                 round.addCard(card);
                 this.notifyPlayersOfCardPlayed(card, activePlayer, j);
                 console.log(`player ${activePlayer.getName()} played ${card} from set ${sortByNaturalOrdering(activePlayer.getCurrentCardSet().concat(card))}`);
@@ -127,10 +126,10 @@ class Game {
         return rounds;
     }
 
-    private askPlayersWhatTheyWantToPlay(): GameMode {
+    private async askPlayersWhatTheyWantToPlay(): Promise<GameMode> {
         let currentGameMode = new GameMode(GameModeEnum.RETRY);
         for (let i = 0; i < 4; i++) {
-            let newGameMode = this.players[i].whatDoYouWantToPlay(currentGameMode, i);
+            let newGameMode = await this.players[i].whatDoYouWantToPlay(currentGameMode, i);
             if (newGameMode && (GameMode.compareGameModes(newGameMode, currentGameMode) > 0)) {
                 currentGameMode = newGameMode;
             }
