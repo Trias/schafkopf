@@ -16,7 +16,7 @@ type CardsInfoType = { [index in ColorWithTrump]: readonly Card[] };
 
 export default class GameKnowledge implements GameEventsReceiverInterface {
     private readonly startHandCards: readonly Card[];
-    // private playedCards: Card[];
+    private readonly playedCards: Card[];
     //  private knownCards: Card[];
     // private rounds: FinishedRound[];
     private gameMode: GameMode;
@@ -37,7 +37,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
     private remainingCardsByColor: CardsInfoType;
 
     // includes cards on Hand
-    private unplayedCardsByColor: CardsInfoType;
+    private remainingCardsByColorWithHandCards: CardsInfoType;
     private currentHandCards: readonly Card[];
     private readonly otherPlayers: PlayerWithNameOnly[];
 
@@ -48,7 +48,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
         this.thisPlayer = self;
         this.allPlayers = allPlayer;
         this.otherPlayers = without(allPlayer, self);
-        // this.playedCards = [];
+        this.playedCards = [];
         // this.rounds = [];
         this.gameMode = new GameMode(GameModeEnum.RETRY);
         this.hasCalledAce = false;
@@ -82,21 +82,21 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
         };
 
         this.remainingCardsByColor = {E: [], G: [], H: [], S: [], T: []};
-        this.unplayedCardsByColor = {E: [], G: [], H: [], S: [], T: []};
+        this.remainingCardsByColorWithHandCards = {E: [], G: [], H: [], S: [], T: []};
     }
 
     onCardPlayed(card: Card, player: PlayerWithNameOnly, index: number): void {
         //  this.knownCards.push(card);
-        //   this.playedCards.push(card);
+        this.playedCards.push(card);
 
         let cardColor = this.gameMode.getOrdering().getColor(card);
 
-        this.unplayedCardsByColor[cardColor] = CardSet.removeCard(this.unplayedCardsByColor[cardColor], card);
+        this.remainingCardsByColorWithHandCards[cardColor] = removeCard(this.remainingCardsByColorWithHandCards[cardColor], card);
 
         if (player == this.thisPlayer) {
-            this.currentHandCards = CardSet.removeCard(this.currentHandCards, card);
+            this.currentHandCards = removeCard(this.currentHandCards, card);
         } else {
-            this.remainingCardsByColor[cardColor] = CardSet.removeCard(this.remainingCardsByColor[cardColor], card);
+            this.remainingCardsByColor[cardColor] = removeCard(this.remainingCardsByColor[cardColor], card);
         }
 
         if (this.gameMode.isCallGame() && card === this.gameMode.getCalledAce()) {
@@ -108,12 +108,14 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
         this.gameMode = gameMode;
 
         if (this.gameMode.isCallGame()) {
-            this.hasCalledAce = CardSet.hasCard(this.startHandCards, this.gameMode.getCalledAce());
+            this.hasCalledAce = hasCard(this.startHandCards, this.gameMode.getCalledAce());
             if (this.hasCalledAce) {
                 this.teamPartner = this.gameMode.getCallingPlayer();
                 this.ownTeam = [this.thisPlayer, this.teamPartner!];
                 this.otherTeam = difference(this.allPlayers, this.ownTeam);
                 this.thisPlayerIsPlaying = true;
+            } else {
+                this.thisPlayerIsPlaying = false;
             }
         } else if (this.gameMode.isSinglePlay()) {
             if (this.gameMode.getCallingPlayer() == this.thisPlayer) {
@@ -122,7 +124,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
                 this.thisPlayerIsPlaying = true;
             } else {
                 this.otherTeam = [this.gameMode.getCallingPlayer()!];
-                this.ownTeam = difference(this.allPlayers, this.otherTeam);
+                this.ownTeam = without(this.allPlayers, this.gameMode.getCallingPlayer()!);
                 this.thisPlayerIsPlaying = false;
             }
         } else {
@@ -202,21 +204,21 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
             let playingPlayer = round.getPlayerForCard(card);
             let cardColor = this.gameMode.getOrdering().getColor(card);
 
-            this.playedCardsByPlayer.get(playingPlayer)!.push(card);
+            this.playedCardsByPlayer[playingPlayer.getName()]!.push(card);
 
-            if (!this.colorFreeByPlayer.get(playingPlayer)![roundColor]) {
+            if (!this.colorFreeByPlayer[playingPlayer.getName()]![roundColor]) {
                 if (roundColor != cardColor) {
                     if (this.thisPlayer.getName() == "Player 1") {
                         console.log(`player ${playingPlayer} marked color free of ${roundColor} because did not follow suit`);
                     }
-                    this.colorFreeByPlayer.get(playingPlayer)![roundColor] = true;
+                    this.colorFreeByPlayer[playingPlayer.getName()]![roundColor] = true;
                 }
-                if (this.doIHaveAllCardsOfColor(cardColor) || this.unplayedCardsByColor[cardColor].length == 0) {
+                if (this.doIHaveAllCardsOfColor(cardColor) || this.remainingCardsByColorWithHandCards[cardColor].length == 0) {
                     for (let otherPlayer of this.otherPlayers) {
                         if (this.thisPlayer.getName() == "Player 1") {
                             console.log(`player ${otherPlayer} marked color free of ${roundColor} because all color cards played or held by player are played`);
                         }
-                        this.colorFreeByPlayer.get(otherPlayer)![cardColor] = true;
+                        this.colorFreeByPlayer[otherPlayer.getName()]![cardColor] = true;
                     }
                 }
             }
@@ -227,20 +229,20 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
         if (this.colorFreeByPlayer[this.thisPlayer.getName()]![color]) {
             return false;
         }
-        return eq(this.unplayedCardsByColor[color], CardSet.allOfColor(this.currentHandCards, color, this.gameMode));
+        return eq(this.remainingCardsByColorWithHandCards[color], allOfColor(this.currentHandCards, color, this.gameMode));
     }
 
     highestUnplayedCardForColor(color: ColorWithTrump) {
-        if (this.unplayedCardsByColor[color].length == 0) {
+        if (this.remainingCardsByColorWithHandCards[color].length == 0) {
             return null;
         }
-        return this.unplayedCardsByColor[color][0];
+        return this.remainingCardsByColorWithHandCards[color][0];
     }
 
     doIHaveTheHighestCardForColor(color: ColorWithTrump) {
         let highestCard = this.highestUnplayedCardForColor(color);
         if (highestCard) {
-            return CardSet.hasCard(this.currentHandCards, highestCard);
+            return hasCard(this.currentHandCards, highestCard);
         } else {
             return false;
         }
@@ -270,24 +272,59 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
         return this.gameMode.getOrdering().getColorOrdering(ColorWithTrump.SCHELLE);
     }
 
-    private myTrumpCards() {
-        return CardSet.allOfColor(this.startHandCards, ColorWithTrump.TRUMP, this.gameMode);
+    isPlayerColorFree(player: PlayerWithNameOnly, color: ColorWithTrump) {
+        return this.colorFreeByPlayer[player.getName()]![color];
     }
 
-    private myEichelCards() {
-        return CardSet.allOfColor(this.startHandCards, CallableColor.EICHEL, this.gameMode);
+    getCurrentRankWithEqualRanksOfCardInColor(cards: readonly Card[], color: ColorWithTrump): { [index in Card]?: number } {
+        let cardsInColor = allOfColor(cards, color, this.gameMode);
+        let currentRank = 0;
+        let result: { [index in Card]?: number } = {};
+        let lastCard;
+        for (let i = 0; i < this.remainingCardsByColorWithHandCards[color].length; i++) {
+            let card = this.remainingCardsByColorWithHandCards[color][i];
+            if (cardsInColor.indexOf(card) !== -1) {
+                if (lastCard && result[lastCard] === currentRank - 1) {
+                    currentRank = currentRank - 1;
+                }
+                result[card] = currentRank;
+            }
+
+            lastCard = card;
+            currentRank = currentRank + 1;
+        }
+
+        return result;
     }
 
-    private myHerzCards() {
-        return CardSet.allOfColor(this.startHandCards, ColorWithTrump.HERZ, this.gameMode);
-    }
+    isAnyoneDefinitelyFreeOfColor(color: ColorWithTrump) {
+        // für wenz leicht andere regeln....
+        if (this.gameMode.getMode() == GameModeEnum.CALL_GAME || this.gameMode.getMode() == GameModeEnum.SOLO) {
+            for (let player of this.allPlayers) {
+                if (this.colorFreeByPlayer[player.getName()]![color]) {
+                    return true;
+                }
+            }
+            if (color != ColorWithTrump.TRUMP) {
+                if (allOfColor(this.startHandCards, color, this.gameMode).length > 3) {
+                    return true;
+                }
 
-    private myGrasCards() {
-        return CardSet.allOfColor(this.startHandCards, CallableColor.GRAS, this.gameMode);
-    }
+                if (this.angespieltByColor[color]) {
+                    return true;
+                }
+            } else {
+                if (this.playedTrumpCards().length + this.myCurrentTrumpCards().length > 14) {
+                    return true;
+                }
+            }
 
-    private mySchelleCards() {
-        return CardSet.allOfColor(this.startHandCards, CallableColor.SCHELLE, this.gameMode);
+            // does not imply the opposite....
+            return false;
+        }
+
+        throw Error('not implemented');
+
     }
 
     getHasCalledAceBeenPlayed() {
@@ -317,60 +354,82 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
         }
     }
 
-    isPlayerColorFree(player: PlayerWithNameOnly, color: ColorWithTrump) {
-        return this.colorFreeByPlayer[player.getName()]![color];
+    getCurrentRankOfCardInColor(card: Card) {
+        let color = this.gameMode.getOrdering().getColor(card);
+
+        return this.remainingCardsByColor[color].indexOf(card);
     }
 
-    getCurrentRankWithEqualRanksOfCardInColor(cards: readonly Card[], color: ColorWithTrump): { [index in Card]?: number } {
-        let cardsInColor = CardSet.allOfColor(cards, color, this.gameMode);
-        let currentRank = 0;
-        let result: { [index in Card]?: number } = {};
-        let lastCard;
-        for (let i = 0; i < this.unplayedCardsByColor[color].length; i++) {
-            let card = this.unplayedCardsByColor[color][i];
-            if (cardsInColor.indexOf(card) !== -1) {
-                if (lastCard && result[lastCard] === currentRank - 1) {
-                    currentRank = currentRank - 1;
-                }
-                result[card] = currentRank;
-            }
+    private myTrumpCards() {
+        return allOfColor(this.currentHandCards, ColorWithTrump.TRUMP, this.gameMode);
+    }
 
-            lastCard = card;
-            currentRank = currentRank + 1;
-        }
+    private myEichelCards() {
+        return allOfColor(this.currentHandCards, CallableColor.EICHEL, this.gameMode);
+    }
 
-        return result;
+    private myHerzCards() {
+        return allOfColor(this.currentHandCards, ColorWithTrump.HERZ, this.gameMode);
+    }
+
+    private myGrasCards() {
+        return allOfColor(this.currentHandCards, CallableColor.GRAS, this.gameMode);
+    }
+
+    private mySchelleCards() {
+        return allOfColor(this.currentHandCards, CallableColor.SCHELLE, this.gameMode);
+    }
+
+    private myCurrentTrumpCards() {
+        return allOfColor(this.currentHandCards, ColorWithTrump.TRUMP, this.gameMode);
+    }
+
+    private playedTrumpCards() {
+        return allOfColor(this.playedCards, ColorWithTrump.TRUMP, this.gameMode);
     }
 
     private determineTeams(round: FinishedRound) {
         if (this.gameMode.getMode() == GameModeEnum.CALL_GAME && !this.isTeamPartnerKnown()) {
-            if (CardSet.hasCard(round.getCards(), this.gameMode.getCalledAce())) {
-                if (this.gameMode.getCallingPlayer() == this.thisPlayer) {
-                    this.teamPartner = round.getPlayerForCard(this.gameMode.getCalledAce());
-                    this.thisPlayerIsPlaying = true;
-                } else {
-                    let callAcePlayer = round.getPlayerForCard(this.gameMode.getCalledAce());
-                    this.teamPartner = without(this.allPlayers, this.thisPlayer, this.gameMode.getCallingPlayer(), callAcePlayer).pop();
-                    this.thisPlayerIsPlaying = false;
-                }
-
-                this.ownTeam = [this.thisPlayer, this.teamPartner!];
-                this.otherTeam = difference(this.allPlayers, this.ownTeam);
-
-                // davongelaufen
-            } else if (round.getRoundColor() == this.gameMode.getColorOfTheGame()
-                && !CardSet.hasCard(round.getCards(), this.gameMode.getCalledAce())
-            ) {
-                if (this.gameMode.getCallingPlayer() == this.thisPlayer) {
-                    this.teamPartner = round.getStartPlayer();
-                    this.thisPlayerIsPlaying = true;
-                } else {
-                    let callAcePlayer = round.getStartPlayer();
-                    this.teamPartner = without(this.allPlayers, this.thisPlayer, this.gameMode.getCallingPlayer(), callAcePlayer).pop();
-                    this.thisPlayerIsPlaying = false;
-                }
+            if (this.roundIncludesCalledAce(round)) {
+                this.determineTeamsFromCalledAceInRound(round);
+            } else if (this.isDavongelaufen(round)) {
+                this.determineTeamsFromDavongelaufeneRufsau(round);
             }
         }
+    }
+
+    private roundIncludesCalledAce(round: FinishedRound) {
+        return hasCard(round.getCards(), this.gameMode.getCalledAce());
+    }
+
+    private isDavongelaufen(round: FinishedRound) {
+        return round.getRoundColor() == this.gameMode.getColorOfTheGame()
+            && !hasCard(round.getCards(), this.gameMode.getCalledAce());
+    }
+
+    private determineTeamsFromDavongelaufeneRufsau(round: FinishedRound) {
+        if (this.gameMode.getCallingPlayer() == this.thisPlayer) {
+            this.teamPartner = round.getStartPlayer();
+            this.thisPlayerIsPlaying = true;
+        } else {
+            let callAcePlayer = round.getStartPlayer();
+            this.teamPartner = without(this.allPlayers, this.thisPlayer, this.gameMode.getCallingPlayer(), callAcePlayer).pop();
+            this.thisPlayerIsPlaying = false;
+        }
+    }
+
+    private determineTeamsFromCalledAceInRound(round: FinishedRound) {
+        if (this.gameMode.getCallingPlayer() == this.thisPlayer) {
+            this.teamPartner = round.getPlayerForCard(this.gameMode.getCalledAce());
+            this.thisPlayerIsPlaying = true;
+        } else {
+            let callAcePlayer = round.getPlayerForCard(this.gameMode.getCalledAce());
+            this.teamPartner = without(this.allPlayers, this.thisPlayer, this.gameMode.getCallingPlayer(), callAcePlayer).pop();
+            this.thisPlayerIsPlaying = false;
+        }
+
+        this.ownTeam = [this.thisPlayer, this.teamPartner!];
+        this.otherTeam = difference(this.allPlayers, this.ownTeam);
     }
 
     isThisPlayerPlaying() {

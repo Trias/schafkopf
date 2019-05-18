@@ -1,13 +1,12 @@
-import CardSet from "./cards/CardSet";
+import {removeCard, sortByNaturalOrdering} from "./cards/CardSet";
 import {FinishedRound, Round} from "./Round";
 import {Card} from "./cards/Card";
 import {GameMode, GameModeEnum} from "./GameMode";
 import StrategyInterface from "./strategy/StrategyInterface";
-import CardsOrdering from "./cards/CardsOrdering";
 import GamePhase from "./GamePhase";
 import GameKnowledge from "./knowledge/GameKnowledge";
 import GameEventsReceiverInterface from "./knowledge/GameEventsReceiverInterface";
-import {Colors, ColorWithTrump} from "./cards/Color";
+import {colorsWithTrump, ColorWithTrump} from "./cards/Color";
 import GameAssumptionsInCallGame from "./knowledge/GameAssumptionsInCallGame";
 
 type PlayerWithNameOnly = {
@@ -18,7 +17,7 @@ type PlayerWithNameOnly = {
 class Player implements GameEventsReceiverInterface, PlayerWithNameOnly {
     private startCardSet?: readonly Card[];
     private readonly name: string;
-    private readonly strategy: StrategyInterface;
+    private strategy: StrategyInterface;
     private gameMode?: GameMode;
     private currentCardSet?: readonly Card[];
     private gamePhase: GamePhase;
@@ -27,10 +26,15 @@ class Player implements GameEventsReceiverInterface, PlayerWithNameOnly {
     private players?: readonly [PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly];
     private gameAssumptions?: GameAssumptionsInCallGame;
 
-    constructor(name: string, strategy: StrategyInterface) {
-        this.strategy = strategy;
+    constructor(name: string, strategy: new (player: Player) => StrategyInterface) {
         this.gamePhase = GamePhase.BEFORE_GAME;
         this.name = name;
+
+        this.strategy = new strategy(this);
+    }
+
+    setStrategy(strategy: StrategyInterface) {
+        this.strategy = strategy;
     }
 
     onGameStart(players: readonly [PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly]) {
@@ -58,7 +62,7 @@ class Player implements GameEventsReceiverInterface, PlayerWithNameOnly {
         }
 
         this.currentCardSet = this.currentCardSet!.concat(cards);
-        this.startCardSet = this.currentCardSet;
+        this.startCardSet = sortByNaturalOrdering(this.currentCardSet);
 
         this.gameKnowledge = new GameKnowledge(this.startCardSet, this, this.players!);
     }
@@ -77,7 +81,7 @@ class Player implements GameEventsReceiverInterface, PlayerWithNameOnly {
 
         let card = this.strategy.chooseCardToPlay(round, this.getCurrentCardSet(), this.gameMode!);
 
-        this.currentCardSet = CardSet.removeCard(this.getCurrentCardSet(), card);
+        this.currentCardSet = removeCard(this.getCurrentCardSet(), card);
 
         return card;
     }
@@ -96,11 +100,11 @@ class Player implements GameEventsReceiverInterface, PlayerWithNameOnly {
         }
     }
 
-    whatDoYouWantToPlay(currentGameMode: GameMode): GameMode {
+    whatDoYouWantToPlay(currentGameMode: GameMode, playerIndex: number): GameMode {
         if (this.gamePhase !== GamePhase.ALL_CARDS_DEALT) {
             throw Error('function not available in this state');
         }
-        let [gameMode, color] = this.strategy.chooseGameToCall(this.getStartCardSet(), currentGameMode);
+        let [gameMode, color] = this.strategy.chooseGameToCall(this.getStartCardSet(), currentGameMode, playerIndex);
 
         if (gameMode && gameMode !== currentGameMode.getMode()) {
             return new GameMode(gameMode, this, color);
@@ -117,7 +121,7 @@ class Player implements GameEventsReceiverInterface, PlayerWithNameOnly {
         if (this.gamePhase < GamePhase.FOUR_CARDS_DEALT) {
             throw Error('function not available in this state');
         }
-        return CardsOrdering.sortByNaturalOrdering(this.currentCardSet!);
+        return sortByNaturalOrdering(this.currentCardSet!);
     }
 
     toString() {
@@ -169,7 +173,7 @@ class Player implements GameEventsReceiverInterface, PlayerWithNameOnly {
                 console.log(`possible Partner: ${player} with confidence ${Math.round(confidence * 100)}% because ${reasons}`);
 
                 for (let player of this.players!) {
-                    for (let color of Colors.colorsWithTrumpAsArray()) {
+                    for (let color of colorsWithTrump) {
                         let {assumption, reasons} = this.gameAssumptions.isPlayerPossiblyColorFree(player, color);
                         if (assumption) {
                             console.log(`player ${player} assumed Color free of ${color} because of ${reasons}`);
@@ -177,7 +181,7 @@ class Player implements GameEventsReceiverInterface, PlayerWithNameOnly {
                     }
                 }
 
-                for (let color of Colors.colorsWithTrumpAsArray()) {
+                for (let color of colorsWithTrump) {
                     let cardRanks = this.gameKnowledge!.getCurrentRankWithEqualRanksOfCardInColor(this.currentCardSet!, color);
                     console.log(`current hand card ranks for ${color}: ${JSON.stringify(cardRanks)}:`)
                 }

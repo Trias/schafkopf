@@ -1,13 +1,11 @@
 import {Card} from "./Card";
-import {clone, includes, intersection, sortBy} from "lodash";
-import CardDeck from "./sets/CardDeck";
+import {clone, includes} from "lodash";
 import {GameModeEnum} from "../GameMode";
 import DefaultTrumpOrdering from "./sets/CallGameTrumps";
 import {ColorWithTrump, PlainColor} from "./Color";
 import OberAndUnter from "./sets/OberAndUnter";
 import {CardsByColor} from "./sets/CardsByColor";
 import Unter from "./sets/Unter";
-import CardRank from "./CardRank";
 
 export default class CardsOrdering {
     private readonly gameModeEnum: GameModeEnum;
@@ -16,24 +14,6 @@ export default class CardsOrdering {
     constructor(gameModeEnum: GameModeEnum, color?: PlainColor) {
         this.gameModeEnum = gameModeEnum;
         this.color = color;
-    }
-
-    static sortAndFilterBy(allTrumpsSorted: readonly Card[], winnerCardSet: readonly Card[]): readonly Card[] {
-        let trumpsInHands: Card[] = intersection(allTrumpsSorted, winnerCardSet);
-
-        return sortBy(trumpsInHands, (trump) => allTrumpsSorted.indexOf(trump));
-    }
-
-    static sortByNaturalOrdering(cards: readonly Card[]): readonly Card[] {
-        return sortBy(cards, (card) => CardDeck.indexOf(card));
-    }
-
-    static getRank(card: Card): CardRank {
-        return card[1] as CardRank;
-    }
-
-    static getPlainColor(card: Card) {
-        return card[0] as PlainColor;
     }
 
     isTrump(card: Card) {

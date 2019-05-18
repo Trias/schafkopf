@@ -3,9 +3,9 @@ import {GameMode} from "./GameMode";
 import {PlayerWithNameOnly} from "./Player";
 import cardRankToValue from "./cards/CardRankToValue";
 import CardRankToValue from "./cards/CardRankToValue";
-import CardsOrdering from "./cards/CardsOrdering";
 import {ColorWithTrump} from "./cards/Color";
 import CardRank from "./cards/CardRank";
+import {getRank} from "./cards/CardSet";
 
 class Round implements FinishedRound {
     private readonly playedCards: Card[];
@@ -79,7 +79,7 @@ class Round implements FinishedRound {
     getPoints(): number {
         let points = 0;
         for (let playedCard of this.playedCards) {
-            let cardRank = CardsOrdering.getRank(playedCard);
+            let cardRank = getRank(playedCard);
             let addedPoints = cardRankToValue[cardRank];
             points = points + addedPoints;
         }
@@ -164,7 +164,13 @@ class Round implements FinishedRound {
     }
 }
 
-export {Round, FinishedRound};
+export {Round, FinishedRound, MinimalRound};
+
+type MinimalRound = {
+    getCards(): readonly Card[],
+    getRoundColor(): ColorWithTrump,
+    isEmpty(): boolean
+}
 
 type FinishedRound = {
     getCards(): readonly Card[];

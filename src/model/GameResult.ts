@@ -3,18 +3,17 @@ import CardRank from "./cards/CardRank";
 import {Player} from "./Player";
 import {FinishedRound} from "./Round";
 import {Card} from "./cards/Card";
-import CardsOrdering from "./cards/CardsOrdering";
-import CardSet from "./cards/CardSet";
 import {includes} from "lodash";
+import {hasCard, sortAndFilterBy} from "./cards/CardSet";
 
 /**
  * who wins with how many points
  */
 
-export default class GameResult{
+export default class GameResult {
     private readonly playingTeamPoints: number;
     private readonly playingTeam: [Player?, Player?];
-    private readonly pointsByPlayer: Map<Player, number>;
+    private readonly pointsByPlayer: { [index in string]: number };
     private readonly players: readonly Player[];
     private readonly gameMode: GameMode;
     private readonly rounds: readonly FinishedRound[];
@@ -59,25 +58,25 @@ export default class GameResult{
         }
     }
 
-    determinePointsByPlayer(): Map<Player, number> {
-        let pointsByPlayer = new Map<Player, number>();
+    determinePointsByPlayer(): { [index in string]: number } {
+        let pointsByPlayer: { [index in string]: number } = {};
         for(let i = 0; i < 4; i++){
-            pointsByPlayer.set(this.players[i], 0);
+            pointsByPlayer[this.players[i].getName()] = 0;
         }
         for (let i = 0; i < this.rounds.length; i++) {
             let round = this.rounds[i];
             let roundWinner = round.getWinningPlayer() as Player;
             let pointsAdded = round.getPoints();
-            let oldPoints = pointsByPlayer.get(roundWinner)!;
+            let oldPoints = pointsByPlayer[roundWinner.getName()]!;
             let newPoints = pointsAdded + oldPoints;
-            pointsByPlayer.set(roundWinner, newPoints);
+            pointsByPlayer[roundWinner.getName()] = newPoints;
         }
 
         return pointsByPlayer;
     }
 
     getPoints(player: Player): number{
-        return this.pointsByPlayer.get(player)!;
+        return this.pointsByPlayer[player.getName()]!;
     }
 
     determinePlayingTeam() :[Player?, Player?] {
@@ -86,7 +85,7 @@ export default class GameResult{
             let calledAce = this.gameMode.getColorOfTheGame() + CardRank.ACE as Card;
 
             for(let i = 0; i< 4;i++){
-                if (CardSet.hasCard(this.players[i].getStartCardSet(), calledAce)) {
+                if (hasCard(this.players[i].getStartCardSet(), calledAce)) {
                     return [callingPlayer, this.players[i]];
                 }
             }
@@ -179,7 +178,7 @@ export default class GameResult{
             throw Error('not Implemented');
         }
 
-        return CardsOrdering.sortAndFilterBy(trumpSet, winnerTrumpSet);
+        return sortAndFilterBy(trumpSet, winnerTrumpSet);
     }
 
     private getPlayingTeamRounds(): FinishedRound[] {

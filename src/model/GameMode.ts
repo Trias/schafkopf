@@ -110,7 +110,14 @@ class GameMode {
     }
 
     getHasAceBeenCalled() {
+        if (this.mode != GameModeEnum.CALL_GAME) {
+            throw Error('no call game, no called ace');
+        }
         return this.hasAceBeenCalled;
+    }
+
+    getTrumps() {
+        return this.getOrdering().getTrumpOrdering();
     }
 }
 

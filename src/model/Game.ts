@@ -7,9 +7,9 @@ import {GameMode, GameModeEnum} from "./GameMode";
 import GameResult from "./GameResult";
 import {Player} from "./Player";
 import {FinishedRound, Round} from "./Round";
-import CardsOrdering from "./cards/CardsOrdering";
 import GamePhase from "./GamePhase";
 import {Card} from "./cards/Card";
+import {sortByNaturalOrdering} from "./cards/CardSet";
 
 class Game {
     private readonly players: readonly [Player, Player, Player, Player];
@@ -102,7 +102,7 @@ class Game {
                 let card = activePlayer.playCard(round);
                 round.addCard(card);
                 this.notifyPlayersOfCardPlayed(card, activePlayer, j);
-                console.log(`player ${activePlayer.getName()} played ${card} from set ${CardsOrdering.sortByNaturalOrdering(activePlayer.getCurrentCardSet().concat(card))}`);
+                console.log(`player ${activePlayer.getName()} played ${card} from set ${sortByNaturalOrdering(activePlayer.getCurrentCardSet().concat(card))}`);
 
                 activePlayer = this.nextPlayer(activePlayer);
 
@@ -130,7 +130,7 @@ class Game {
     private askPlayersWhatTheyWantToPlay(): GameMode {
         let currentGameMode = new GameMode(GameModeEnum.RETRY);
         for (let i = 0; i < 4; i++) {
-            let newGameMode = this.players[i].whatDoYouWantToPlay(currentGameMode);
+            let newGameMode = this.players[i].whatDoYouWantToPlay(currentGameMode, i);
             if (newGameMode && (GameMode.compareGameModes(newGameMode, currentGameMode) > 0)) {
                 currentGameMode = newGameMode;
             }

@@ -18,18 +18,8 @@ const PlainColor = {...CallableColor, ...Herz};
 type ColorWithTrump = CallableColor | Herz | Trump;
 const ColorWithTrump = {...CallableColor, ...Herz, ...Trump};
 
-namespace Colors {
-    export function colorsWithTrumpAsArray(): [ColorWithTrump, ColorWithTrump, ColorWithTrump, ColorWithTrump, ColorWithTrump] {
-        return [PlainColor.EICHEL, PlainColor.GRAS, PlainColor.HERZ, PlainColor.SCHELLE, ColorWithTrump.TRUMP];
-    }
+const colorsWithTrump = [PlainColor.EICHEL, PlainColor.GRAS, PlainColor.HERZ, PlainColor.SCHELLE, ColorWithTrump.TRUMP];
+const plainColors = [PlainColor.EICHEL, PlainColor.GRAS, PlainColor.HERZ, PlainColor.SCHELLE];
+const callableColors = [CallableColor.EICHEL, CallableColor.GRAS, CallableColor.SCHELLE];
 
-    export function plainColorsAsArray(): [PlainColor, PlainColor, PlainColor, PlainColor] {
-        return [PlainColor.EICHEL, PlainColor.GRAS, PlainColor.HERZ, PlainColor.SCHELLE];
-    }
-
-    export function callableColorsAsArray(): [CallableColor, CallableColor, CallableColor] {
-        return [CallableColor.EICHEL, CallableColor.GRAS, CallableColor.SCHELLE];
-    }
-}
-
-export {PlainColor, ColorWithTrump, CallableColor, Colors};
+export {PlainColor, ColorWithTrump, CallableColor, callableColors, colorsWithTrump, plainColors};

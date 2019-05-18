@@ -1,15 +1,16 @@
 import {Game} from "./model/Game";
 import {Player} from "./model/Player";
-import RandomStrategy from "./model/strategy/random/index";
 import Statistics from "./model/Statistics";
 import shuffleCards from "./model/cards/shuffleCards";
+import SimpleStrategy from "./model/strategy/simple";
+import {GameModeEnum} from "./model/GameMode";
 
 let runs = 120;
 
-let player1 = new Player("Player 1", new RandomStrategy());
-let player2 = new Player("Player 2", new RandomStrategy());
-let player3 = new Player("Player 3", new RandomStrategy());
-let player4 = new Player("Player 4", new RandomStrategy());
+let player1 = new Player("Player 1", SimpleStrategy);
+let player2 = new Player("Player 2", SimpleStrategy);
+let player3 = new Player("Player 3", SimpleStrategy);
+let player4 = new Player("Player 4", SimpleStrategy);
 
 let players: [Player, Player, Player, Player] = [player1, player2, player3, player4];
 
@@ -25,10 +26,14 @@ for (let i = 0; i < runs; i++) {
 
     stats.addResult(gameResult);
 
-    console.log(`Team (${gameResult.getPlayingTeam()}) ${gameResult.hasPlayingTeamWon() ? 'wins' : 'looses'} ` +
-        `with ${gameResult.getPlayingTeamPoints()} points ` +
-        `and ${gameResult.hasPlayingTeamWon() ? 'win' : 'loose'} ${Math.abs(gameResult.getGameMoneyValue())} cents each!`);
-    reportCents(i);
+    if (game.getGameResult().getGameMode().getMode() != GameModeEnum.RETRY) {
+        console.log(`Team (${gameResult.getPlayingTeam()}) ${gameResult.hasPlayingTeamWon() ? 'wins' : 'looses'} ` +
+            `with ${gameResult.getPlayingTeamPoints()} points ` +
+            `and ${gameResult.hasPlayingTeamWon() ? 'win' : 'loose'} ${Math.abs(gameResult.getGameMoneyValue())} cents each!`);
+        reportCents(i);
+    } else {
+        console.log(`retry with cards:${players.map(p => '\n' + p.getName() + ': ' + JSON.stringify(p.getStartCardSet()))}`)
+    }
 
     rotateStartPlayer();
 }

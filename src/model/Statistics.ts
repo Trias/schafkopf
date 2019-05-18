@@ -17,14 +17,14 @@ type Stats = {
 export default class Statistics {
     //private readonly results: GameResult[];
     private readonly players: Player[];
-    private stats: Map<Player, Stats>;
+    private stats: { [index in string]: Stats };
 
     constructor(players: Player[]) {
         this.players = players;
         //this.results = [];
-        this.stats = new Map<Player, Stats>();
+        this.stats = {};
         for (let player of players) {
-            this.stats.set(player, {
+            this.stats[player.getName()] = {
                 wins: 0,
                 cents: 0,
                 inPlayingTeam: 0,
@@ -33,12 +33,12 @@ export default class Statistics {
                 ownSoloWins: 0,
                 ownSoloPlays: 0,
                 ownPlays: 0
-            });
+            };
         }
     }
 
     getStatsForPlayer(player: Player) {
-        return this.stats.get(player)!;
+        return this.stats[player.getName()]!;
     }
 
     addResult(gameResult: GameResult) {
@@ -48,7 +48,7 @@ export default class Statistics {
 
     private updateStatistics(result: GameResult) {
         for (let player of this.players) {
-            let {wins, cents, inPlayingTeam, retries, ownPlays, ownWins, ownSoloWins, ownSoloPlays} = this.stats.get(player)!;
+            let {wins, cents, inPlayingTeam, retries, ownPlays, ownWins, ownSoloWins, ownSoloPlays} = this.stats[player.getName()]!;
 
             if (player == result.getGameMode().getCallingPlayer()) {
                 ownPlays = ownPlays + 1;
@@ -100,7 +100,16 @@ export default class Statistics {
             } else {
                 throw Error('not implemented');
             }
-            this.stats.set(player, {wins, cents, inPlayingTeam, retries, ownWins, ownSoloWins, ownSoloPlays, ownPlays});
+            this.stats[player.getName()] = {
+                wins,
+                cents,
+                inPlayingTeam,
+                retries,
+                ownWins,
+                ownSoloWins,
+                ownSoloPlays,
+                ownPlays
+            };
         }
     }
 }

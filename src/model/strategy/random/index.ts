@@ -1,37 +1,40 @@
 import StrategyInterface from "../StrategyInterface";
-import PlayableMoves from "../../PlayableMoves";
-import {shuffle} from "lodash"
-import {Colors, PlainColor} from "../../cards/Color";
+import {filter, sample, shuffle} from "lodash"
+import {callableColors, PlainColor, plainColors} from "../../cards/Color";
 import {GameMode, GameModeEnum} from "../../GameMode";
 import {Round} from "../../Round";
 import {Card} from "../../cards/Card";
+import {canCallColor, canPlayCard} from "../../PlayableMoves";
+import {playRandomCard} from "../rules/inplay/playRandomCard";
+import {CardToWeights} from "../rules/CardToWeights";
+import {Player} from "../../Player";
+
+function chooseBestCard(cardToWeights: CardToWeights) {
+    return Object.entries(cardToWeights).sort((a, b) => {
+        return a[1]! > b[1]! ? -1 : 1;
+    }).shift()![0] as Card;
+}
 
 export default class RandomStrategy implements StrategyInterface {
     chooseCardToPlay(round: Round, cardSet: readonly Card[], gameMode: GameMode): Card {
-        let cards = shuffle(cardSet);
+        let playableCards = filter(cardSet, card => {
+            return canPlayCard(gameMode, cardSet, card, round)
+        });
 
-        let chosenCard = null;
-        for(let card of cards){
-            if(PlayableMoves.canPlayCard(gameMode, cardSet, card, round)){
-                chosenCard = card;
-                break;
-            }
-        }
-
-        if(chosenCard){
-            return chosenCard;
-        }else{
+        if (!playableCards.length) {
             throw Error(`no playable card found! ${cardSet}`);
         }
+
+        return chooseBestCard(playRandomCard(playableCards));
     }
 
-    chooseGameToCall(cardSet: readonly Card[], previousGameMode: GameMode): [GameModeEnum?, PlainColor?] {
+    chooseGameToCall(cardSet: readonly Card[], previousGameMode: GameMode, playerIndex: number): [GameModeEnum?, PlainColor?] {
         if (Math.random() < 0.25) {
             return [];
         }
 
         if (Math.random() < 0.05) {
-            let callColor = shuffle(Colors.plainColorsAsArray()).shift();
+            let callColor = sample(plainColors);
             return [GameModeEnum.SOLO, callColor];
         }
 
@@ -39,10 +42,10 @@ export default class RandomStrategy implements StrategyInterface {
             return [GameModeEnum.WENZ];
         }
 
-        let shuffledColors = shuffle(Colors.callableColorsAsArray());
+        let shuffledColors = shuffle(callableColors);
         let callColor = null;
         for (let color of shuffledColors) {
-            if (Math.random() < 0.8 && PlayableMoves.canCallColor(cardSet, color)) {
+            if (Math.random() < 0.8 && canCallColor(cardSet, color)) {
                 callColor = color;
             }
         }
@@ -56,5 +59,9 @@ export default class RandomStrategy implements StrategyInterface {
 
     chooseToRaise(cardSet: readonly Card[]): boolean {
         return Math.random() < 0.1;
+    }
+
+    setPlayer(player: Player): void {
+        // dont care...
     }
 }
