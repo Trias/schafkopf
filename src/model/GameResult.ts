@@ -3,7 +3,7 @@ import CardRank from "./cards/CardRank";
 import {Player} from "./Player";
 import {FinishedRound} from "./Round";
 import {Card} from "./cards/Card";
-import {includes} from "lodash";
+import {find, includes} from "lodash";
 import {hasCard, sortAndFilterBy} from "./cards/CardSet";
 
 /**
@@ -192,11 +192,21 @@ export default class GameResult {
         return playingTeamRounds;
     }
 
-    hasPlayerWon(player: Player) {
-        if (includes(this.playingTeam, player) && this.hasPlayingTeamWon()) {
+    hasPlayerWon(playerName: string) {
+        let player = find(this.playingTeam, p => p && p.getName() == playerName);
+        if (player && this.hasPlayingTeamWon() || !player && !this.hasPlayingTeamWon()) {
             return true;
         } else {
             return false;
+        }
+    }
+
+    getPlayersPoints(playerName: string) {
+        let player = find(this.playingTeam, p => p && p.getName() == playerName);
+        if (player) {
+            return this.getPlayingTeamPoints();
+        } else {
+            return 120 - this.getPlayingTeamPoints();
         }
     }
 

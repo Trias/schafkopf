@@ -1,14 +1,14 @@
 import GameKnowledge from "../knowledge/GameKnowledge";
 import {Player} from "../Player";
 import {GameMode} from "../GameMode";
-import {clone, filter, remove, sample, shuffle, without} from "lodash";
+import {clone, remove, sample, shuffle, without} from "lodash";
 import {Card} from "../cards/Card";
 import {removeCard} from "../cards/CardSet";
 import {Round} from "../Round";
 
 export function generateRandomWorldConsistentWithGameKnowledge(gameMode: GameMode, gameKnowledge: GameKnowledge, otherPlayers: Player[], thisPlayer: Player, round: Round): Player[] {
     let remainingCards = gameKnowledge.getRemainingCards();
-    let shuffledRemainingCards = shuffle(remainingCards);
+    let shuffledRemainingCards = shuffle(remainingCards) as Card[];
     let remainingCardsByColor = gameKnowledge.getRemainingCardsByColor();
     let colorFreeByPlayer = gameKnowledge.getColorFreeByPlayer();
 
@@ -102,27 +102,25 @@ export function generateRandomWorldConsistentWithGameKnowledge(gameMode: GameMod
 
     // rufer kann nicht das ruf ass haben
     if (gameMode.isCallGame()) {
-        if (gameMode.getCalledAce() in cardsToPossiblePlayer) {
-            remove(cardsToPossiblePlayer[gameMode.getCalledAce()!]!, (player) => player.getName() == gameMode.getCallingPlayer().getName());
-            remove(playerToPossibleCards[gameMode.getCallingPlayer().getName()]!, gameMode.getCalledAce());
-        }
+        remove(cardsToPossiblePlayer[gameMode.getCalledAce()!]!, (player) => player.getName() == gameMode.getCallingPlayer().getName());
+        remove(playerToPossibleCards[gameMode.getCallingPlayer().getName()]!, card => card == gameMode.getCalledAce());
     }
     // rufer muss eine ruf farben karte haben...
     if (gameMode.isCallGame() && !gameKnowledge.isTeamPartnerPublicallyKnown() && !gameKnowledge.hasPlayerAbspatzenCallColor()
         && gameMode.getCallingPlayer().getName() != thisPlayer.getName()
     ) {
         let callColorCard = sample(without(remainingCardsByColor[gameMode.getCalledColor()]!, gameMode.getCalledAce()!));
-        if (!callColorCard) {
-            throw Error('undefined card, empty array?');
-        }
-        playerToCards[gameMode.getCallingPlayer().getName()]!.push(callColorCard);
-        remainingCards = filter(remainingCards, card => card != callColorCard);
-        shuffledRemainingCards = filter(shuffledRemainingCards, card => card != callColorCard);
-        if (remainingCards.length != shuffledRemainingCards.length) {
-            throw Error('invariant violated');
+        if (callColorCard) {
+            playerToCards[gameMode.getCallingPlayer().getName()]!.push(callColorCard);
+            remainingCards = removeCard(remainingCards, callColorCard);
+            shuffledRemainingCards = removeCard(shuffledRemainingCards, callColorCard) as Card[];
+            if (remainingCards.length != shuffledRemainingCards.length) {
+                throw Error('invariant violated');
+            }
+        } else {
+            // sad sad but we assume all is well... may happen if player has abgespatzed the color.. we currently do not track this well
         }
 
-        //remove(remainingCardsByColor[this.gameMode.getCalledColor() as ColorWithTrump], callColorCard);
     }
 
     assignForcedCards();

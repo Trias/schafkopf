@@ -47,6 +47,8 @@ class Player implements GameEventsReceiverInterface {
         fakePlayer.gamePhase = this.gamePhase;
         fakePlayer.rounds = cloneDeep(this.rounds);
         fakePlayer.gameMode = this.gameMode;
+        fakePlayer.gameKnowledge = cloneDeep(this.gameKnowledge);
+        fakePlayer.gameAssumptions = cloneDeep(this.gameAssumptions);
 
         return fakePlayer;
     }
@@ -106,6 +108,21 @@ class Player implements GameEventsReceiverInterface {
             throw Error('invariant violated');
         }
 
+        return card;
+    }
+
+    forcePlayCard(card: Card) {
+        if (this.gamePhase !== GamePhase.IN_PLAY) {
+            throw Error('function not available in this state');
+        }
+
+        if (this.currentCardSet!.length + this.rounds.length != 8) {
+            throw Error('invariant violated');
+        }
+        this.currentCardSet = removeCard(this.currentCardSet as Card[], card);
+        if (this.currentCardSet.length + this.rounds.length + 1 != 8) {
+            throw Error('invariant violated');
+        }
         return card;
     }
 

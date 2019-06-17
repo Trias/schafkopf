@@ -4,7 +4,6 @@ import {FinishedRound, Round} from "../Round";
 import {Card} from "../cards/Card";
 import GameResult from "../GameResult";
 import {find, findIndex} from "lodash";
-import {removeCard} from "../cards/CardSet";
 
 export class SimulatedGame {
     private players: readonly Player[];
@@ -75,10 +74,10 @@ export class SimulatedGame {
 
     forcePlayCard(playerName: string, card: Card, round: Round) {
         let activePlayer = find(this.players, p => p.getName() == playerName)!;
-        activePlayer.currentCardSet = removeCard(activePlayer.currentCardSet as Card[], card);
+        activePlayer.forcePlayCard(card);
+        round.addCard(card);
         this.notifyPlayersOfCardPlayed(card, activePlayer, round.getPosition());
         activePlayer = this.nextPlayer(activePlayer.getName());
-        round.addCard(card);
         return activePlayer;
     }
 

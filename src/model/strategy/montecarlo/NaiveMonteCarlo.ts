@@ -60,16 +60,20 @@ export default class NaiveMonteCarlo implements StrategyInterface, GameEventsRec
 
     runSimulation(playableCards: Card[], gameMode: GameMode, playedRounds: readonly FinishedRound[], myRound: Round) {
         let simulations = 10;
-        let runsPerSimulation = 10;
+        let runsPerSimulation = 100;
         let otherPlayers = NaiveMonteCarlo.generatePlayers(gameMode, playedRounds);
         let valuations: { [index in string]?: number } = {};
 
         let fakePlayer = this.thisPlayer.getDummyClone();
 
         let wins: { [index in Card]?: number[] } = {};
+
+        // parallize?
         for (let i = 0; i < simulations; i++) {
             let fakePlayers = generateRandomWorldConsistentWithGameKnowledge(gameMode, this.thisPlayer.gameKnowledge!, otherPlayers, this.thisPlayer, myRound);
             fakePlayers.splice(0, 0, fakePlayer);
+            //console.log(colors.grey(`${JSON.stringify(fakePlayers.map(p => p.currentCardSet))}`));
+
             for (let card of playableCards) {
                 wins[card] = wins[card] || [];
                 for (let j = 0; j < runsPerSimulation; j++) {
@@ -84,13 +88,14 @@ export default class NaiveMonteCarlo implements StrategyInterface, GameEventsRec
                     fakeRound.setStartPlayer(startPlayer);
 
                     let winsSoFar = wins[card]![i] || 0;
-                    wins[card]![i] = winsSoFar + (this.simulateGame(card, fakeRound, players, gameMode, playedRounds) ? 1 : 0);
+                    let win = (this.simulateGame(card, fakeRound, players, gameMode, playedRounds) ? 1 : 0);
+                    wins[card]![i] = winsSoFar + win;
                 }
             }
         }
 
         let entries: [string, number[]][] = Object.entries(wins) as [string, number[]][];
-        for (let [card, winCounts]  of entries) {
+        for (let [card, winCounts] of entries) {
             valuations[card] = reduce(winCounts, (a, b) => a + b, 0) / (runsPerSimulation * simulations) as number;
         }
 
@@ -104,8 +109,11 @@ export default class NaiveMonteCarlo implements StrategyInterface, GameEventsRec
         let nextPlayer = game.forcePlayCard(round.getCurrentPlayer().getName(), card, round);
 
         game.simulateRounds(nextPlayer.getName(), playedRounds.length, round);
+        let result = game.getGameResult();
 
-        return game.getGameResult().hasPlayerWon(this.thisPlayer);
+        // console.log(colors.blue(`${JSON.stringify(rounds.map(r => r.getCards()))}`) + colors.red(`points: ${JSON.stringify(result.getPlayersPoints(this.thisPlayer.getName()))}`));
+
+        return result.hasPlayerWon(this.thisPlayer.getName());
     }
 
     chooseGameToCall(cardSet: readonly Card[], previousGameMode: GameMode, playerIndex: number): [GameModeEnum?, PlainColor?] {
