@@ -1,6 +1,6 @@
 import {Card} from "./Card";
-import {callableColors, ColorWithTrump, PlainColor} from "./Color";
-import {filter, includes, intersection, some, sortBy, without} from "lodash";
+import {callableColors, colorsWithTrump, ColorWithTrump, PlainColor} from "./Color";
+import {difference, filter, includes, intersection, some, sortBy, without} from "lodash";
 import {GameMode, GameModeEnum} from "../GameMode";
 import OberAndUnter from "./sets/OberAndUnter";
 import CardDeck from "./sets/CardDeck";
@@ -39,6 +39,10 @@ export function highTrumps(cards: readonly Card[], gameMode: GameMode): Card[] {
     return filter(cards, card => card[1] == "O" || card[1] == "U") as Card[];
 }
 
+export function getLowerTrumps(cards: readonly Card[], gameMode: GameMode): Card[] {
+    return difference(getTrumps(cards, gameMode), highTrumps(cards, gameMode));
+}
+
 export function sortAndFilterBy(allTrumpsSorted: readonly Card[], winnerCardSet: readonly Card[]): readonly Card[] {
     let trumpsInHands: Card[] = intersection(allTrumpsSorted, winnerCardSet);
 
@@ -53,8 +57,76 @@ export function getRank(card: Card): CardRank {
     return card[1] as CardRank;
 }
 
+export function getRanks(cardSet: readonly Card[]): readonly CardRank[] {
+    let ranks = [];
+
+    for (let card of cardSet) {
+        ranks.push(card[1] as CardRank);
+    }
+
+    return intersection(ranks);
+}
+
+export function getRankIndex(card: Card): number {
+    return Object.values(CardRank).indexOf(card[1]);
+}
+
 export function getPlainColor(card: Card) {
     return card[0] as PlainColor;
+}
+
+export function getBlankColors(cardSet: readonly Card[], gameMode: GameMode) {
+    let cardsByColor = getCardsByColor(cardSet, gameMode);
+    let blankColors = [];
+
+    for (let color of colorsWithTrump) {
+        if (cardsByColor[color].length == 1 && color != ColorWithTrump.TRUMP) {
+            blankColors.push(color);
+        }
+    }
+
+    return blankColors;
+}
+
+export function getBlankCards(cardSet: readonly Card[], gameMode: GameMode) {
+    let cardsByColor = getCardsByColor(cardSet, gameMode);
+    let blankCards = [];
+
+    for (let color of colorsWithTrump) {
+        if (cardsByColor[color].length == 1 && color != ColorWithTrump.TRUMP) {
+            blankCards.push(cardsByColor[color][0]);
+        }
+    }
+
+    return blankCards;
+}
+
+export function withoutAces(cardSet: readonly Card[]) {
+    return filter(cardSet, card => card[1] != "A");
+}
+
+export function getAces(cardSet: readonly Card[]) {
+    return filter(cardSet, card => card[1] == "A");
+}
+
+export function getColorsOfCards(cardSet: Card[], gameMode: GameMode) {
+    let colors = [];
+
+    for (let card of cardSet) {
+        let color = gameMode.getOrdering().getColor(card);
+
+        if (!includes(colors, color)) {
+            colors.push(color);
+        }
+    }
+
+    return colors;
+}
+
+export function hasBlankColors(cardSet: readonly Card[], gameMode: GameMode) {
+    let blankColors = getBlankColors(cardSet, gameMode);
+
+    return blankColors.length > 0;
 }
 
 export function getCallableColors(cardSet: readonly Card[], gameMode: GameMode) {
@@ -83,4 +155,90 @@ export function getCardsByColor(cardSet: readonly Card[], gameMode: GameMode) {
     }
 
     return result;
+}
+
+export function getCardLengthsByColor(cardSet: readonly Card[], gameMode: GameMode) {
+    let result: { [index in ColorWithTrump]: number } = {
+        [ColorWithTrump.TRUMP]: 0,
+        [ColorWithTrump.EICHEL]: 0,
+        [ColorWithTrump.GRAS]: 0,
+        [ColorWithTrump.SCHELLE]: 0,
+        [ColorWithTrump.HERZ]: 0,
+    };
+
+    let cardsByColor = getCardsByColor(cardSet, gameMode);
+
+    for (let [color, cards] of (Object.entries(cardsByColor) as [ColorWithTrump, Card[]][])) {
+        result[color] = cards.length;
+    }
+
+    return result;
+}
+
+export function getShortestColors(cardSet: readonly Card[], gameMode: GameMode) {
+    let cardLengthsByColor = getCardLengthsByColor(cardSet, gameMode);
+    let shortestColorLength = 8;
+    let shortestColors: ColorWithTrump[] = [];
+
+    for (let [color, length] of Object.entries(cardLengthsByColor) as [ColorWithTrump, number][]) {
+        if (length < shortestColorLength) {
+            shortestColors = [color];
+        } else if (length == shortestColorLength) {
+            shortestColors.push(color);
+        }
+    }
+
+    return shortestColors;
+}
+
+export function getLongestColors(cardSet: readonly Card[], gameMode: GameMode) {
+    let cardLengthsByColor = getCardLengthsByColor(cardSet, gameMode);
+    let longestColorLength = 0;
+    let longestColors: ColorWithTrump[] = [];
+
+    for (let [color, length] of Object.entries(cardLengthsByColor) as [ColorWithTrump, number][]) {
+        if (length > longestColorLength) {
+            longestColors = [color];
+        } else if (length == longestColorLength) {
+            longestColors.push(color);
+        }
+    }
+
+    return longestColors;
+}
+
+
+export function hasTrumps(cardSet: readonly Card[], gameMode: GameMode) {
+    return getTrumps(cardSet, gameMode).length > 0;
+}
+
+export function getTrumps(cardSet: readonly Card[], gameMode: GameMode) {
+    let cardsByColor = getCardsByColor(cardSet, gameMode);
+
+    return cardsByColor[ColorWithTrump.TRUMP];
+}
+
+export function hasSchmiers(cardSet: readonly Card[]) {
+    return getSchmiers(cardSet).length > 0;
+}
+
+export function getSchmiers(cardSet: readonly Card[]) {
+    let schmiers = [];
+    for (let card of cardSet) {
+        if (card[1] == "A" || card[1] == "X") {
+            schmiers.push(card);
+        }
+    }
+
+    return schmiers;
+}
+
+export function hasKings(cardSet: readonly Card[]) {
+    for (let card of cardSet) {
+        if (card[1] == "K") {
+            return true;
+        }
+    }
+
+    return false;
 }

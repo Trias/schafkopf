@@ -68,8 +68,7 @@ export default class GameResult {
             let roundWinner = round.getWinningPlayer() as Player;
             let pointsAdded = round.getPoints();
             let oldPoints = pointsByPlayer[roundWinner.getName()]!;
-            let newPoints = pointsAdded + oldPoints;
-            pointsByPlayer[roundWinner.getName()] = newPoints;
+            pointsByPlayer[roundWinner.getName()] = pointsAdded + oldPoints;
         }
 
         return pointsByPlayer;
@@ -79,7 +78,7 @@ export default class GameResult {
         return this.pointsByPlayer[player.getName()]!;
     }
 
-    determinePlayingTeam() :[Player?, Player?] {
+    determinePlayingTeam(): [Player?, Player?] {
         if (this.gameMode.getMode() === GameModeEnum.CALL_GAME) {
             let callingPlayer = this.gameMode.getCallingPlayer()! as Player;
             let calledAce = this.gameMode.getColorOfTheGame() + CardRank.ACE as Card;
@@ -92,7 +91,7 @@ export default class GameResult {
 
             throw Error('invalid call');
         } else {
-            if(this.gameMode.getCallingPlayer()){
+            if (this.gameMode.isNoRetry()) {
                 return [this.gameMode.getCallingPlayer()! as Player];
             }else{
                 return [];
@@ -191,5 +190,25 @@ export default class GameResult {
             }
         }
         return playingTeamRounds;
+    }
+
+    hasPlayerWon(player: Player) {
+        if (includes(this.playingTeam, player) && this.hasPlayingTeamWon()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    getTournamentPointsValue() {
+        let schneider = (this.getPlayingTeamPoints() > 90 || this.getPlayingTeamPoints() <= 30);
+        let schwarz = (this.getPlayingTeamRounds().length == 0 || this.getPlayingTeamRounds().length == 8);
+        let add = (schneider ? 1 : 0) + (schwarz ? 1 : 0);
+
+        if (this.getGameMode().isCallGame()) {
+            return 1 + add;
+        } else {
+            return 2 + add;
+        }
     }
 }

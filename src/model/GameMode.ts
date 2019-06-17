@@ -3,7 +3,7 @@
  * information about the chosen game (Rufspiel, Solo, Wenz,...)
  */
 
-import {PlainColor} from "./cards/Color";
+import {CallableColor, PlainColor} from "./cards/Color";
 import {PlayerWithNameOnly} from "./Player";
 import CardsOrdering from "./cards/CardsOrdering";
 import CardRank from "./cards/CardRank";
@@ -66,7 +66,17 @@ class GameMode {
         return this.color;
     }
 
+    getCalledColor(): CallableColor {
+        if (!this.isCallGame()) {
+            throw Error('no called color in call game');
+        }
+        return this.color as CallableColor;
+    }
+
     getCallingPlayer() {
+        if (!this.callingPlayer) {
+            throw Error('no calling player decided');
+        }
         return this.callingPlayer;
     }
 
@@ -118,6 +128,49 @@ class GameMode {
 
     getTrumps() {
         return this.getOrdering().getTrumpOrdering();
+    }
+
+    isWenz() {
+        return this.getMode() === GameModeEnum.WENZ;
+    }
+
+    isNoRetry() {
+        return this.getMode() !== GameModeEnum.RETRY;
+    }
+
+    getTrumpTen() {
+        if (this.isWenz()) {
+            throw Error('no trump ten, wenz game');
+        }
+
+        let trumpColor = this.getTrumpColor();
+
+        return trumpColor + "X" as Card;
+    }
+
+    getTrumpAce() {
+        if (this.isWenz()) {
+            throw Error('no trump ten, wenz game');
+        }
+
+        let trumpColor = this.getTrumpColor();
+
+        return trumpColor + "A" as Card;
+    }
+
+    getTrumpColor() {
+        if (this.isWenz()) {
+            throw Error('no trump color, wenz game');
+        }
+        if (this.isCallGame()) {
+            return PlainColor.HERZ
+        } else {
+            return this.color;
+        }
+    }
+
+    isSolo() {
+        return this.getMode() == GameModeEnum.SOLO;
     }
 }
 

@@ -42,6 +42,10 @@ export default class CardsOrdering {
         }
     }
 
+    rightBeatsLeftCard(card1: Card, card2: Card) {
+        return this.highestCard(card1, card2) == card2;
+    }
+
     getTrumpOrdering(): readonly Card[] {
         if (this.gameModeEnum == GameModeEnum.CALL_GAME) {
             return DefaultTrumpOrdering;

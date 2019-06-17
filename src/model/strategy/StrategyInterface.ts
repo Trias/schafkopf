@@ -1,13 +1,15 @@
 import {GameMode, GameModeEnum} from "../GameMode";
 import {Card} from "../cards/Card";
-import {Round} from "../Round";
+import {FinishedRound, Round} from "../Round";
 import {PlainColor} from "../cards/Color";
 
 export default interface StrategyInterface {
 
-    chooseCardToPlay(round: Round, cardSet: readonly Card[], gameMode: GameMode): Card | Promise<Card>
+    chooseCardToPlay(round: Round, cardSet: readonly Card[], gameMode: GameMode, playedRounds: FinishedRound[]): Card
 
-    chooseGameToCall(cardSet: readonly Card[], gameMode: GameMode, playerIndex: number): [GameModeEnum?, PlainColor?] | Promise<[GameModeEnum?, PlainColor?]>;
+    chooseGameToCall(cardSet: readonly Card[], gameMode: GameMode, playerIndex: number): [GameModeEnum?, PlainColor?];
 
-    chooseToRaise(cardSet: readonly Card[]): boolean | Promise<boolean>;
+    chooseToRaise(cardSet: readonly Card[]): boolean;
+
+    skipInference(): boolean;
 }

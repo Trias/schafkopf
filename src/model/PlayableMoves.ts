@@ -9,11 +9,18 @@ import {GameMode} from "./GameMode";
 import {Card} from "./cards/Card";
 import CardRank from "./cards/CardRank";
 import {allOfColor, hasCard, hasColor, hasPlainColorWithoutOberAndUnter} from "./cards/CardSet";
-import {MinimalRound} from "./Round";
+import {MinimalRound, Round} from "./Round";
+import {filter} from "lodash";
 
 export function canCallColor(cardsOnHand: readonly Card[], color: CallableColor) {
     let callAce: Card = color + CardRank.ACE as Card;
     return !hasCard(cardsOnHand, callAce) && hasPlainColorWithoutOberAndUnter(cardsOnHand, color);
+}
+
+export function getPlayableCards(cardSet: ReadonlyArray<Card>, gameMode: GameMode, round: Round) {
+    return filter(cardSet, card => {
+        return canPlayCard(gameMode, cardSet, card, round)
+    });
 }
 
 export function canPlayCard(gameMode: GameMode, cardsOnHand: readonly Card[], card: Card, round: MinimalRound): boolean {
@@ -86,3 +93,4 @@ function isCalledColorButNotAce(gameMode: GameMode, cardsOnHand: readonly Card[]
 function getCalledAce(gameMode: GameMode): Card {
     return gameMode.getColorOfTheGame() + CardRank.ACE as Card;
 }
+

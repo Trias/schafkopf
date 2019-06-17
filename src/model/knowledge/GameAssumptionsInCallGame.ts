@@ -1,17 +1,21 @@
 import GameKnowledge from "./GameKnowledge";
 import GameEventsReceiverInterface from "./GameEventsReceiverInterface";
 import {Card} from "../cards/Card";
-import {PlayerWithNameOnly} from "../Player";
+import {Player, PlayerWithNameOnly} from "../Player";
 import {GameMode, GameModeEnum} from "../GameMode";
-import {FinishedRound} from "../Round";
+import {FinishedRound, Round} from "../Round";
 import {ColorWithTrump} from "../cards/Color";
-import {difference, intersection} from "lodash";
+import {difference, includes, intersection, without} from "lodash";
+import GameAssumptions from "./GameAssumptions";
+import {getCardLengthsByColor} from "../cards/CardSet";
+import {getPlayableCards} from "../PlayableMoves";
+import CardRank from "../cards/CardRank";
 
 type TeamPartnerScore = {
     score: number, reasons: string[]
 };
 
-type ColorFreeAssumption = {
+export type ColorFreeAssumption = {
     assumption: boolean, reasons: string[]
 };
 
@@ -19,7 +23,8 @@ type PlayerConfidence = {
     player?: PlayerWithNameOnly, confidence: number, reasons: string[],
 }
 
-export default class GameAssumptionsInCallGame implements GameEventsReceiverInterface {
+
+export default class GameAssumptionsInCallGame implements GameEventsReceiverInterface, GameAssumptions {
     private gameKnowledge: GameKnowledge;
     private gameMode!: GameMode;
     private possibleTeamPartnerScores: { [index in string]: TeamPartnerScore };
@@ -42,7 +47,7 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
     }
 
     getPossibleTeamPartnerForPlayer(player: PlayerWithNameOnly): PlayerConfidence {
-        if (player == this.thisPlayer) {
+        if (player.getName() == this.thisPlayer.getName()) {
             if (this.gameKnowledge.isTeamPartnerKnown()) {
                 let partner = this.gameKnowledge.getTeamPartner()!;
                 let reasons = ['knowledge: i have the ace'];
@@ -135,7 +140,7 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
                 && roundIndex <= 5
             ) {
                 let player = round.getOffColorSchmierPlayer();
-                if (player && player != this.thisPlayer) {
+                if (player && player.getName() != this.thisPlayer.getName()) {
                     this.markPlayerAsPossiblePartnerBySchmier(player, roundIndex);
                     tell = true;
                 }
@@ -177,7 +182,7 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
                         let player = round.getPlayerForCard(card);
 
                         if (round.getWinningPlayer() == this.gameMode.getCallingPlayer()
-                            && player != this.thisPlayer
+                            && player.getName() != this.thisPlayer.getName()
                         ) {
                             this.markPlayerAsPossiblePartnerByGivingUpOberToOtherPlayer(player, roundIndex);
                             tell = true;
@@ -236,8 +241,159 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
         }
     }
 
+    getPossiblePartner(): PlayerWithNameOnly | undefined {
+        return this.getPossibleTeamPartnerForPlayer(this.thisPlayer).player;
+    }
+
+    getPossiblyHighestTrumpOfPartner(): Card {
+        let possiblePartner = this.getPossiblePartner();
+        if (possiblePartner) {
+            return this.getProbablyHighestTrumpByPlayer(possiblePartner);
+        } else {
+            return this.gameKnowledge.getRemainingCards()[0] as Card;
+        }
+
+    }
+
+    isOpposingTeamPossiblyColorFree(color: ColorWithTrump): boolean {
+        let opposingTeam = this.getLikelyOpposingTeam();
+        if (!opposingTeam) {
+            return false;
+        }
+
+        for (let opponent of opposingTeam) {
+            if (!this.isPlayerPossiblyColorFree(opponent, color).assumption) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    isPlayerProbablyTrumpFree(player: Player): boolean {
+        return this.isPlayerPossiblyColorFree(player, ColorWithTrump.TRUMP).assumption;
+    }
+
+    isTeampartnerProbablyKnown(): boolean {
+        return !!this.getPossibleTeamPartnerForPlayer(this.thisPlayer).player;
+    }
+
+    isThisRoundProbablyLost(round: Round): boolean {
+        let winningCard = round.getWinningCard();
+        let winningPlayer = round.getWinningPlayer();
+        let opposingTeam = this.getLikelyOpposingTeam();
+        let partner = this.getPossiblePartner();
+        let currentHandCards = this.gameKnowledge.getCurrentHandCards();
+        let winningCardColor = this.gameMode.getOrdering().getColor(winningCard);
+        let rank = this.gameKnowledge.getCurrentRankOfCardInColor(winningCard);
+        let myBestPlayableCard = getPlayableCards(currentHandCards, this.gameMode, round)[0];
+        let myBestRank = this.gameKnowledge.getCurrentRankOfCardInColor(myBestPlayableCard);
+        let colorOfMyBestCard = this.gameMode.getOrdering().getColor(myBestPlayableCard);
+        let myBestCardBeatsCurrentBestCard = this.gameMode.getOrdering().rightBeatsLeftCard(winningCard, myBestPlayableCard);
+        let roundBelongsToOpposingTeam = includes(opposingTeam, winningPlayer);
+
+        if (!partner) {
+            return !myBestCardBeatsCurrentBestCard;
+        }
+
+        let partnerIsBehindMe = round.isLeftPlayerBeforeRightPlayer(this.thisPlayer.getName(), partner.getName());
+
+        if (rank == 0 && winningCardColor == ColorWithTrump.TRUMP && roundBelongsToOpposingTeam) {
+            return true;
+        }
+
+        let ownColorCount = getCardLengthsByColor(this.gameKnowledge.getCurrentHandCards(), this.gameMode)[winningCardColor];
+
+        if (rank == 0
+            && roundBelongsToOpposingTeam
+            && !this.gameKnowledge.hasColorBeenAngespielt(winningCardColor)
+            && winningCardColor != ColorWithTrump.TRUMP
+            && round.getPosition() < 3
+            && !includes(opposingTeam, round.getLastPlayer())
+            && ownColorCount < 3) {
+            return true;
+        }
+
+        if (winningCardColor == ColorWithTrump.TRUMP
+            && roundBelongsToOpposingTeam
+            && rank < myBestRank
+            && colorOfMyBestCard == ColorWithTrump.TRUMP
+            && !partnerIsBehindMe) {
+            return true;
+        }
+
+        if (!partnerIsBehindMe && roundBelongsToOpposingTeam && !myBestCardBeatsCurrentBestCard) {
+            return true
+        }
+
+        return false;
+    }
+
+    isThisRoundProbablyWon(round: Round): boolean {
+        return !this.isThisRoundProbablyLost(round);
+    }
+
+    willLikelyWinRoundWithCard(round: Round, card: Card): boolean {
+        let isThisRoundProbablyLost = this.isThisRoundProbablyLost(round);
+
+        if (isThisRoundProbablyLost) {
+            return false;
+        }
+
+        let winningCard = round.getWinningCard();
+        let partner = this.getPossiblePartner();
+        let roundColor = round.getRoundColor();
+        let colorOfCard = this.gameMode.getOrdering().getColor(card);
+        let isInBackHandPosition = round.getPosition() == 3 || round.getPosition() == 2 && partner == round.getLastPlayer();
+
+        if (colorOfCard == ColorWithTrump.TRUMP
+            && roundColor != ColorWithTrump.TRUMP
+            && !this.gameKnowledge.hasColorBeenAngespielt(roundColor)) {
+            return true;
+        }
+
+        if (card[1] as CardRank == "A"
+            && this.gameKnowledge.hasColorBeenAngespielt(roundColor)
+            && roundColor == card[0] as ColorWithTrump
+            && roundColor != ColorWithTrump.TRUMP) {
+            return true;
+        }
+
+        if (this.gameKnowledge.getCurrentRankOfCardInColor(card) < 2
+            && colorOfCard == ColorWithTrump.TRUMP) {
+        }
+
+        if (this.gameMode.getOrdering().rightBeatsLeftCard(winningCard, card)
+            && isInBackHandPosition) {
+            return true
+        }
+
+        return false;
+    }
+
+    getLikelyOpposingTeam() {
+        let partner = this.getPossiblePartner();
+        if (!partner) {
+            return null;
+        }
+
+        return without(this.players, this.thisPlayer, partner);
+    }
+
+    private scorePlayer(player: PlayerWithNameOnly, scoreAdd: number, reason: string) {
+        let {score, reasons} = this.possibleTeamPartnerScores[player.getName()]!;
+
+        reasons.push(reason);
+        score = score + scoreAdd;
+
+        this.possibleTeamPartnerScores[player.getName()] = {
+            score,
+            reasons
+        };
+    }
+
     private markPlayerAsPossiblePartnerByTrump(round: FinishedRound, roundIndex: number) {
-        if (this.thisPlayer === this.gameMode!.getCallingPlayer()) {
+        if (this.thisPlayer.getName() === this.gameMode!.getCallingPlayer().getName()) {
             let player = round.getStartPlayer();
             this.scorePlayer(player, 0.9, `${player} begins with trump in round ${roundIndex}`);
         } else {
@@ -247,7 +403,7 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
     }
 
     private markPlayerAsPossiblePartnerBySchmier(schmierer: PlayerWithNameOnly, roundIndex: number) {
-        if (this.thisPlayer === this.gameMode!.getCallingPlayer()) {
+        if (this.thisPlayer.getName() === this.gameMode!.getCallingPlayer().getName()) {
             this.scorePlayer(schmierer, 0.8, `${schmierer} schmiers calling player in round ${roundIndex}`);
         } else {
             let potentialPartner = difference(this.otherPlayersWithoutCaller, [schmierer]).pop()!;
@@ -257,7 +413,7 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
 
     private markPlayerAsPossiblePartnerByColorPlay(player: PlayerWithNameOnly, roundIndex: number) {
         let reason = `${player} plays color calling player in round ${roundIndex}`;
-        if (this.thisPlayer === this.gameMode!.getCallingPlayer()) {
+        if (this.thisPlayer.getName() === this.gameMode!.getCallingPlayer().getName()) {
             this.scorePlayer(player, -0.5, reason);
         } else {
             this.scorePlayer(player, 0.5, reason);
@@ -266,7 +422,7 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
 
     private markPlayerAsPossiblePartnerBySchmierToOtherPlayer(player: PlayerWithNameOnly, roundIndex: number) {
         let reason = `${player} schmiers color in round ${roundIndex} to other player`;
-        if (this.thisPlayer === this.gameMode!.getCallingPlayer()) {
+        if (this.thisPlayer.getName() === this.gameMode!.getCallingPlayer().getName()) {
             this.scorePlayer(player, -0.25, reason);
         } else {
             this.scorePlayer(player, 0.25, reason);
@@ -275,32 +431,19 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
 
     private markPlayerAsPossiblePartnerByGivingUpOberToOtherPlayer(player: PlayerWithNameOnly, roundIndex: number) {
         let reason = `${player} plays ober but looses in round ${roundIndex} to other player`;
-        if (this.thisPlayer === this.gameMode!.getCallingPlayer()) {
+        if (this.thisPlayer.getName() === this.gameMode!.getCallingPlayer().getName()) {
             this.scorePlayer(player, -0.25, reason);
         } else {
             this.scorePlayer(player, 0.25, reason);
         }
     }
 
-    private scorePlayer(player: PlayerWithNameOnly, scoreAdd: number, reason: string) {
-        let {score, reasons} = this.possibleTeamPartnerScores[player.getName()]!;
-
-        reasons.push(reason);
-        score = score + scoreAdd;
-
-        let teampartnerScore = {
-            score,
-            reasons
-        };
-        this.possibleTeamPartnerScores[player.getName()] = teampartnerScore;
-    }
-
     private isPlayerLikelyMitspieler(otherPlayer: PlayerWithNameOnly) {
-        if (otherPlayer == this.gameMode.getCallingPlayer()) {
+        if (otherPlayer.getName() == this.gameMode.getCallingPlayer().getName()) {
             return {assumption: true, confidence: 1, reasons: ['is calling player']};
         }
         let {player, confidence, reasons} = this.getPossibleTeamPartnerForPlayer(otherPlayer);
-        if (player && player == this.gameMode.getCallingPlayer()) {
+        if (player && player.getName() == this.gameMode.getCallingPlayer().getName()) {
             return {assumption: true, confidence, reasons};
         } else {
             reasons.push(`likely partner ${player} is not calling player!`);

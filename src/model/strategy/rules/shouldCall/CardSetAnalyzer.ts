@@ -1,9 +1,9 @@
-import {Card} from "../../cards/Card";
-import {GameMode} from "../../GameMode";
-import {CallableColor, callableColors, plainColors} from "../../cards/Color";
-import {getCallableColors, getCardsByColor} from "../../cards/CardSet";
-import {CardToWeights} from "../rules/CardToWeights";
-import {chooseBestCard} from "../helper";
+import {Card} from "../../../cards/Card";
+import {GameMode} from "../../../GameMode";
+import {CallableColor, callableColors, plainColors} from "../../../cards/Color";
+import {getCallableColors, getCardsByColor} from "../../../cards/CardSet";
+import {CardToWeights} from "../CardToWeights";
+import {chooseBestCard} from "../../helper";
 import {includes} from "lodash";
 
 export function determineCallColorCard(cardSet: ReadonlyArray<Card>, newGameMode: GameMode) {

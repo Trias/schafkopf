@@ -1,31 +1,26 @@
 import StrategyInterface from "../StrategyInterface";
-import {filter, sample, shuffle} from "lodash"
+import {sample, shuffle} from "lodash"
 import {callableColors, PlainColor, plainColors} from "../../cards/Color";
 import {GameMode, GameModeEnum} from "../../GameMode";
-import {Round} from "../../Round";
+import {FinishedRound, Round} from "../../Round";
 import {Card} from "../../cards/Card";
-import {canCallColor, canPlayCard} from "../../PlayableMoves";
-import {playRandomCard} from "../rules/inplay/playRandomCard";
-import {CardToWeights} from "../rules/CardToWeights";
+import {canCallColor, getPlayableCards} from "../../PlayableMoves";
+import {RandomCard} from "../rules/inplay/RandomCard";
 import {Player} from "../../Player";
-
-function chooseBestCard(cardToWeights: CardToWeights) {
-    return Object.entries(cardToWeights).sort((a, b) => {
-        return a[1]! > b[1]! ? -1 : 1;
-    }).shift()![0] as Card;
-}
+import {chooseBestCard} from "../helper";
 
 export default class RandomStrategy implements StrategyInterface {
-    chooseCardToPlay(round: Round, cardSet: readonly Card[], gameMode: GameMode): Card {
-        let playableCards = filter(cardSet, card => {
-            return canPlayCard(gameMode, cardSet, card, round)
-        });
+    chooseCardToPlay(round: Round, cardSet: readonly Card[], gameMode: GameMode, playedRounds: FinishedRound[]): Card {
+        if (playedRounds.length + cardSet.length != 8) {
+            throw Error('invariant violated');
+        }
+        let playableCards = getPlayableCards(cardSet, gameMode, round);
 
         if (!playableCards.length) {
             throw Error(`no playable card found! ${cardSet}`);
         }
 
-        return chooseBestCard(playRandomCard(playableCards));
+        return chooseBestCard((new RandomCard).rateCardSet(playableCards))!;
     }
 
     chooseGameToCall(cardSet: readonly Card[], previousGameMode: GameMode, playerIndex: number): [GameModeEnum?, PlainColor?] {
@@ -64,4 +59,10 @@ export default class RandomStrategy implements StrategyInterface {
     setPlayer(player: Player): void {
         // dont care...
     }
+
+    skipInference(): boolean {
+        return true;
+    }
+
+
 }

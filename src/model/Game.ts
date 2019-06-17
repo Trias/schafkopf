@@ -10,6 +10,7 @@ import {FinishedRound, Round} from "./Round";
 import GamePhase from "./GamePhase";
 import {Card} from "./cards/Card";
 import {sortByNaturalOrdering} from "./cards/CardSet";
+import {findIndex, intersection} from "lodash";
 
 class Game {
     private readonly players: readonly [Player, Player, Player, Player];
@@ -19,12 +20,22 @@ class Game {
     private gamePhase: GamePhase;
 
     constructor(players: readonly [Player, Player, Player, Player]) {
+        let names = [];
+
+        for (let player of players) {
+            names.push(player.getName());
+
+            if (intersection(names).length !== names.length) {
+                throw Error('duplicate names!');
+            }
+        }
+
         this.rounds = [];
         this.players = players;
         this.gamePhase = GamePhase.BEFORE_GAME;
     }
 
-    async play(cardsInSets: readonly Card[][]) {
+    play(cardsInSets: readonly Card[][]) {
         if (this.gamePhase != GamePhase.BEFORE_GAME) {
             throw Error('Invalid state transition');
         }
@@ -36,22 +47,22 @@ class Game {
         this.dealFirstBatchOfCards(cardsInSets);
         this.setGamePhase(GamePhase.FOUR_CARDS_DEALT);
 
-        let klopfer = await this.askPlayerForKlopfer();
+        let klopfer = this.askPlayerForKlopfer();
 
         console.log(`-----deal second batch of cards ------`);
         this.dealSecondBatchOfCard(cardsInSets);
         this.setGamePhase(GamePhase.ALL_CARDS_DEALT);
 
-        this.gameMode = await this.askPlayersWhatTheyWantToPlay();
+        this.gameMode = this.askPlayersWhatTheyWantToPlay();
         this.gameMode.setKlopfer(klopfer);
 
-        if (this.gameMode.getCallingPlayer()) {
+        if (this.gameMode.isNoRetry()) {
             this.notifyPlayersOfGameMode(this.gameMode);
             this.setGamePhase(GamePhase.IN_PLAY);
 
             console.log(`game mode decided: ${this.gameMode.getMode()}, by ${this.gameMode.getCallingPlayer()}, calling for ${this.gameMode.getColorOfTheGame()}`);
 
-            this.rounds = await this.playRounds();
+            this.rounds = this.playRounds();
         }
 
         this.setGamePhase(GamePhase.AFTER_GAME);
@@ -69,10 +80,10 @@ class Game {
         }
     }
 
-    private async askPlayerForKlopfer() {
+    private askPlayerForKlopfer() {
         let klopfer = 0;
         for (let i = 0; i < this.players.length; i++) {
-            let raise = await this.players[i].doYouWantToKlopf();
+            let raise = this.players[i].doYouWantToKlopf();
 
             if (raise) {
                 console.log(`${this.players[i]} klopfes with cards: ${this.players[i].getCurrentCardSet()}!`);
@@ -90,33 +101,41 @@ class Game {
         return new GameResult(this.getGameMode(), this.rounds!, this.players);
     }
 
-    private async playRounds(): Promise<readonly FinishedRound[]> {
+    private playRounds(): readonly FinishedRound[] {
         let rounds: FinishedRound[] = [];
         let activePlayer = this.players[0];
+        if (!activePlayer) {
+            throw Error('no winning player?');
+        }
 
         for (let i = 0; i < 8; i++) {
             console.log(`------round ${i + 1} start-----`);
             let round = new Round(activePlayer, this.players, this.gameMode!);
             for (let j = 0; j < 4; j++) {
-                let card = await activePlayer.playCard(round);
+                if (round.getPosition() >= 4) {
+                    throw Error('round finished');
+                }
+                let card = activePlayer.playCard(round);
                 round.addCard(card);
                 this.notifyPlayersOfCardPlayed(card, activePlayer, j);
                 console.log(`player ${activePlayer.getName()} played ${card} from set ${sortByNaturalOrdering(activePlayer.getCurrentCardSet().concat(card))}`);
 
-                activePlayer = this.nextPlayer(activePlayer);
+                console.log(activePlayer.getName());
+                activePlayer = this.nextPlayer(activePlayer.getName());
+                if (!activePlayer) {
+                    throw Error('no winning player?');
+                }
 
                 // console.log(`------pli ${j+1} finished-----`);
             }
             this.notifyPlayersOfRoundCompleted(round.finish());
-            if (this.gameMode!.isCallGame()
-                && !this.gameMode!.getHasAceBeenCalled()
-                && round.getRoundColor() == this.gameMode!.getColorOfTheGame()
-            ) {
-                this.gameMode!.setHasAceBeenCalled();
-            }
+            this.markCalledAce(round);
             rounds.push(round);
 
             activePlayer = round.getWinningPlayer() as Player;
+            if (!activePlayer) {
+                throw Error('no winning player?');
+            }
 
             console.log(`round winner: ${round.getWinningPlayer().getName()} at position ${round.getWinningCardIndex() + 1}; round cards: ${round.getCards()}`);
             console.log(`------round ${i + 1} finished-----`);
@@ -126,10 +145,19 @@ class Game {
         return rounds;
     }
 
-    private async askPlayersWhatTheyWantToPlay(): Promise<GameMode> {
+    private markCalledAce(round: Round) {
+        if (this.gameMode!.isCallGame()
+            && !this.gameMode!.getHasAceBeenCalled()
+            && round.getRoundColor() == this.gameMode!.getColorOfTheGame()
+        ) {
+            this.gameMode!.setHasAceBeenCalled();
+        }
+    }
+
+    private askPlayersWhatTheyWantToPlay(): GameMode {
         let currentGameMode = new GameMode(GameModeEnum.RETRY);
         for (let i = 0; i < 4; i++) {
-            let newGameMode = await this.players[i].whatDoYouWantToPlay(currentGameMode, i);
+            let newGameMode = this.players[i].whatDoYouWantToPlay(currentGameMode, i);
             if (newGameMode && (GameMode.compareGameModes(newGameMode, currentGameMode) > 0)) {
                 currentGameMode = newGameMode;
             }
@@ -138,8 +166,12 @@ class Game {
         return currentGameMode;
     }
 
-    private nextPlayer(player: Player) {
-        return this.players[(this.players.indexOf(player) + 1) % 4];
+    private nextPlayer(playerName: string) {
+        let playerIndex = findIndex(this.players, (p => p.getName() == playerName));
+        if (playerIndex < 0) {
+            throw Error('player not found');
+        }
+        return this.players[(playerIndex + 1) % 4];
     }
 
     private notifyPlayersOfGameMode(gameMode: GameMode) {

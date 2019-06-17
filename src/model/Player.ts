@@ -8,29 +8,47 @@ import GameKnowledge from "./knowledge/GameKnowledge";
 import GameEventsReceiverInterface from "./knowledge/GameEventsReceiverInterface";
 import {colorsWithTrump, ColorWithTrump} from "./cards/Color";
 import GameAssumptionsInCallGame from "./knowledge/GameAssumptionsInCallGame";
+import {clone, cloneDeep} from "lodash";
+import RandomStrategy from "./strategy/random";
 
-type PlayerWithNameOnly = {
-    getName(): string,
-    toString(): string,
-};
+interface PlayerWithNameOnly {
+    getName(): string;
 
-class Player implements GameEventsReceiverInterface, PlayerWithNameOnly {
-    private startCardSet?: readonly Card[];
-    private readonly name: string;
-    private readonly strategy: StrategyInterface;
-    private gameMode?: GameMode;
-    private currentCardSet?: readonly Card[];
-    private gamePhase: GamePhase;
-    private gameKnowledge?: GameKnowledge;
+    toString(): string;
+}
+
+class Player implements GameEventsReceiverInterface {
+    startCardSet?: readonly Card[];
+    readonly name: string;
+    strategy: StrategyInterface;
+    gameMode?: GameMode;
+    currentCardSet?: readonly Card[];
+    gamePhase: GamePhase;
+    gameKnowledge?: GameKnowledge;
     // noinspection JSMismatchedCollectionQueryUpdate
-    private players?: readonly [PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly];
-    private gameAssumptions?: GameAssumptionsInCallGame;
+    players?: readonly [PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly];
+    gameAssumptions?: GameAssumptionsInCallGame;
+    skipGameKnowledge: boolean = false;
+    rounds: FinishedRound[] = [];
 
     constructor(name: string, strategy: new (player: Player) => (StrategyInterface)) {
         this.gamePhase = GamePhase.BEFORE_GAME;
         this.name = name;
 
         this.strategy = new strategy(this);
+    }
+
+    getDummyClone() {
+        let fakePlayer = new Player(this.name, RandomStrategy);
+        fakePlayer.skipGameKnowledge = true;
+        fakePlayer.currentCardSet = cloneDeep(this.currentCardSet);
+        fakePlayer.startCardSet = cloneDeep(this.startCardSet);
+        // dont do mc recursivly, gameknowledge is not upto date...
+        fakePlayer.gamePhase = this.gamePhase;
+        fakePlayer.rounds = cloneDeep(this.rounds);
+        fakePlayer.gameMode = this.gameMode;
+
+        return fakePlayer;
     }
 
     onGameStart(players: readonly [PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly]) {
@@ -58,9 +76,11 @@ class Player implements GameEventsReceiverInterface, PlayerWithNameOnly {
         }
 
         this.currentCardSet = this.currentCardSet!.concat(cards);
-        this.startCardSet = sortByNaturalOrdering(this.currentCardSet);
+        this.startCardSet = clone(sortByNaturalOrdering(this.currentCardSet));
 
-        this.gameKnowledge = new GameKnowledge(this.startCardSet, this, this.players!);
+        if (!this.strategy.skipInference()) {
+            this.gameKnowledge = new GameKnowledge(this.startCardSet, this, this.players!);
+        }
     }
 
     getStartCardSet(): readonly Card[] {
@@ -70,14 +90,21 @@ class Player implements GameEventsReceiverInterface, PlayerWithNameOnly {
         return this.startCardSet!;
     }
 
-    async playCard(round: Round) {
+    playCard(round: Round) {
         if (this.gamePhase !== GamePhase.IN_PLAY) {
             throw Error('function not available in this state');
         }
 
-        let card = await this.strategy.chooseCardToPlay(round, this.getCurrentCardSet(), this.gameMode!);
+        if (this.currentCardSet!.length + this.rounds.length != 8) {
+            throw Error('invariant violated');
+        }
 
-        this.currentCardSet = removeCard(this.getCurrentCardSet(), card);
+        let card = this.strategy.chooseCardToPlay(round, this.getCurrentCardSet(), this.gameMode!, this.rounds);
+
+        this.currentCardSet = removeCard(this.currentCardSet as Card[], card);
+        if (this.currentCardSet.length + this.rounds.length + 1 != 8) {
+            throw Error('invariant violated');
+        }
 
         return card;
     }
@@ -88,19 +115,22 @@ class Player implements GameEventsReceiverInterface, PlayerWithNameOnly {
         }
 
         this.gameMode = gameMode;
-        this.gameKnowledge!.onGameModeDecided(gameMode);
 
-        if (this.gameMode.getMode() === GameModeEnum.CALL_GAME) {
-            this.gameAssumptions = new GameAssumptionsInCallGame(this.gameKnowledge!, this, this.players!);
-            this.gameAssumptions.onGameModeDecided(gameMode);
+        if (!this.strategy.skipInference()) {
+            this.gameKnowledge!.onGameModeDecided(gameMode);
+
+            if (this.gameMode.getMode() === GameModeEnum.CALL_GAME) {
+                this.gameAssumptions = new GameAssumptionsInCallGame(this.gameKnowledge!, this, this.players!);
+                this.gameAssumptions.onGameModeDecided(gameMode);
+            }
         }
     }
 
-    async whatDoYouWantToPlay(currentGameMode: GameMode, playerIndex: number) {
+    whatDoYouWantToPlay(currentGameMode: GameMode, playerIndex: number) {
         if (this.gamePhase !== GamePhase.ALL_CARDS_DEALT) {
             throw Error('function not available in this state');
         }
-        let [gameMode, color] = await this.strategy.chooseGameToCall(this.getStartCardSet(), currentGameMode, playerIndex);
+        let [gameMode, color] = this.strategy.chooseGameToCall(this.getStartCardSet(), currentGameMode, playerIndex);
 
         if (gameMode && gameMode !== currentGameMode.getMode()) {
             return new GameMode(gameMode, this, color);
@@ -141,23 +171,30 @@ class Player implements GameEventsReceiverInterface, PlayerWithNameOnly {
             this.players = undefined;
             this.gameAssumptions = undefined;
             this.gameKnowledge = undefined;
+            this.rounds = [];
         }
     }
 
     onCardPlayed(card: Card, player: PlayerWithNameOnly, index: number): void {
-        this.gameKnowledge!.onCardPlayed(card, player, index);
-        if (this.gameAssumptions) {
-            this.gameAssumptions!.onCardPlayed(card, player, index);
+        if (!this.strategy.skipInference()) {
+            this.gameKnowledge!.onCardPlayed(card, player, index);
+            if (this.gameAssumptions) {
+                this.gameAssumptions!.onCardPlayed(card, player, index);
+            }
         }
     }
 
     onRoundCompleted(round: FinishedRound, roundIndex: number): void {
-        this.gameKnowledge!.onRoundCompleted(round, roundIndex);
-        if (this.gameAssumptions) {
-            this.gameAssumptions.onRoundCompleted(round, roundIndex);
+        if (!this.strategy.skipInference()) {
+            this.gameKnowledge!.onRoundCompleted(round, roundIndex);
+            if (this.gameAssumptions) {
+                this.gameAssumptions.onRoundCompleted(round, roundIndex);
+            }
         }
 
-        if (this.getName() == "Player 1") {
+        this.rounds.push(round);
+
+        if (this.getName() == "Player 1" && !this.strategy.skipInference()) {
             console.log(`Player: ${this.toString()}`);
             console.log(`teampartner known: ${this.gameKnowledge!.isTeamPartnerKnown()}; `);
             console.log(`highestUnplayed card for Eichel: ${this.gameKnowledge!.highestUnplayedCardForColor(ColorWithTrump.EICHEL)}, Gras: ${this.gameKnowledge!.highestUnplayedCardForColor(ColorWithTrump.GRAS)}, Herz: ${this.gameKnowledge!.highestUnplayedCardForColor(ColorWithTrump.HERZ)},  Schelle: ${this.gameKnowledge!.highestUnplayedCardForColor(ColorWithTrump.SCHELLE)},  Trump: ${this.gameKnowledge!.highestUnplayedCardForColor(ColorWithTrump.TRUMP)}`);
@@ -185,6 +222,20 @@ class Player implements GameEventsReceiverInterface, PlayerWithNameOnly {
 
             console.log(`-----`);
         }
+    }
+
+    setCurrentCardSet(currentCardSet: Card[]) {
+        // TODO: protect with types...
+
+        if (this.currentCardSet && currentCardSet.length != this.currentCardSet!.length) {
+            throw Error('sorry cant doo');
+        }
+
+        if (currentCardSet.length + this.rounds.length != 8) {
+            // throw Error('invariant violated');
+        }
+
+        this.currentCardSet = currentCardSet;
     }
 }
 

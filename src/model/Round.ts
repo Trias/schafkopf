@@ -1,23 +1,36 @@
 import {Card} from "./cards/Card";
 import {GameMode} from "./GameMode";
-import {PlayerWithNameOnly} from "./Player";
+import {Player, PlayerWithNameOnly} from "./Player";
 import cardRankToValue from "./cards/CardRankToValue";
 import CardRankToValue from "./cards/CardRankToValue";
 import {ColorWithTrump} from "./cards/Color";
 import CardRank from "./cards/CardRank";
 import {getRank} from "./cards/CardSet";
+import {clone, findIndex, includes} from "lodash";
 
 class Round implements FinishedRound {
-    private readonly playedCards: Card[];
-    private readonly startPlayer: PlayerWithNameOnly;
-    private readonly players: readonly PlayerWithNameOnly[];
+    private playedCards: Card[];
+    private startPlayer: PlayerWithNameOnly;
+    private players: readonly PlayerWithNameOnly[];
     private readonly gameMode: GameMode;
 
+    // TODO use player names, not objects.
     constructor(startPlayer: PlayerWithNameOnly, players: readonly PlayerWithNameOnly[], gameMode: GameMode) {
         this.players = players;
         this.gameMode = gameMode;
         this.playedCards = [];
         this.startPlayer = startPlayer;
+    }
+
+    nextRound(activePlayer: Player) {
+        return new Round(activePlayer, this.players, this.gameMode);
+    }
+
+    clone() {
+        let r = new Round(this.startPlayer, this.players, this.gameMode);
+        r.playedCards = clone(this.playedCards);
+
+        return r;
     }
 
     isEmpty() {
@@ -37,6 +50,13 @@ class Round implements FinishedRound {
     }
 
     addCard(card: Card) {
+        if (this.playedCards.length >= 4) {
+            throw Error('round is finished');
+        }
+
+        if (includes(this.playedCards, card)) {
+            throw Error('invariant violated');
+        }
         this.playedCards.push(card);
     }
 
@@ -44,21 +64,23 @@ class Round implements FinishedRound {
         return this.startPlayer;
     }
 
+    getLastPlayer() {
+        return this.players[(this.players.indexOf(this.startPlayer) + 3) % 4];
+    }
+
+    getSecondPlayer() {
+        return this.players[(this.players.indexOf(this.startPlayer) + 1) % 4];
+    }
+
+    getThirdPlayer() {
+        return this.players[(this.players.indexOf(this.startPlayer) + 2) % 4];
+    }
+
     getWinningCardIndex() {
         if (!this.isFinished()) {
             throw Error('round not finished');
         } else {
-            let highestCard = this.playedCards[0];
-            let highestCardIndex = 0;
-            for (let i = 1; i < this.playedCards.length; i++) {
-                let newHighestCardCandidate = this.gameMode.getOrdering().highestCard(highestCard, this.playedCards[i]);
-                if (highestCard !== newHighestCardCandidate) {
-                    // console.log(`new highest card: ${newHighestCardCandidate}`);
-                    highestCardIndex = i;
-                    highestCard = newHighestCardCandidate;
-                }
-            }
-            return highestCardIndex;
+            return this.playedCards.indexOf(this.getHighestCard());
         }
     }
 
@@ -89,6 +111,10 @@ class Round implements FinishedRound {
 
     getCards(): readonly Card[] {
         return this.playedCards;
+    }
+
+    getPosition(): number {
+        return this.playedCards.length;
     }
 
     finish() {
@@ -159,20 +185,140 @@ class Round implements FinishedRound {
         return this.playedCards[this.getWinningCardIndex()];
     }
 
-    getPlayerIndex(player: PlayerWithNameOnly) {
-        return this.players.indexOf(player);
+    getHighestCard() {
+        let highestCard = this.playedCards[0];
+        for (let i = 1; i < this.playedCards.length; i++) {
+            let newHighestCardCandidate = this.gameMode.getOrdering().highestCard(highestCard, this.playedCards[i]);
+            if (highestCard !== newHighestCardCandidate) {
+                highestCard = newHighestCardCandidate;
+            }
+        }
+        return highestCard;
+    }
+
+    getHighestCardIndex() {
+        let highestCard = this.getHighestCard();
+
+        return this.getIndexOfCard(highestCard);
+    }
+
+    getIndexOfCard(card: Card) {
+        return this.playedCards.indexOf(card);
+    }
+
+    setPlayers(players: PlayerWithNameOnly[]) {
+        // todo restrict with types
+        this.players = players;
+        this.startPlayer = players[0];
+    }
+
+    getCardForPlayer(playerName: string) {
+        let playerIndex = findIndex(this.players, (p => p.getName() == playerName));
+        let startPlayerIndex = findIndex(this.players, (p => p.getName() == this.startPlayer.getName()));
+        let playedCardsOffset = (playerIndex + 4 - startPlayerIndex) % 4;
+
+        if (playedCardsOffset >= this.playedCards.length) {
+            return null;
+        } else {
+            return this.playedCards[playedCardsOffset];
+        }
+    }
+
+    playerBefore(lastPlayerName: string) {
+        let index = findIndex(this.players, p => p.getName() == lastPlayerName)!;
+
+        if (index < 0) {
+            throw Error('player not found');
+        }
+
+        return this.players[(index - 1 + 4) % 4];
+    }
+
+    playerAfter(lastPlayerName: string) {
+        let index = findIndex(this.players, p => p.getName() == lastPlayerName)!;
+
+        if (index < 0) {
+            throw Error('player not found');
+        }
+
+        return this.players[(index + 1 + 4) % 4];
+    }
+
+    isLeftPlayerBeforeRightPlayer(name1: string, name2: string) {
+        let index1 = findIndex(this.players, p => p.getName() == name1)!;
+        let index2 = findIndex(this.players, p => p.getName() == name2)!;
+        let startPlayerIndex = findIndex(this.players, p => p.getName() == this.getStartPlayer().getName())!;
+
+        if (index1 < index2) {
+            if (startPlayerIndex <= index1 || startPlayerIndex > index2) {
+                return true;
+            } else {
+                // between index 1 and index2
+                return false;
+            }
+        } else if (index1 == index2) {
+            // hmm...
+            return true;
+        } else {
+            if (startPlayerIndex <= index1 && startPlayerIndex > index2) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    getNextPlayer() {
+        let currentPlayer = this.getCurrentPlayer();
+        return this.playerAfter(currentPlayer.getName());
+    }
+
+    getCurrentPlayer() {
+        let position = this.getPosition();
+        return this.getPlayerAtPosition(position);
+    }
+
+    getPlayerPosition(name: string) {
+        let index = findIndex(this.players, p => p.getName() == name);
+        if (index < 0) {
+            throw Error('player not found');
+        }
+
+        return (index - this.getStartPlayerIndex() + 4) % 4;
+    }
+
+    setStartPlayer(player: Player) {
+        this.startPlayer = player;
+    }
+
+    private getPlayerAtPosition(position: number) {
+        return this.players[(this.getStartPlayerIndex() + position + 4) % 4];
+    }
+
+    private getStartPlayerIndex() {
+        let startPlayer = this.getStartPlayer();
+
+        let index = this.players.indexOf(startPlayer);
+
+        if (index < 0) {
+            throw Error('player not found');
+        }
+
+        return index;
     }
 }
 
 export {Round, FinishedRound, MinimalRound};
 
-type MinimalRound = {
-    getCards(): readonly Card[],
-    getRoundColor(): ColorWithTrump,
-    isEmpty(): boolean
+interface MinimalRound {
+    getCards(): readonly Card[];
+
+    getRoundColor(): ColorWithTrump;
+
+    isEmpty(): boolean;
 }
 
-type FinishedRound = {
+interface FinishedRound {
     getCards(): readonly Card[];
     getPoints(): number;
     getWinningPlayer(): PlayerWithNameOnly;
@@ -184,7 +330,6 @@ type FinishedRound = {
     hasSchmier(): boolean;
     getSchmierPlayer(): readonly PlayerWithNameOnly[];
     getSchmierCardIndex(): number | null;
-    getPlayerIndex(player: PlayerWithNameOnly): number;
     getWinningCard(): Card;
     getWinningCardIndex(): number;
 }

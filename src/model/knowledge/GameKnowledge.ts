@@ -6,10 +6,11 @@ import {Card} from "../cards/Card";
 import GameEventsReceiverInterface from "./GameEventsReceiverInterface";
 import {GameMode, GameModeEnum} from "../GameMode";
 import {FinishedRound} from "../Round";
-import {allOfColor, hasCard, removeCard} from "../cards/CardSet";
+import {allOfColor, getCardsByColor, hasCard, removeCard} from "../cards/CardSet";
 import {PlayerWithNameOnly} from "../Player";
 import {difference, eq, without} from "lodash";
 import {CallableColor, ColorWithTrump} from "../cards/Color";
+import CardDeck from "../cards/sets/CardDeck";
 
 type ColorInfoType = { [index in ColorWithTrump]: boolean };
 type CardsInfoType = { [index in ColorWithTrump]: readonly Card[] };
@@ -35,6 +36,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
 
     // without cards on hand, iE public knowledge
     private remainingCardsByColor: CardsInfoType;
+    private remainingCards: readonly Card[];
 
     // includes cards on Hand
     private remainingCardsByColorWithHandCards: CardsInfoType;
@@ -62,7 +64,7 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
         for (let player of allPlayer) {
             this.pointsForPlayer[player.getName()] = 0;
             this.playedCardsByPlayer[player.getName()] = [];
-            if (player != this.thisPlayer) {
+            if (player.getName() != this.thisPlayer.getName()) {
                 this.colorFreeByPlayer[player.getName()] = {
                     [ColorWithTrump.EICHEL]: false,
                     [ColorWithTrump.GRAS]: false,
@@ -82,7 +84,16 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
         };
 
         this.remainingCardsByColor = {E: [], G: [], H: [], S: [], T: []};
+        this.remainingCards = difference(CardDeck, this.startHandCards);
         this.remainingCardsByColorWithHandCards = {E: [], G: [], H: [], S: [], T: []};
+    }
+
+    getPlayedCards() {
+        return this.playedCards;
+    }
+
+    getRemainingCards() {
+        return this.remainingCards;
     }
 
     onCardPlayed(card: Card, player: PlayerWithNameOnly, index: number): void {
@@ -93,9 +104,10 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
 
         this.remainingCardsByColorWithHandCards[cardColor] = removeCard(this.remainingCardsByColorWithHandCards[cardColor], card);
 
-        if (player == this.thisPlayer) {
+        if (player.getName() == this.thisPlayer.getName()) {
             this.currentHandCards = removeCard(this.currentHandCards, card);
         } else {
+            this.remainingCards = removeCard(this.remainingCards, card);
             this.remainingCardsByColor[cardColor] = removeCard(this.remainingCardsByColor[cardColor], card);
         }
 
@@ -276,6 +288,10 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
         return this.colorFreeByPlayer[player.getName()]![color];
     }
 
+    getColorFreeByPlayer() {
+        return this.colorFreeByPlayer;
+    }
+
     getCurrentRankWithEqualRanksOfCardInColor(cards: readonly Card[], color: ColorWithTrump): { [index in Card]?: number } {
         let cardsInColor = allOfColor(cards, color, this.gameMode);
         let currentRank = 0;
@@ -441,10 +457,10 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
     }
 
     getTeamPartnerForPlayer(player: PlayerWithNameOnly): PlayerWithNameOnly | null {
-        if (player == this.thisPlayer) {
+        if (player.getName() == this.thisPlayer.getName()) {
             return this.getTeamPartner();
         } else if (this.startHandCards.indexOf(this.gameMode.getCalledAce()) !== -1) {
-            if (player == this.gameMode.getCallingPlayer()) {
+            if (player.getName() == this.gameMode.getCallingPlayer().getName()) {
                 return this.thisPlayer;
             } else {
                 return without(this.allPlayers, player, this.gameMode.getCallingPlayer(), this.thisPlayer).pop()!;
@@ -460,5 +476,36 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
                 return null;
             }
         }
+    }
+
+    hasPlayerAbspatzenCallColor() {
+        if (!this.gameMode.isCallGame()) {
+            throw Error('only available in call game');
+        }
+
+        if (this.isTeamPartnerPublicallyKnown()) {
+            throw Error('function call does no make sense here...');
+        }
+        let cardPlayedByCaller = this.playedCardsByPlayer[this.gameMode.getCallingPlayer().getName()];
+        let callColor = this.gameMode.getCalledColor();
+        let callColorCards = getCardsByColor(cardPlayedByCaller, this.gameMode)[callColor];
+
+        if (callColorCards.length > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    getRemainingCardsByColor() {
+        return this.remainingCardsByColor;
+    }
+
+    getPlayedCardsByPlayer(name: string) {
+        return this.playedCardsByPlayer[name]!;
+    }
+
+    getCurrentHandCards() {
+        return this.currentHandCards;
     }
 }
