@@ -9,7 +9,7 @@ import {getRank} from "./cards/CardSet";
 import {clone, findIndex, includes} from "lodash";
 
 class Round implements FinishedRound {
-    private playedCards: Card[];
+    playedCards: Card[];
     private startPlayer: PlayerWithNameOnly;
     private players: readonly PlayerWithNameOnly[];
     private readonly gameMode: GameMode;

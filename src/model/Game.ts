@@ -120,7 +120,6 @@ class Game {
                 this.notifyPlayersOfCardPlayed(card, activePlayer, j);
                 console.log(`player ${activePlayer.getName()} played ${card} from set ${sortByNaturalOrdering(activePlayer.getCurrentCardSet().concat(card))}`);
 
-                console.log(activePlayer.getName());
                 activePlayer = this.nextPlayer(activePlayer.getName());
                 if (!activePlayer) {
                     throw Error('no winning player?');

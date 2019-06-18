@@ -9,16 +9,18 @@ export class SimulatedGame {
     private players: readonly Player[];
     private rounds: FinishedRound[];
     private gameMode: GameMode;
+    private round: Round;
 
-    constructor(players: readonly Player[], gameMode: GameMode, playedRounds: FinishedRound[]) {
+    constructor(players: readonly Player[], round: Round, gameMode: GameMode, playedRounds: FinishedRound[]) {
         this.gameMode = gameMode;
         this.rounds = playedRounds;
         this.players = players;
+        this.round = round;
     }
 
     simulateRounds(playerName: string, roundIndex: number, round: Round): readonly FinishedRound[] {
         let activePlayer = find(this.players, p => p.getName() == playerName)!;
-
+        this.round = round;
         for (let i = roundIndex; i < 8; i++) {
             for (let player of this.players) {
                 if (round.isLeftPlayerBeforeRightPlayer(activePlayer.getName(), player.getName()) && player.currentCardSet!.length != 8 - i) {
@@ -45,7 +47,7 @@ export class SimulatedGame {
             this.rounds.push(round);
 
             activePlayer = round.getWinningPlayer() as Player;
-            round = round.nextRound(activePlayer);
+            this.round = round.nextRound(activePlayer);
         }
 
         return this.rounds;
@@ -94,5 +96,13 @@ export class SimulatedGame {
         for (let i = 0; i < 4; i++) {
             this.players[i].onRoundCompleted(finishedRound, this.rounds.length);
         }
+    }
+
+    getRound() {
+        return this.round
+    }
+
+    getPlayedRounds() {
+        return this.rounds;
     }
 }

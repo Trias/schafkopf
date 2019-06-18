@@ -5,6 +5,7 @@ import {clone, remove, sample, shuffle, without} from "lodash";
 import {Card} from "../cards/Card";
 import {removeCard} from "../cards/CardSet";
 import {Round} from "../Round";
+import GamePhase from "../GamePhase";
 
 export function generateRandomWorldConsistentWithGameKnowledge(gameMode: GameMode, gameKnowledge: GameKnowledge, otherPlayers: Player[], thisPlayer: Player, round: Round): Player[] {
     let remainingCards = gameKnowledge.getRemainingCards();
@@ -125,9 +126,6 @@ export function generateRandomWorldConsistentWithGameKnowledge(gameMode: GameMod
 
     assignForcedCards();
 
-    //let fullPlayers: Player[] = [];
-
-
     // do player to possible card...
 
     let i = 0;
@@ -157,6 +155,11 @@ export function generateRandomWorldConsistentWithGameKnowledge(gameMode: GameMod
     for (let player of players) {
         player.setCurrentCardSet(playerToCards[player.getName()]!);
         player.startCardSet = playerToCards[player.getName()]!.concat(gameKnowledge.getPlayedCardsByPlayer(player.getName()));
+        player.gamePhase = GamePhase.ALL_CARDS_DEALT;
+        player.gameKnowledge = new GameKnowledge(player.startCardSet, player, [thisPlayer, ...players]);
+        player.players = [thisPlayer, ...players];
+        player.onGameModeDecided(gameMode);
+        player.gamePhase = GamePhase.IN_PLAY;
 
         let currentRoundCard = round.getCardForPlayer(player.getName());
 

@@ -208,6 +208,36 @@ export function getLongestColors(cardSet: readonly Card[], gameMode: GameMode) {
 }
 
 
+function getCardLengthsByPlainColor(cardSet: ReadonlyArray<Card>) {
+    let result: { [index in string]: number } = {};
+    for (let card of cardSet) {
+        let color = card[0] as string;
+        result[color] = result[color] || 0;
+        result[color]++;
+    }
+
+    return result;
+}
+
+export function getLongestPlainColors(cardSet: readonly Card[]): PlainColor[] {
+    cardSet = difference(cardSet, OberAndUnter);
+
+    let cardLengthsByColor = getCardLengthsByPlainColor(cardSet);
+    let longestColorLength = 0;
+    let longestColors: PlainColor[] = [];
+
+    for (let [color, length] of Object.entries(cardLengthsByColor) as [PlainColor, number][]) {
+        if (length > longestColorLength) {
+            longestColorLength = length;
+            longestColors = [color];
+        } else if (length == longestColorLength) {
+            longestColors.push(color);
+        }
+    }
+
+    return longestColors;
+}
+
 export function hasTrumps(cardSet: readonly Card[], gameMode: GameMode) {
     return getTrumps(cardSet, gameMode).length > 0;
 }

@@ -6,7 +6,6 @@ import {FinishedRound, Round} from "../../Round";
 import {Card} from "../../cards/Card";
 import {canCallColor, getPlayableCards} from "../../PlayableMoves";
 import {RandomCard} from "../rules/inplay/RandomCard";
-import {Player} from "../../Player";
 import {chooseBestCard} from "../helper";
 
 export default class RandomStrategy implements StrategyInterface {
@@ -56,12 +55,8 @@ export default class RandomStrategy implements StrategyInterface {
         return Math.random() < 0.1;
     }
 
-    setPlayer(player: Player): void {
-        // dont care...
-    }
-
     skipInference(): boolean {
-        return true;
+        return false;
     }
 
 

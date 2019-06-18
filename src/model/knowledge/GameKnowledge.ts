@@ -15,6 +15,7 @@ import CardDeck from "../cards/sets/CardDeck";
 type ColorInfoType = { [index in ColorWithTrump]: boolean };
 type CardsInfoType = { [index in ColorWithTrump]: readonly Card[] };
 
+// TODO split into public history and private knowledge
 export default class GameKnowledge implements GameEventsReceiverInterface {
     private readonly startHandCards: readonly Card[];
     private readonly playedCards: Card[];
@@ -221,14 +222,14 @@ export default class GameKnowledge implements GameEventsReceiverInterface {
             if (!this.colorFreeByPlayer[playingPlayer.getName()]![roundColor]) {
                 if (roundColor != cardColor) {
                     if (this.thisPlayer.getName() == "Player 1") {
-                        console.log(`player ${playingPlayer} marked color free of ${roundColor} because did not follow suit`);
+                        //  console.log(`player ${playingPlayer} marked color free of ${roundColor} because did not follow suit`);
                     }
                     this.colorFreeByPlayer[playingPlayer.getName()]![roundColor] = true;
                 }
                 if (this.doIHaveAllCardsOfColor(cardColor) || this.remainingCardsByColorWithHandCards[cardColor].length == 0) {
                     for (let otherPlayer of this.otherPlayers) {
                         if (this.thisPlayer.getName() == "Player 1") {
-                            console.log(`player ${otherPlayer} marked color free of ${roundColor} because all color cards played or held by player are played`);
+                            // console.log(`player ${otherPlayer} marked color free of ${roundColor} because all color cards played or held by player are played`);
                         }
                         this.colorFreeByPlayer[otherPlayer.getName()]![cardColor] = true;
                     }

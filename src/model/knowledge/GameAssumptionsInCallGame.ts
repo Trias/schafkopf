@@ -5,7 +5,7 @@ import {Player, PlayerWithNameOnly} from "../Player";
 import {GameMode, GameModeEnum} from "../GameMode";
 import {FinishedRound, Round} from "../Round";
 import {ColorWithTrump} from "../cards/Color";
-import {difference, includes, intersection, without} from "lodash";
+import {difference, filter, includes, intersection, without} from "lodash";
 import GameAssumptions from "./GameAssumptions";
 import {getCardLengthsByColor} from "../cards/CardSet";
 import {getPlayableCards} from "../PlayableMoves";
@@ -37,7 +37,7 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
 
     // private otherPlayers?: [Player, Player, Player];
 
-    constructor(gameKnowledge: GameKnowledge, thisPlayer: PlayerWithNameOnly, players: readonly [PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly]) {
+    constructor(gameKnowledge: GameKnowledge, thisPlayer: PlayerWithNameOnly, players: readonly PlayerWithNameOnly[]) {
         this.gameKnowledge = gameKnowledge;
         this.thisPlayer = thisPlayer;
         this.players = players;
@@ -113,8 +113,11 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
 
         // this.noneCaller = difference(this.players, [this.gameMode.getCallingPlayer()]) as [Player, Player, Player];
         //    this.otherPlayers = without(this.players, this.thisPlayer) as [Player, Player, Player];
-        this.otherPlayersWithoutCaller = difference(this.players, [this.thisPlayer, this.gameMode.getCallingPlayer()!]);
+        this.otherPlayersWithoutCaller = filter(this.players, p => p.getName() != this.thisPlayer.getName() && p.getName() != this.gameMode.getCallingPlayer().getName())!;
 
+        if (this.otherPlayersWithoutCaller.length == 0) {
+            throw Error('empty other players');
+        }
         for (let player of this.otherPlayersWithoutCaller) {
             this.possibleTeamPartnerScores[player.getName()] = {score: 0, reasons: []};
         }
@@ -381,15 +384,17 @@ export default class GameAssumptionsInCallGame implements GameEventsReceiverInte
     }
 
     private scorePlayer(player: PlayerWithNameOnly, scoreAdd: number, reason: string) {
-        let {score, reasons} = this.possibleTeamPartnerScores[player.getName()]!;
+        if (player.getName() in this.possibleTeamPartnerScores) {
+            let {score, reasons} = this.possibleTeamPartnerScores[player.getName()]!;
 
-        reasons.push(reason);
-        score = score + scoreAdd;
+            reasons.push(reason);
+            score = score + scoreAdd;
 
-        this.possibleTeamPartnerScores[player.getName()] = {
-            score,
-            reasons
-        };
+            this.possibleTeamPartnerScores[player.getName()] = {
+                score,
+                reasons
+            };
+        }
     }
 
     private markPlayerAsPossiblePartnerByTrump(round: FinishedRound, roundIndex: number) {

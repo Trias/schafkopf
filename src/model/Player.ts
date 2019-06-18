@@ -26,7 +26,7 @@ class Player implements GameEventsReceiverInterface {
     gamePhase: GamePhase;
     gameKnowledge?: GameKnowledge;
     // noinspection JSMismatchedCollectionQueryUpdate
-    players?: readonly [PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly];
+    players?: readonly PlayerWithNameOnly[];
     gameAssumptions?: GameAssumptionsInCallGame;
     skipGameKnowledge: boolean = false;
     rounds: FinishedRound[] = [];
@@ -53,7 +53,7 @@ class Player implements GameEventsReceiverInterface {
         return fakePlayer;
     }
 
-    onGameStart(players: readonly [PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly, PlayerWithNameOnly]) {
+    onGameStart(players: readonly PlayerWithNameOnly[]) {
         this.players = players;
         this.notifyGamePhase(GamePhase.GAME_STARTED);
     }
@@ -211,7 +211,7 @@ class Player implements GameEventsReceiverInterface {
 
         this.rounds.push(round);
 
-        if (this.getName() == "Player 1" && !this.strategy.skipInference()) {
+        if (this.getName() == "Player 1" && !this.strategy.skipInference() && false) {
             console.log(`Player: ${this.toString()}`);
             console.log(`teampartner known: ${this.gameKnowledge!.isTeamPartnerKnown()}; `);
             console.log(`highestUnplayed card for Eichel: ${this.gameKnowledge!.highestUnplayedCardForColor(ColorWithTrump.EICHEL)}, Gras: ${this.gameKnowledge!.highestUnplayedCardForColor(ColorWithTrump.GRAS)}, Herz: ${this.gameKnowledge!.highestUnplayedCardForColor(ColorWithTrump.HERZ)},  Schelle: ${this.gameKnowledge!.highestUnplayedCardForColor(ColorWithTrump.SCHELLE)},  Trump: ${this.gameKnowledge!.highestUnplayedCardForColor(ColorWithTrump.TRUMP)}`);
@@ -219,12 +219,12 @@ class Player implements GameEventsReceiverInterface {
             console.log(`farbe Angespielt: Eichel: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.EICHEL)}, Gras: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.GRAS)}, Herz: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.HERZ)}, Schelle: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.SCHELLE)}, Trump: ${this.gameKnowledge!.hasColorBeenAngespielt(ColorWithTrump.TRUMP)}`);
 
             if (this.gameAssumptions) {
-                let {player, confidence, reasons} = this.gameAssumptions.getPossibleTeamPartnerForPlayer(this);
+                let {player, confidence, reasons} = this.gameAssumptions!.getPossibleTeamPartnerForPlayer(this);
                 console.log(`possible Partner: ${player} with confidence ${Math.round(confidence * 100)}% because ${reasons}`);
 
                 for (let player of this.players!) {
                     for (let color of colorsWithTrump) {
-                        let {assumption, reasons} = this.gameAssumptions.isPlayerPossiblyColorFree(player, color);
+                        let {assumption, reasons} = this.gameAssumptions!.isPlayerPossiblyColorFree(player, color);
                         if (assumption) {
                             console.log(`player ${player} assumed Color free of ${color} because of ${reasons}`);
                         }
