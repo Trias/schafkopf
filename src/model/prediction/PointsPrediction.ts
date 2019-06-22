@@ -1,4 +1,0 @@
-/**
- estimates the points possible
-
- */

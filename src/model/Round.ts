@@ -1,36 +1,24 @@
 import {Card} from "./cards/Card";
+import {includes} from "lodash";
 import {GameMode} from "./GameMode";
-import {Player, PlayerWithNameOnly} from "./Player";
-import cardRankToValue from "./cards/CardRankToValue";
-import CardRankToValue from "./cards/CardRankToValue";
-import {ColorWithTrump} from "./cards/Color";
-import CardRank from "./cards/CardRank";
-import {getRank} from "./cards/CardSet";
-import {clone, findIndex, includes} from "lodash";
+import {RoundAnalyzer} from "./knowledge/RoundAnalyzer";
 
 class Round implements FinishedRound {
-    playedCards: Card[];
-    private startPlayer: PlayerWithNameOnly;
-    private players: readonly PlayerWithNameOnly[];
-    private readonly gameMode: GameMode;
+    private playedCards: Card[];
+    private startPlayerName: string;
+    private playerNames: readonly string[];
 
-    // TODO use player names, not objects.
-    constructor(startPlayer: PlayerWithNameOnly, players: readonly PlayerWithNameOnly[], gameMode: GameMode) {
-        this.players = players;
-        this.gameMode = gameMode;
-        this.playedCards = [];
-        this.startPlayer = startPlayer;
+    constructor(startPlayerName: string, playerNames: readonly string[], playedCards: Card[] = []) {
+        if (!startPlayerName || playerNames.indexOf(startPlayerName) == -1) {
+            throw Error('player not found');
+        }
+        this.playerNames = playerNames;
+        this.playedCards = playedCards;
+        this.startPlayerName = startPlayerName;
     }
 
-    nextRound(activePlayer: Player) {
-        return new Round(activePlayer, this.players, this.gameMode);
-    }
-
-    clone() {
-        let r = new Round(this.startPlayer, this.players, this.gameMode);
-        r.playedCards = clone(this.playedCards);
-
-        return r;
+    nextRound(activePlayerName: string) {
+        return new Round(activePlayerName, this.playerNames);
     }
 
     isEmpty() {
@@ -39,14 +27,6 @@ class Round implements FinishedRound {
 
     isFinished() {
         return this.playedCards.length === 4;
-    }
-
-    getRoundColor() {
-        if (this.isEmpty()) {
-            throw Error('no card played');
-        } else {
-            return this.gameMode.getOrdering().getColor(this.playedCards[0]);
-        }
     }
 
     addCard(card: Card) {
@@ -61,56 +41,33 @@ class Round implements FinishedRound {
         this.playedCards.push(card);
     }
 
-    getStartPlayer() {
-        return this.startPlayer;
+    getStartPlayerName() {
+        return this.startPlayerName;
     }
 
-    getLastPlayer() {
-        return this.players[(this.players.indexOf(this.startPlayer) + 3) % 4];
+    getSecondPlayerName() {
+        return this.playerNames[(this.playerNames.indexOf(this.startPlayerName) + 1) % 4];
     }
 
-    getSecondPlayer() {
-        return this.players[(this.players.indexOf(this.startPlayer) + 1) % 4];
+    getThirdPlayerName() {
+        return this.playerNames[(this.playerNames.indexOf(this.startPlayerName) + 2) % 4];
     }
 
-    getThirdPlayer() {
-        return this.players[(this.players.indexOf(this.startPlayer) + 2) % 4];
+    getLastPlayerName() {
+        return this.playerNames[(this.playerNames.indexOf(this.startPlayerName) + 3) % 4];
     }
 
-    getWinningCardIndex() {
-        if (!this.isFinished()) {
-            throw Error('round not finished');
-        } else {
-            return this.playedCards.indexOf(this.getHighestCard());
-        }
-    }
-
-    getWinningPlayer() {
-        return this.players[(this.getWinningCardIndex() + this.players.indexOf(this.getStartPlayer())) % 4];
-    }
-
-    getPlayerForCard(card: Card): PlayerWithNameOnly {
+    getPlayerNameForCard(card: Card): string {
         let index = this.playedCards.indexOf(card);
 
         if (index == -1) {
             throw Error('card no included in round');
         }
-        return this.players[(this.players.indexOf(this.getStartPlayer()) + index) % 4];
+        return this.playerNames[(this.playerNames.indexOf(this.getStartPlayerName()) + index) % 4];
 
     }
 
-    getPoints(): number {
-        let points = 0;
-        for (let playedCard of this.playedCards) {
-            let cardRank = getRank(playedCard);
-            let addedPoints = cardRankToValue[cardRank];
-            points = points + addedPoints;
-        }
-
-        return points;
-    }
-
-    getCards(): readonly Card[] {
+    getPlayedCards(): Card[] {
         return this.playedCards;
     }
 
@@ -126,96 +83,20 @@ class Round implements FinishedRound {
         return this as FinishedRound;
     }
 
-    hasOffColorSchmier() {
-        for (let card of this.playedCards) {
-            if (this.gameMode.getOrdering().getColor(card) !== this.getRoundColor()
-                && CardRankToValue[card[1] as CardRank] >= 10
-                && card != this.getWinningCard()
-            ) {
-                return true;
-            }
-        }
 
-        return false;
-    }
-
-    hasSchmier() {
-        for (let card of this.playedCards) {
-            if (CardRankToValue[card[1] as CardRank] >= 10 && card != this.getWinningCard()) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    getSchmierPlayer() {
-        let schmierPlayer = [];
-        for (let card of this.playedCards) {
-            if (CardRankToValue[card[1] as CardRank] >= 10 && card != this.getWinningCard()) {
-                schmierPlayer.push(this.getPlayerForCard(card));
-            }
-        }
-
-        return schmierPlayer as readonly PlayerWithNameOnly[];
-    }
-
-    getSchmierCardIndex() {
-        for (let i = 0; i < this.playedCards.length; i++) {
-            let card = this.playedCards[i];
-            if (CardRankToValue[card[1] as CardRank] >= 10) {
-                if (i != this.getWinningCardIndex()) {
-                    return i;
-                }
-            }
-        }
-        return null;
-    }
-
-    getOffColorSchmierPlayer() {
-        for (let card of this.playedCards) {
-            if (this.gameMode.getOrdering().getColor(card) !== this.getRoundColor() && CardRankToValue[card[1] as CardRank] >= 10) {
-                return this.getPlayerForCard(card);
-            }
-        }
-
-        return null;
-    }
-
-    getWinningCard() {
-        return this.playedCards[this.getWinningCardIndex()];
-    }
-
-    getHighestCard() {
-        let highestCard = this.playedCards[0];
-        for (let i = 1; i < this.playedCards.length; i++) {
-            let newHighestCardCandidate = this.gameMode.getOrdering().highestCard(highestCard, this.playedCards[i]);
-            if (highestCard !== newHighestCardCandidate) {
-                highestCard = newHighestCardCandidate;
-            }
-        }
-        return highestCard;
-    }
-
-    getHighestCardIndex() {
-        let highestCard = this.getHighestCard();
-
-        return this.getIndexOfCard(highestCard);
-    }
-
-    getIndexOfCard(card: Card) {
+    getPositionOfCard(card: Card) {
         return this.playedCards.indexOf(card);
     }
 
-    setPlayers(players: PlayerWithNameOnly[]) {
+    setPlayerNames(playerNames: string[]) {
         // todo restrict with types
-        this.players = players;
-        this.startPlayer = players[0];
+        this.playerNames = playerNames;
+        this.startPlayerName = playerNames[0];
     }
 
-    getCardForPlayer(playerName: string) {
-        let playerIndex = findIndex(this.players, (p => p.getName() == playerName));
-        let startPlayerIndex = findIndex(this.players, (p => p.getName() == this.startPlayer.getName()));
+    getCardForPlayerName(playerName: string) {
+        let playerIndex = this.playerNames.indexOf(playerName);
+        let startPlayerIndex = this.playerNames.indexOf(this.startPlayerName);
         let playedCardsOffset = (playerIndex + 4 - startPlayerIndex) % 4;
 
         if (playedCardsOffset >= this.playedCards.length) {
@@ -226,29 +107,29 @@ class Round implements FinishedRound {
     }
 
     playerBefore(lastPlayerName: string) {
-        let index = findIndex(this.players, p => p.getName() == lastPlayerName)!;
+        let index = this.playerNames.indexOf(lastPlayerName);
 
         if (index < 0) {
             throw Error('player not found');
         }
 
-        return this.players[(index - 1 + 4) % 4];
+        return this.playerNames[(index - 1 + 4) % 4];
     }
 
     playerAfter(lastPlayerName: string) {
-        let index = findIndex(this.players, p => p.getName() == lastPlayerName)!;
+        let index = this.playerNames.indexOf(lastPlayerName);
 
         if (index < 0) {
             throw Error('player not found');
         }
 
-        return this.players[(index + 1 + 4) % 4];
+        return this.playerNames[(index + 1 + 4) % 4];
     }
 
     isLeftPlayerBeforeRightPlayer(name1: string, name2: string) {
-        let index1 = findIndex(this.players, p => p.getName() == name1)!;
-        let index2 = findIndex(this.players, p => p.getName() == name2)!;
-        let startPlayerIndex = findIndex(this.players, p => p.getName() == this.getStartPlayer().getName())!;
+        let index1 = this.playerNames.indexOf(name1);
+        let index2 = this.playerNames.indexOf(name2);
+        let startPlayerIndex = this.playerNames.indexOf(this.getStartPlayerName());
 
         if (index1 < index2) {
             if (startPlayerIndex <= index1 || startPlayerIndex > index2) {
@@ -259,7 +140,7 @@ class Round implements FinishedRound {
             }
         } else if (index1 == index2) {
             // hmm...
-            return true;
+            return false;
         } else {
             if (startPlayerIndex <= index1 && startPlayerIndex > index2) {
                 return true;
@@ -269,18 +150,16 @@ class Round implements FinishedRound {
         }
     }
 
-    getNextPlayer() {
-        let currentPlayer = this.getCurrentPlayer();
-        return this.playerAfter(currentPlayer.getName());
+    getNextPlayerName() {
+        return this.playerAfter(this.getCurrentPlayerName());
     }
 
-    getCurrentPlayer() {
-        let position = this.getPosition();
-        return this.getPlayerAtPosition(position);
+    getCurrentPlayerName() {
+        return this.getPlayerNameAtPosition(this.getPosition());
     }
 
-    getPlayerPosition(name: string) {
-        let index = findIndex(this.players, p => p.getName() == name);
+    getPlayerPositionByName(name: string) {
+        let index = this.playerNames.indexOf(name);
         if (index < 0) {
             throw Error('player not found');
         }
@@ -288,18 +167,16 @@ class Round implements FinishedRound {
         return (index - this.getStartPlayerIndex() + 4) % 4;
     }
 
-    setStartPlayer(player: Player) {
-        this.startPlayer = player;
+    setStartPlayerName(playerName: string) {
+        this.startPlayerName = playerName;
     }
 
-    private getPlayerAtPosition(position: number) {
-        return this.players[(this.getStartPlayerIndex() + position + 4) % 4];
+    getPlayerNameAtPosition(position: number) {
+        return this.playerNames[(this.getStartPlayerIndex() + position + 4) % 4];
     }
 
-    private getStartPlayerIndex() {
-        let startPlayer = this.getStartPlayer();
-
-        let index = this.players.indexOf(startPlayer);
+    getStartPlayerIndex() {
+        let index = this.playerNames.indexOf(this.getStartPlayerName());
 
         if (index < 0) {
             throw Error('player not found');
@@ -307,30 +184,36 @@ class Round implements FinishedRound {
 
         return index;
     }
+
+    getRoundAnalyzer(gameMode: GameMode) {
+        return new RoundAnalyzer(this, gameMode);
+    }
+
+    getLastPlayedCard() {
+        return this.getPlayedCards()[this.getPlayedCards().length - 1];
+    }
+
+    getLastPlayedPlayerName() {
+        if (this.getPosition() == 0) {
+            throw Error('at beginning, no player played');
+        }
+        return this.getPlayerNameAtPosition(this.getPosition() - 1);
+    }
 }
 
 export {Round, FinishedRound, MinimalRound};
 
 interface MinimalRound {
     getCards(): readonly Card[];
-
-    getRoundColor(): ColorWithTrump;
-
     isEmpty(): boolean;
 }
 
 interface FinishedRound {
-    getCards(): readonly Card[];
-    getPoints(): number;
-    getWinningPlayer(): PlayerWithNameOnly;
-    getStartPlayer(): PlayerWithNameOnly;
-    getRoundColor(): ColorWithTrump;
-    getPlayerForCard(card: Card): PlayerWithNameOnly;
-    hasOffColorSchmier(): boolean;
-    getOffColorSchmierPlayer(): PlayerWithNameOnly | null;
-    hasSchmier(): boolean;
-    getSchmierPlayer(): readonly PlayerWithNameOnly[];
-    getSchmierCardIndex(): number | null;
-    getWinningCard(): Card;
-    getWinningCardIndex(): number;
+    getPlayedCards(): readonly Card[];
+
+    getStartPlayerName(): string;
+
+    getPlayerNameForCard(card: Card): string;
+
+    getRoundAnalyzer(gameMode: GameMode): RoundAnalyzer;
 }

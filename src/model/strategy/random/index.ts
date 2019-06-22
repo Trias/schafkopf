@@ -2,18 +2,18 @@ import StrategyInterface from "../StrategyInterface";
 import {sample, shuffle} from "lodash"
 import {callableColors, PlainColor, plainColors} from "../../cards/Color";
 import {GameMode, GameModeEnum} from "../../GameMode";
-import {FinishedRound, Round} from "../../Round";
 import {Card} from "../../cards/Card";
 import {canCallColor, getPlayableCards} from "../../PlayableMoves";
 import {RandomCard} from "../rules/inplay/RandomCard";
 import {chooseBestCard} from "../helper";
+import {GameWorld} from "../../GameWorld";
 
 export default class RandomStrategy implements StrategyInterface {
-    chooseCardToPlay(round: Round, cardSet: readonly Card[], gameMode: GameMode, playedRounds: FinishedRound[]): Card {
-        if (playedRounds.length + cardSet.length != 8) {
+    chooseCardToPlay(world: GameWorld, cardSet: readonly Card[]): Card {
+        if (world.rounds.length + cardSet.length != 8) {
             throw Error('invariant violated');
         }
-        let playableCards = getPlayableCards(cardSet, gameMode, round);
+        let playableCards = getPlayableCards(cardSet, world.gameMode, world.round);
 
         if (!playableCards.length) {
             throw Error(`no playable card found! ${cardSet}`);
@@ -54,10 +54,4 @@ export default class RandomStrategy implements StrategyInterface {
     chooseToRaise(cardSet: readonly Card[]): boolean {
         return Math.random() < 0.1;
     }
-
-    skipInference(): boolean {
-        return false;
-    }
-
-
 }

@@ -1,108 +1,99 @@
 import {GameMode} from "../GameMode";
-import {Player} from "../Player";
+import {PlayerMap} from "../Player";
 import {FinishedRound, Round} from "../Round";
 import {Card} from "../cards/Card";
 import GameResult from "../GameResult";
-import {find, findIndex} from "lodash";
+import {RoundAnalyzer} from "../knowledge/RoundAnalyzer";
+import {GameWorld} from "../GameWorld";
 
 export class SimulatedGame {
-    private players: readonly Player[];
-    private rounds: FinishedRound[];
-    private gameMode: GameMode;
-    private round: Round;
+    private readonly playerMap: PlayerMap;
+    private readonly world: GameWorld;
+    private readonly gameMode: GameMode;
 
-    constructor(players: readonly Player[], round: Round, gameMode: GameMode, playedRounds: FinishedRound[]) {
-        this.gameMode = gameMode;
-        this.rounds = playedRounds;
-        this.players = players;
-        this.round = round;
+    constructor(world: GameWorld) {
+        this.world = world;
+        this.gameMode = world.gameMode;
+        this.playerMap = world.playerMap;
     }
 
-    simulateRounds(playerName: string, roundIndex: number, round: Round): readonly FinishedRound[] {
-        let activePlayer = find(this.players, p => p.getName() == playerName)!;
-        this.round = round;
+    simulateWithCard(playerName: string, card: Card) {
+        let round = this.world.round;
+        if (playerName != round.getCurrentPlayerName()) {
+            throw Error('cannot force play other player');
+        }
+        this.forcePlayCard(round.getCurrentPlayerName(), card);
+        this.simulateRounds();
+
+        let result = this.getGameResult();
+
+        // console.log(colors.blue(`${JSON.stringify(rounds.map(r => r.getCards()))}`) + colors.red(`points: ${JSON.stringify(result.getPlayersPoints(this.thisPlayer.getName()))}`));
+
+        return result.hasPlayerWon(playerName);
+    }
+
+    private simulateRounds(): readonly FinishedRound[] {
+        let roundIndex = this.world.rounds.length;
         for (let i = roundIndex; i < 8; i++) {
-            for (let player of this.players) {
-                if (round.isLeftPlayerBeforeRightPlayer(activePlayer.getName(), player.getName()) && player.currentCardSet!.length != 8 - i) {
-                    //  throw Error('invariant violated');
-                } else if (!round.isLeftPlayerBeforeRightPlayer(activePlayer.getName(), player.getName()) && player.currentCardSet!.length != 8 - i - 1) {
-                    // throw Error('invariant violated');
+
+
+            /*
+            for (let playerName of Object.keys(this.world.playerMap)) {
+                if (this.world.round.isLeftPlayerBeforeRightPlayer(this.world.round.getCurrentPlayerName(), playerName) && this.world.playerMap[playerName].getCurrentCardSet()!.length != 8 - i) {
+                    throw Error('invariant violated');
+                } else if (!this.world.round.isLeftPlayerBeforeRightPlayer(this.world.round.getCurrentPlayerName(), playerName) && this.world.playerMap[playerName].getCurrentCardSet()!.length != 8 - i - 1) {
+                    throw Error('invariant violated');
+                }
+            } */
+
+            for (let j = this.world.round.getPosition(); j < 4; j++) {
+                this.playerMap[this.world.round.getCurrentPlayerName()].playCard(this.world);
+            }
+
+            /*
+            for (let playerName of Object.keys(this.world.playerMap)) {
+                if (this.world.playerMap[playerName].getCurrentCardSet()!.length != 8 - i - 1) {
+                     throw Error('invariant violated');
                 }
             }
-            for (let j = round.getPosition(); j < 4; j++) {
-                let card = activePlayer.playCard(round);
-                round.addCard(card);
-                this.notifyPlayersOfCardPlayed(card, activePlayer, j);
-                activePlayer = this.nextPlayer(activePlayer.getName());
-            }
-            for (let player of this.players) {
-                if (player.currentCardSet!.length != 8 - i - 1) {
-                    // throw Error('invariant violated');
+            */
+
+            this.markCalledAce(this.world.round);
+
+            this.world.rounds.push(this.world.round);
+
+            for (let player of Object.values(this.playerMap)) {
+                if (this.world.rounds.length + player.getCurrentCardSet().length != 8) {
+                    throw new Error('invariant violated');
                 }
             }
 
-            this.notifyPlayersOfRoundCompleted(round.finish());
-            this.markCalledAce(round);
-
-            this.rounds.push(round);
-
-            activePlayer = round.getWinningPlayer() as Player;
-            this.round = round.nextRound(activePlayer);
+            this.world.round = this.world.round.nextRound(this.world.round.getRoundAnalyzer(this.world.gameMode).getWinningPlayerName());
         }
 
-        return this.rounds;
+        return this.world.rounds;
     }
 
-    notifyPlayersOfCardPlayed(card: Card, activePlayer: Player, j: number) {
-        for (let i = 0; i < 4; i++) {
-            this.players[i].onCardPlayed(card, activePlayer, j);
-        }
-    }
-
-    nextPlayer(playerName: string) {
-        let playerIndex = findIndex(this.players, (p => p.getName() == playerName));
-        if (playerIndex < 0) {
-            throw Error('player not found');
-        }
-        return this.players[(playerIndex + 1) % 4];
-    }
-
-    getGameResult() {
-        if (this.rounds.length != 8) {
+    private getGameResult() {
+        if (this.world.rounds.length != 8) {
             throw Error('not finished yet!');
         }
-        return new GameResult(this.gameMode, this.rounds!, this.players);
+        return new GameResult(this.world);
     }
 
-    forcePlayCard(playerName: string, card: Card, round: Round) {
-        let activePlayer = find(this.players, p => p.getName() == playerName)!;
-        activePlayer.forcePlayCard(card);
-        round.addCard(card);
-        this.notifyPlayersOfCardPlayed(card, activePlayer, round.getPosition());
-        activePlayer = this.nextPlayer(activePlayer.getName());
-        return activePlayer;
+    private forcePlayCard(playerName: string, card: Card) {
+        let activePlayer = this.playerMap[playerName];
+        activePlayer.forcePlayCard(this.world, card);
     }
 
+    // todo: into game history class?.... played called influences which cards are allowed to play
     private markCalledAce(round: Round) {
+        let roundAnalyzer = new RoundAnalyzer(round, this.gameMode);
         if (this.gameMode!.isCallGame()
             && !this.gameMode!.getHasAceBeenCalled()
-            && round.getRoundColor() == this.gameMode!.getColorOfTheGame()
+            && roundAnalyzer.getRoundColor() == this.gameMode!.getColorOfTheGame()
         ) {
             this.gameMode!.setHasAceBeenCalled();
         }
-    }
-
-    private notifyPlayersOfRoundCompleted(finishedRound: FinishedRound) {
-        for (let i = 0; i < 4; i++) {
-            this.players[i].onRoundCompleted(finishedRound, this.rounds.length);
-        }
-    }
-
-    getRound() {
-        return this.round
-    }
-
-    getPlayedRounds() {
-        return this.rounds;
     }
 }

@@ -1,6 +1,5 @@
 import GameResult from "./GameResult";
 import {GameModeEnum} from "./GameMode";
-import {Player} from "./Player";
 import {includes} from "lodash";
 
 interface Stats {
@@ -17,15 +16,15 @@ interface Stats {
 
 export default class Statistics {
     //private readonly results: GameResult[];
-    private readonly players: Player[];
     private stats: { [index in string]: Stats };
+    private playerNames: string[];
 
-    constructor(players: Player[]) {
-        this.players = players;
+    constructor(playerNames: string[]) {
+        this.playerNames = playerNames;
         //this.results = [];
         this.stats = {};
-        for (let player of players) {
-            this.stats[player.getName()] = {
+        for (let playerName of playerNames) {
+            this.stats[playerName] = {
                 wins: 0,
                 cents: 0,
                 inPlayingTeam: 0,
@@ -39,8 +38,8 @@ export default class Statistics {
         }
     }
 
-    getStatsForPlayer(player: Player) {
-        return this.stats[player.getName()]!;
+    getStatsForPlayer(playerName: string) {
+        return this.stats[playerName]!;
     }
 
     addResult(gameResult: GameResult) {
@@ -49,10 +48,10 @@ export default class Statistics {
     }
 
     private updateStatistics(result: GameResult) {
-        for (let player of this.players) {
-            let {wins, cents, inPlayingTeam, retries, ownPlays, ownWins, ownSoloWins, ownSoloPlays, tournamentPoints} = this.stats[player.getName()]!;
+        for (let playerName of this.playerNames) {
+            let {wins, cents, inPlayingTeam, retries, ownPlays, ownWins, ownSoloWins, ownSoloPlays, tournamentPoints} = this.stats[playerName]!;
 
-            if (result.getGameMode().isNoRetry() && player.getName() == result.getGameMode().getCallingPlayer().getName()) {
+            if (result.getGameMode().isNoRetry() && playerName == result.getGameMode().getCallingPlayerName()) {
                 ownPlays = ownPlays + 1;
 
                 if (result.hasPlayingTeamWon()) {
@@ -69,15 +68,15 @@ export default class Statistics {
             }
 
             if (result.getGameMode().getMode() === GameModeEnum.CALL_GAME) {
-                if (includes(result.getPlayingTeam(), player)) {
+                if (includes(result.getPlayingTeamNames(), playerName)) {
                     inPlayingTeam = inPlayingTeam + 1;
                 }
 
-                if (result.hasPlayingTeamWon() && includes(result.getPlayingTeam(), player)) {
+                if (result.hasPlayingTeamWon() && includes(result.getPlayingTeamNames(), playerName)) {
                     wins = wins + 1;
                     cents = cents + result.getGameMoneyValue();
                     tournamentPoints = tournamentPoints + result.getTournamentPointsValue();
-                } else if (!result.hasPlayingTeamWon() && !includes(result.getPlayingTeam(), player)) {
+                } else if (!result.hasPlayingTeamWon() && !includes(result.getPlayingTeamNames(), playerName)) {
                     wins = wins + 1;
                     cents = cents + result.getGameMoneyValue();
                     tournamentPoints = tournamentPoints + result.getTournamentPointsValue();
@@ -87,17 +86,17 @@ export default class Statistics {
                     tournamentPoints = tournamentPoints - result.getTournamentPointsValue();
                 }
             } else if (result.getGameMode().getMode() === GameModeEnum.SOLO || result.getGameMode().getMode() === GameModeEnum.WENZ) {
-                if (includes(result.getPlayingTeam(), player)) {
+                if (includes(result.getPlayingTeamNames(), playerName)) {
                     inPlayingTeam = inPlayingTeam + 1;
                 }
-                if (result.hasPlayingTeamWon() && includes(result.getPlayingTeam(), player)) {
+                if (result.hasPlayingTeamWon() && includes(result.getPlayingTeamNames(), playerName)) {
                     wins = wins + 1;
                     cents = cents + result.getGameMoneyValue() * 3;
-                    tournamentPoints = tournamentPoints + result.getTournamentPointsValue();
-                } else if (result.hasPlayingTeamWon() && !includes(result.getPlayingTeam(), player)) {
+                    tournamentPoints = tournamentPoints + result.getTournamentPointsValue() * 3;
+                } else if (result.hasPlayingTeamWon() && !includes(result.getPlayingTeamNames(), playerName)) {
                     cents = cents - result.getGameMoneyValue();
                     tournamentPoints = tournamentPoints - result.getTournamentPointsValue();
-                } else if (!result.hasPlayingTeamWon() && !includes(result.getPlayingTeam(), player)) {
+                } else if (!result.hasPlayingTeamWon() && !includes(result.getPlayingTeamNames(), playerName)) {
                     wins = wins + 1;
                     cents = cents + result.getGameMoneyValue();
                     tournamentPoints = tournamentPoints + result.getTournamentPointsValue();
@@ -110,7 +109,7 @@ export default class Statistics {
             } else {
                 throw Error('not implemented');
             }
-            this.stats[player.getName()] = {
+            this.stats[playerName] = {
                 wins,
                 cents,
                 inPlayingTeam,

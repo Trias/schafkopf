@@ -46,7 +46,7 @@ export default class CardsOrdering {
         return this.highestCard(card1, card2) == card2;
     }
 
-    getTrumpOrdering(): readonly Card[] {
+    getTrumpOrdering(): Card[] {
         if (this.gameModeEnum == GameModeEnum.CALL_GAME) {
             return DefaultTrumpOrdering;
         } else if (this.gameModeEnum == GameModeEnum.SOLO) {
@@ -55,12 +55,12 @@ export default class CardsOrdering {
         } else if (this.gameModeEnum == GameModeEnum.WENZ) {
             return Unter;
         } else {
-            throw Error('not implemented');
+            return DefaultTrumpOrdering;
         }
     }
 
-    getColorOrdering(color: PlainColor): readonly Card[] {
-        if (this.gameModeEnum == GameModeEnum.CALL_GAME || this.gameModeEnum == GameModeEnum.SOLO) {
+    getColorOrdering(color: PlainColor): Card[] {
+        if (this.gameModeEnum == GameModeEnum.CALL_GAME || this.gameModeEnum == GameModeEnum.SOLO || this.gameModeEnum == GameModeEnum.RETRY) {
             if (color == ColorWithTrump.HERZ && this.gameModeEnum == GameModeEnum.CALL_GAME
                 || this.gameModeEnum == GameModeEnum.SOLO && color === this.color) {
                 return [];

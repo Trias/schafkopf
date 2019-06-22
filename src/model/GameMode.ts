@@ -4,7 +4,6 @@
  */
 
 import {CallableColor, PlainColor} from "./cards/Color";
-import {PlayerWithNameOnly} from "./Player";
 import CardsOrdering from "./cards/CardsOrdering";
 import CardRank from "./cards/CardRank";
 import {Card} from "./cards/Card";
@@ -20,12 +19,12 @@ class GameMode {
 
     private readonly mode: GameModeEnum;
     private readonly color?: PlainColor;
-    private readonly callingPlayer?: PlayerWithNameOnly;
+    private readonly callingPlayer?: string;
     private klopfer: number = 0;
     private readonly ordering: CardsOrdering;
     private hasAceBeenCalled = false;
 
-    constructor(mode: GameModeEnum, callingPlayer?: PlayerWithNameOnly, color?: PlainColor) {
+    constructor(mode: GameModeEnum, callingPlayer?: string, color?: PlainColor) {
         if (mode == GameModeEnum.SOLO && !color) {
             throw Error('color must be set for solo');
         }
@@ -73,7 +72,7 @@ class GameMode {
         return this.color as CallableColor;
     }
 
-    getCallingPlayer() {
+    getCallingPlayerName() {
         if (!this.callingPlayer) {
             throw Error('no calling player decided');
         }

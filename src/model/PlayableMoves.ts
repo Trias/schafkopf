@@ -9,8 +9,9 @@ import {GameMode} from "./GameMode";
 import {Card} from "./cards/Card";
 import CardRank from "./cards/CardRank";
 import {allOfColor, hasCard, hasColor, hasPlainColorWithoutOberAndUnter} from "./cards/CardSet";
-import {MinimalRound, Round} from "./Round";
+import {Round} from "./Round";
 import {filter} from "lodash";
+import {RoundAnalyzer} from "./knowledge/RoundAnalyzer";
 
 export function canCallColor(cardsOnHand: readonly Card[], color: CallableColor) {
     let callAce: Card = color + CardRank.ACE as Card;
@@ -23,7 +24,7 @@ export function getPlayableCards(cardSet: ReadonlyArray<Card>, gameMode: GameMod
     });
 }
 
-export function canPlayCard(gameMode: GameMode, cardsOnHand: readonly Card[], card: Card, round: MinimalRound): boolean {
+export function canPlayCard(gameMode: GameMode, cardsOnHand: readonly Card[], card: Card, round: Round): boolean {
     if (cardsOnHand.length === 1) {
         return true;
     }
@@ -41,7 +42,8 @@ export function canPlayCard(gameMode: GameMode, cardsOnHand: readonly Card[], ca
             return true;
         }
     } else {
-        let roundColor = round.getRoundColor();
+        let roundAnalyzer = new RoundAnalyzer(round, gameMode);
+        let roundColor = roundAnalyzer.getRoundColor();
 
         if (gameMode.isCallGame()
             && card == getCalledAce(gameMode)

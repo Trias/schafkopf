@@ -1,26 +1,25 @@
 import {Round} from "../Round";
-import {PlayerWithNameOnly} from "../Player";
 import {Card} from "../cards/Card";
 import {ColorWithTrump} from "../cards/Color";
 import {ColorFreeAssumption} from "./GameAssumptionsInCallGame";
 
 export default interface GameAssumptions {
-    isThisRoundProbablyWon(round: Round): boolean;
+    isThisRoundProbablyWon(round: Round, currentHandCards: Card[]): boolean;
 
-    isThisRoundProbablyLost(round: Round): boolean;
+    isThisRoundProbablyLost(round: Round, currentHandCards: Card[]): boolean;
 
     isTeampartnerProbablyKnown(): boolean;
 
-    getPossiblePartner(): PlayerWithNameOnly | undefined;
+    getPossiblePartnerName(): string | undefined;
 
     getPossiblyHighestTrumpOfPartner(): Card;
 
-    isPlayerPossiblyColorFree(callingPlayer: PlayerWithNameOnly, color: ColorWithTrump): ColorFreeAssumption;
+    isPlayerNamePossiblyColorFree(callingPlayer: string, color: ColorWithTrump): ColorFreeAssumption;
 
-    isPlayerProbablyTrumpFree(partner: PlayerWithNameOnly): boolean;
+    isPlayerNameProbablyTrumpFree(partner: string): boolean;
 
     isOpposingTeamPossiblyColorFree(color: ColorWithTrump): boolean;
 
-    willLikelyWinRoundWithCard(round: Round, card: Card): boolean;
+    willLikelyWinRoundWithCard(round: Round, card: Card, currentHandCards: Card[]): boolean;
 
 }

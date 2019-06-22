@@ -1,10 +1,11 @@
 import {GameMode, GameModeEnum} from "./GameMode";
 import CardRank from "./cards/CardRank";
-import {Player} from "./Player";
+import {PlayerMap} from "./Player";
 import {FinishedRound} from "./Round";
 import {Card} from "./cards/Card";
-import {find, includes} from "lodash";
+import {includes} from "lodash";
 import {hasCard, sortAndFilterBy} from "./cards/CardSet";
+import {GameWorld} from "./GameWorld";
 
 /**
  * who wins with how many points
@@ -12,23 +13,25 @@ import {hasCard, sortAndFilterBy} from "./cards/CardSet";
 
 export default class GameResult {
     private readonly playingTeamPoints: number;
-    private readonly playingTeam: [Player?, Player?];
+    private readonly playingTeam: [string?, string?];
     private readonly pointsByPlayer: { [index in string]: number };
-    private readonly players: readonly Player[];
+    private readonly playerNames: readonly string[];
     private readonly gameMode: GameMode;
     private readonly rounds: readonly FinishedRound[];
+    private playerMap: PlayerMap;
 
-    constructor(gameMode: GameMode, rounds: readonly FinishedRound[], players: readonly Player[]) {
-        this.gameMode = gameMode;
-        this.rounds = rounds;
-        this.players = players;
+    constructor(world: GameWorld) {
+        this.gameMode = world.gameMode;
+        this.rounds = world.rounds;
+        this.playerNames = Object.keys(world.playerMap);
+        this.playerMap = world.playerMap;
 
         this.pointsByPlayer = this.determinePointsByPlayer();
         this.playingTeam = this.determinePlayingTeam();
         this.playingTeamPoints = this.determinePlayingTeamPoints();
     }
 
-    getPlayingTeam(){
+    getPlayingTeamNames() {
         return this.playingTeam;
     }
 
@@ -46,11 +49,11 @@ export default class GameResult {
 
     determinePlayingTeamPoints(): number {
         if(this.gameMode.getMode() === GameModeEnum.CALL_GAME){
-            let playingTeam = this.playingTeam as [Player, Player];
-            return this.getPoints(playingTeam[0]) + this.getPoints(playingTeam[1]);
+            let playingTeam = this.playingTeam;
+            return this.getPoints(playingTeam[0]!) + this.getPoints(playingTeam[1]!);
         } else if (this.gameMode.getMode() === GameModeEnum.SOLO || this.gameMode.getMode() === GameModeEnum.WENZ) {
-            let playingTeam = this.playingTeam as [Player];
-            return this.getPoints(playingTeam[0]);
+            let playingTeam = this.playingTeam;
+            return this.getPoints(playingTeam[0]!);
         }else if(this.gameMode.getMode() === GameModeEnum.RETRY) {
             return 0;
         }else {
@@ -60,42 +63,42 @@ export default class GameResult {
 
     determinePointsByPlayer(): { [index in string]: number } {
         let pointsByPlayer: { [index in string]: number } = {};
-        for(let i = 0; i < 4; i++){
-            pointsByPlayer[this.players[i].getName()] = 0;
+        for (let playerName of this.playerNames) {
+            pointsByPlayer[playerName] = 0;
         }
         for (let i = 0; i < this.rounds.length; i++) {
-            let round = this.rounds[i];
-            let roundWinner = round.getWinningPlayer() as Player;
-            let pointsAdded = round.getPoints();
-            let oldPoints = pointsByPlayer[roundWinner.getName()]!;
-            pointsByPlayer[roundWinner.getName()] = pointsAdded + oldPoints;
+            let roundAnalyzer = this.rounds[i].getRoundAnalyzer(this.gameMode);
+
+            let roundWinnerName = roundAnalyzer.getWinningPlayerName();
+            let pointsAdded = roundAnalyzer.getPoints();
+            let oldPoints = pointsByPlayer[roundWinnerName]!;
+            pointsByPlayer[roundWinnerName] = pointsAdded + oldPoints;
         }
 
         return pointsByPlayer;
     }
 
-    getPoints(player: Player): number{
-        return this.pointsByPlayer[player.getName()]!;
+    getPoints(playerName: string): number {
+        return this.pointsByPlayer[playerName]!;
     }
 
-    determinePlayingTeam(): [Player?, Player?] {
-        if (this.gameMode.getMode() === GameModeEnum.CALL_GAME) {
-            let callingPlayer = this.gameMode.getCallingPlayer()! as Player;
+    determinePlayingTeam(): [string?, string?] {
+        // TODO: solve with game history?
+        if (this.gameMode.isCallGame()) {
+            let callingPlayer = this.gameMode.getCallingPlayerName();
             let calledAce = this.gameMode.getColorOfTheGame() + CardRank.ACE as Card;
 
             for(let i = 0; i< 4;i++){
-                if (hasCard(this.players[i].getStartCardSet(), calledAce)) {
-                    return [callingPlayer, this.players[i]];
+                if (hasCard(this.playerMap[this.playerNames[i]].getStartCardSet(), calledAce)) {
+                    return [callingPlayer, this.playerNames[i]];
                 }
             }
 
             throw Error('invalid call');
+        } else if (this.gameMode.isSinglePlay()) {
+            return [this.gameMode.getCallingPlayerName()!];
         } else {
-            if (this.gameMode.isNoRetry()) {
-                return [this.gameMode.getCallingPlayer()! as Player];
-            }else{
-                return [];
-            }
+            return [];
         }
     }
 
@@ -162,17 +165,24 @@ export default class GameResult {
         }
     }
 
+    hasPlayerWon(playerName: string) {
+        let isPlayer = includes(this.playingTeam, playerName);
+        if (isPlayer && this.hasPlayingTeamWon() || !isPlayer && !this.hasPlayingTeamWon()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     private getSortedWinnerTrumpSet(trumpSet: readonly Card[]) {
-        let playingTeam = this.getPlayingTeam();
+        let playingTeam = this.getPlayingTeamNames();
         let winnerTrumpSet;
         if (this.gameMode.getMode() == GameModeEnum.CALL_GAME) {
-            let playingTeamCallGame = playingTeam as [Player, Player];
+            let playingTeamCallGame = playingTeam;
 
-            winnerTrumpSet = playingTeamCallGame[0].getStartCardSet().concat(playingTeamCallGame[1].getStartCardSet());
+            winnerTrumpSet = this.playerMap[playingTeamCallGame[0]!].getStartCardSet().concat(this.playerMap[playingTeamCallGame[1]!].getStartCardSet());
         } else if (this.gameMode.getMode() == GameModeEnum.SOLO || this.gameMode.getMode() == GameModeEnum.WENZ) {
-            let playingTeamSolo = playingTeam as [Player];
-
-            winnerTrumpSet = playingTeamSolo[0].getStartCardSet();
+            winnerTrumpSet = this.playerMap[playingTeam[0]!].getStartCardSet();
         } else {
             throw Error('not Implemented');
         }
@@ -181,33 +191,16 @@ export default class GameResult {
     }
 
     private getPlayingTeamRounds(): FinishedRound[] {
-        let playingTeam = this.getPlayingTeam();
+        let playingTeamNames = this.getPlayingTeamNames();
         let playingTeamRounds = [];
 
         for (let round of this.rounds) {
-            if (includes(playingTeam, round.getWinningPlayer() as Player)) {
+
+            if (includes(playingTeamNames, round.getRoundAnalyzer(this.gameMode).getWinningPlayerName())) {
                 playingTeamRounds.push(round);
             }
         }
         return playingTeamRounds;
-    }
-
-    hasPlayerWon(playerName: string) {
-        let player = find(this.playingTeam, p => p && p.getName() == playerName);
-        if (player && this.hasPlayingTeamWon() || !player && !this.hasPlayingTeamWon()) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    getPlayersPoints(playerName: string) {
-        let player = find(this.playingTeam, p => p && p.getName() == playerName);
-        if (player) {
-            return this.getPlayingTeamPoints();
-        } else {
-            return 120 - this.getPlayingTeamPoints();
-        }
     }
 
     getTournamentPointsValue() {

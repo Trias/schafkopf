@@ -14,7 +14,7 @@ export function hasPlainColorWithoutOberAndUnter(cards: readonly Card[], otherCo
     return some(cards, card => !includes(OberAndUnter, card) && getPlainColor(card) === otherColor);
 }
 
-export function removeCard(cards: readonly Card[], card: Card): readonly Card[] {
+export function removeCard(cards: Card[], card: Card): Card[] {
     if (cards.length == 0) {
         throw Error(`cannot remove card from empty set.`);
     }
@@ -30,6 +30,10 @@ export function hasColor(cardsOnHand: readonly Card[], otherColor: ColorWithTrum
 
 export function allOfColor(cards: readonly Card[], color: ColorWithTrump, gameMode: GameMode) {
     return filter(cards, card => gameMode.getOrdering().getColor(card) === color);
+}
+
+export function allOfCallableColor(cards: readonly Card[], color: ColorWithTrump) {
+    return filter(cards, card => card[0] != ColorWithTrump.HERZ && card[1] != "U" && card[1] == "O" && card[0] == color);
 }
 
 export function highTrumps(cards: readonly Card[], gameMode: GameMode): Card[] {
@@ -49,7 +53,7 @@ export function sortAndFilterBy(allTrumpsSorted: readonly Card[], winnerCardSet:
     return sortBy(trumpsInHands, (trump) => allTrumpsSorted.indexOf(trump));
 }
 
-export function sortByNaturalOrdering(cards: readonly Card[]): readonly Card[] {
+export function sortByNaturalOrdering(cards: Card[]): Card[] {
     return sortBy(cards, (card) => CardDeck.indexOf(card));
 }
 
@@ -129,11 +133,11 @@ export function hasBlankColors(cardSet: readonly Card[], gameMode: GameMode) {
     return blankColors.length > 0;
 }
 
-export function getCallableColors(cardSet: readonly Card[], gameMode: GameMode) {
+export function getCallableColors(cardSet: readonly Card[]) {
     let result = [];
     for (let color of callableColors) {
         let ace = color + "A";
-        if (!includes(cardSet, ace) && allOfColor(cardSet, color, gameMode).length > 0) {
+        if (!includes(cardSet, ace) && allOfCallableColor(cardSet, color).length > 0) {
             result.push(color);
         }
     }
