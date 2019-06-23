@@ -6,7 +6,6 @@ import GamePhase from "./GamePhase";
 import {sortByNaturalOrdering} from "./cards/CardSet";
 import {RoundAnalyzer} from "./knowledge/RoundAnalyzer";
 import {GameWorld} from "./GameWorld";
-import {GameHistory} from "./knowledge/GameHistory";
 
 export class Game {
     private readonly playerMap: PlayerMap;
@@ -33,7 +32,7 @@ export class Game {
 
             console.log(`game mode decided: ${this.gameMode.getMode()}, by ${this.gameMode.getCallingPlayerName()}, calling for ${this.gameMode.getColorOfTheGame()}`);
 
-            this.playRounds(this.world.round.getStartPlayerName());
+            this.playRounds();
         }
 
         this.setGamePhase(GamePhase.AFTER_GAME);
@@ -47,30 +46,28 @@ export class Game {
         return new GameResult(this.world);
     }
 
-    private playRounds(startPlayer: string): void {
-        // TODO: should probably work on an injected world
-
-        let myRound = new Round(startPlayer, Object.keys(this.playerMap));
-        let history = new GameHistory(Object.keys(this.playerMap), this.gameMode);
-        let world = new GameWorld(this.gameMode, this.playerMap, this.rounds, myRound, history);
-
+    private playRounds(): void {
         for (let i = 0; i < 8; i++) {
             console.log(`------round ${i + 1} start-----`);
             for (let j = 0; j < 4; j++) {
-                if (world.round.getPosition() >= 4) {
+                if (this.world.round.getPosition() >= 4) {
                     throw Error('round finished');
                 }
-                let activePlayerName = world.round.getCurrentPlayerName();
-                this.playerMap[activePlayerName].playCard(world);
-                console.log(`player ${activePlayerName} played ${world.round.getLastPlayedCard()} from set ${sortByNaturalOrdering(this.playerMap[activePlayerName].getCurrentCardSet().concat(world.round.getLastPlayedCard()))}`);
+                let activePlayerName = this.world.round.getCurrentPlayerName();
+                this.playerMap[activePlayerName].playCard(this.world);
+                console.log(`player ${activePlayerName} played ${this.world.round.getLastPlayedCard()} from set ${sortByNaturalOrdering(this.playerMap[activePlayerName].getCurrentCardSet().concat(this.world.round.getLastPlayedCard()))}`);
             }
-            this.markCalledAce(world.round);
-            this.rounds.push(world.round.finish());
+            this.markCalledAce(this.world.round);
+            this.rounds.push(this.world.round.finish());
 
-            let roundAnalyzer = new RoundAnalyzer(world.round, this.gameMode);
-            console.log(`round winner: ${roundAnalyzer.getWinningPlayerName()} at position ${roundAnalyzer.getWinningCardPosition() + 1}; round cards: ${world.round.getPlayedCards()}`);
+            let roundAnalyzer = new RoundAnalyzer(this.world.round, this.gameMode);
+            console.log(`round winner: ${roundAnalyzer.getWinningPlayerName()} at position ${roundAnalyzer.getWinningCardPosition() + 1}; round cards: ${this.world.round.getPlayedCards()}`);
+            this.world.onRoundCompleted(this.world.round.finish(), i);
+            if (this.world.history.isTeamPartnerKnown()) {
+                console.log(`Playing Team (${this.world.history.getPlayingTeam()}) has ${this.world.history.getTeamPoints(this.world.history.getPlayingTeam())} points; Opposing Team (${this.world.history.getNonPlayingTeam()}) has ${this.world.history.getTeamPoints(this.world.history.getNonPlayingTeam())} points`);
+            }
             console.log(`------round ${i + 1} finished-----`);
-            world.round = new Round(roundAnalyzer.getWinningPlayerName(), Object.keys(this.playerMap));
+            this.world.round = new Round(roundAnalyzer.getWinningPlayerName(), Object.keys(this.playerMap));
         }
         console.log(`=====game finished=======`);
     }

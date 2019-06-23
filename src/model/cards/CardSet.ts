@@ -1,5 +1,5 @@
 import {Card} from "./Card";
-import {callableColors, colorsWithTrump, ColorWithTrump, PlainColor} from "./Color";
+import {CallableColor, callableColors, colorsWithTrump, ColorWithTrump, PlainColor} from "./Color";
 import {difference, filter, includes, intersection, some, sortBy, without} from "lodash";
 import {GameMode, GameModeEnum} from "../GameMode";
 import OberAndUnter from "./sets/OberAndUnter";
@@ -32,8 +32,8 @@ export function allOfColor(cards: readonly Card[], color: ColorWithTrump, gameMo
     return filter(cards, card => gameMode.getOrdering().getColor(card) === color);
 }
 
-export function allOfCallableColor(cards: readonly Card[], color: ColorWithTrump) {
-    return filter(cards, card => card[0] != ColorWithTrump.HERZ && card[1] != "U" && card[1] == "O" && card[0] == color);
+export function allOfCallableColor(cards: readonly Card[], color: CallableColor) {
+    return filter(cards, card => card[1] == "O" || card[1] == "U" || card[0] != color);
 }
 
 export function highTrumps(cards: readonly Card[], gameMode: GameMode): Card[] {

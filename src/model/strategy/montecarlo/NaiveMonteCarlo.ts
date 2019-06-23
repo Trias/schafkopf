@@ -10,14 +10,14 @@ import {generateRandomWorldConsistentWithGameKnowledge} from "../../simulation/g
 import {reduce} from "lodash";
 import {getCallableColors, getLongestPlainColors} from "../../cards/CardSet";
 import {GameWorld} from "../../GameWorld";
-import {CardToWeights} from "../rules/CardToWeights";
+import {CardToWeights, zeroWeightedCards} from "../rules/CardToWeights";
 import {Player, PlayerMap} from "../../Player";
 import {PlayerPlaceholder} from "../../simulation/PlayerPlaceholder";
 import {GameHistory} from "../../knowledge/GameHistory";
 
-const colors = require('colors');
+const consoleColors = require('colors');
 
-const CAN_PLAY_THRESHOLD = 0.85;
+const CAN_PLAY_THRESHOLD = 0.75;
 
 export default class NaiveMonteCarlo implements StrategyInterface {
     private readonly thisPlayer: Player;
@@ -43,29 +43,39 @@ export default class NaiveMonteCarlo implements StrategyInterface {
         }
     }
 
-    chooseCardToPlay(world: GameWorld, cardSet: readonly Card[]): Card {
+    chooseCardToPlay(world: GameWorld, cardSet: Card[]): Card {
         if (world.round.getPosition() != world.round.getPlayerPositionByName(this.thisPlayer.getName())) {
             throw Error('player not to move');
         }
 
-        let playableCards = getPlayableCards(cardSet, world.gameMode, world.round);
+        console.time('mc simulation');
+        let valuations = this.runSimulation(world, cardSet);
+        console.timeEnd('mc simulation');
 
-        if (playableCards.length == 1) {
-            return playableCards[0];
-        }
-
-        let valuations = this.runSimulation(world, playableCards);
-
-        console.log('valuations:' + colors.green(JSON.stringify(valuations)));
+        console.log('valuations:' + consoleColors.green(JSON.stringify(valuations)));
 
         return chooseBestCard(valuations)!;
     }
 
-    runSimulation(world: GameWorld, playableCards: Card[]) {
-        let simulations = 5;
-        let runsPerSimulation = 5;
+    runSimulation(world: GameWorld, cardSet: Card[]) {
+        let simulations = 100;
+        let runsPerSimulation = 10;
         let valuations: CardToWeights = {};
         let wins: { [index in string]?: number[] } = {};
+
+        let playableCards = getPlayableCards(cardSet, world.gameMode, world.round);
+
+        if (playableCards.length == 1) {
+            // shortcut: only 1 possible move
+            return zeroWeightedCards(playableCards);
+        }
+
+        let points = world.history.getOwnTeamPoints(this.thisPlayer.getName());
+        let otherTeamPoints = world.history.getOtherTeamPoints(this.thisPlayer.getName());
+        if (points && points > 60 || otherTeamPoints && otherTeamPoints > 60) {
+            // shortcut: we have already won or lost..
+            return zeroWeightedCards(playableCards);
+        }
 
         // parallize?
         for (let i = 0; i < simulations; i++) {
@@ -97,33 +107,34 @@ export default class NaiveMonteCarlo implements StrategyInterface {
             valuations[card] = reduce(winCounts, (a, b) => a + b, 0) / (runsPerSimulation * simulations) as number;
         }
 
+        //if(valuations[chooseBestCard(valuations) as string]! == 1 && world.history.getOwnTeamPoints(this.thisPlayer.getName())! < 61){
+        // hmmm.. seems very confident but very often misses a lot....
+        //}
+
         return valuations;
     }
 
     chooseGameToCall(cardSet: Card[], previousGameMode: GameMode, playerIndex: number): [GameModeEnum?, PlainColor?] {
-        //return determineGameMode(previousGameMode, cardSet);
-
-
         let longestColors = getLongestPlainColors(cardSet);
 
         let gameMode = this.testGameMode(GameModeEnum.SOLO, longestColors, playerIndex, cardSet);
 
-        if (gameMode) {
-            console.log("mc-game:" + gameMode);
+        if (gameMode.length) {
+            console.log("mc-game solo:" + gameMode);
             return gameMode;
         }
 
         gameMode = this.testGameMode(GameModeEnum.WENZ, [undefined], playerIndex, cardSet);
-        if (gameMode) {
-            console.log("mc-game:" + gameMode);
+        if (gameMode.length) {
+            console.log("mc-game wenz:" + gameMode);
             return gameMode;
         }
 
         let callableColors = getCallableColors(cardSet);
         gameMode = this.testGameMode(GameModeEnum.CALL_GAME, callableColors, playerIndex, cardSet);
 
-        if (gameMode) {
-            console.log("mc-game:" + gameMode);
+        if (gameMode.length) {
+            console.log("mc-game call game:" + gameMode);
             return gameMode;
         }
 
@@ -154,7 +165,11 @@ export default class NaiveMonteCarlo implements StrategyInterface {
 
             let playableCards = getPlayableCards(cardSet, testGameMode, round);
 
+            console.time('mc-simulation' + [testGameModeEnum, color]);
             let valuations = this.runSimulation(world, playableCards);
+            console.timeEnd('mc-simulation' + [testGameModeEnum, color]);
+            console.log(consoleColors.green(JSON.stringify(valuations)));
+
             let bestValuedCard = chooseBestCard(valuations)!;
             let bestValue = valuations[bestValuedCard]!;
 

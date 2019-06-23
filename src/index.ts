@@ -9,7 +9,7 @@ import {PreGame} from "./model/PreGame";
 import {Round} from "./model/Round";
 import {GameHistory} from "./model/knowledge/GameHistory";
 
-let runs = 1200;
+let runs = 120;
 
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
@@ -25,27 +25,24 @@ let stats = new Statistics(playerNames);
 //(async () => {
     for (let i = 0; i < runs; i++) {
         console.log(`========game ${i + 1}===========`);
-        // TODO: pregameworld
         let preGame = new PreGame(playerMap);
-        let gameMode = preGame.play(shuffleCards());
+        let gameMode = preGame.determineGameMode(shuffleCards());
         let history = new GameHistory(Object.keys(playerMap), gameMode);
         let game = new Game(new GameWorld(gameMode, playerMap, [], new Round(playerNames[0], Object.keys(playerMap)), history));
 
         game.play();
         let gameResult = game.getGameResult();
 
-        if (game.getGameResult().getGameMode().isNoRetry()) {
-            stats.addResult(gameResult);
-        }
+        stats.addResult(gameResult);
 
         if (game.getGameResult().getGameMode().isNoRetry()) {
             console.log(`Team (${gameResult.getPlayingTeamNames()}) ${gameResult.hasPlayingTeamWon() ? 'wins' : 'looses'} ` +
                 `with ${gameResult.getPlayingTeamPoints()} points ` +
                 `and ${gameResult.hasPlayingTeamWon() ? 'win' : 'loose'} ${Math.abs(gameResult.getGameMoneyValue())} cents each!`);
-            reportCents(i);
         } else {
             console.log(`retry with cards:${Object.values(playerMap).map(p => '\n' + p.getName() + ': ' + JSON.stringify(p.getStartCardSet()))}`)
         }
+        reportCents(i);
 
         rotateStartPlayer();
     }
@@ -58,7 +55,6 @@ let {wins, cents, inPlayingTeam, retries, ownPlays, ownWins, ownSoloWins, ownSol
         + (ownPlays ? `calling ${Math.round(ownPlays / runs * 100)}% of the time; winning own games ${Math.round(ownWins / ownPlays * 100)}% of the time; ` : '')
         + (ownSoloPlays ? `winning solos ${Math.round(ownSoloWins / ownSoloPlays * 100)}% of the time ` : '')
         + `and ${Math.round(retries / runs * 100)}% retries for all players`);
-reportCents(120);
 
 //})();
 

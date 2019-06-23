@@ -17,7 +17,6 @@ class Player implements PlayerInterface {
     private strategy: StrategyInterface;
     private currentCardSet: Card[];
     private gamePhase: GamePhase;
-    // noinspection JSMismatchedCollectionQueryUpdate
 
     constructor(name: string, strategy: new (player: Player) => (StrategyInterface)) {
         this.gamePhase = GamePhase.BEFORE_GAME;
@@ -25,7 +24,6 @@ class Player implements PlayerInterface {
 
         this.strategy = new strategy(this);
 
-        // maybe smart getters?
         this.startCardSet = [];
         this.currentCardSet = [];
     }

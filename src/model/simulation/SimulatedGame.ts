@@ -32,43 +32,21 @@ export class SimulatedGame {
         return result.hasPlayerWon(playerName);
     }
 
+    simulateOneRoundWithCard(playerName: string, card: Card) {
+        let round = this.world.round;
+        if (playerName != round.getCurrentPlayerName()) {
+            throw Error('cannot force play other player');
+        }
+        this.forcePlayCard(round.getCurrentPlayerName(), card);
+        this.simulateRound();
+
+        return round;
+    }
+
     private simulateRounds(): readonly FinishedRound[] {
         let roundIndex = this.world.rounds.length;
         for (let i = roundIndex; i < 8; i++) {
-
-
-            /*
-            for (let playerName of Object.keys(this.world.playerMap)) {
-                if (this.world.round.isLeftPlayerBeforeRightPlayer(this.world.round.getCurrentPlayerName(), playerName) && this.world.playerMap[playerName].getCurrentCardSet()!.length != 8 - i) {
-                    throw Error('invariant violated');
-                } else if (!this.world.round.isLeftPlayerBeforeRightPlayer(this.world.round.getCurrentPlayerName(), playerName) && this.world.playerMap[playerName].getCurrentCardSet()!.length != 8 - i - 1) {
-                    throw Error('invariant violated');
-                }
-            } */
-
-            for (let j = this.world.round.getPosition(); j < 4; j++) {
-                this.playerMap[this.world.round.getCurrentPlayerName()].playCard(this.world);
-            }
-
-            /*
-            for (let playerName of Object.keys(this.world.playerMap)) {
-                if (this.world.playerMap[playerName].getCurrentCardSet()!.length != 8 - i - 1) {
-                     throw Error('invariant violated');
-                }
-            }
-            */
-
-            this.markCalledAce(this.world.round);
-
-            this.world.rounds.push(this.world.round);
-
-            for (let player of Object.values(this.playerMap)) {
-                if (this.world.rounds.length + player.getCurrentCardSet().length != 8) {
-                    throw new Error('invariant violated');
-                }
-            }
-
-            this.world.round = this.world.round.nextRound(this.world.round.getRoundAnalyzer(this.world.gameMode).getWinningPlayerName());
+            this.simulateRound();
         }
 
         return this.world.rounds;
@@ -95,5 +73,27 @@ export class SimulatedGame {
         ) {
             this.gameMode!.setHasAceBeenCalled();
         }
+    }
+
+    private simulateRound() {
+        if (this.world.rounds.length > 8) {
+            throw Error('more than 8 rounds');
+        }
+        for (let j = this.world.round.getPosition(); j < 4; j++) {
+            this.playerMap[this.world.round.getCurrentPlayerName()].playCard(this.world);
+        }
+
+        this.markCalledAce(this.world.round);
+
+        this.world.rounds.push(this.world.round);
+
+        for (let player of Object.values(this.playerMap)) {
+            if (this.world.rounds.length + player.getCurrentCardSet().length != 8) {
+                throw new Error('invariant violated');
+            }
+        }
+
+        this.world.round = this.world.round.nextRound(this.world.round.getRoundAnalyzer(this.world.gameMode).getWinningPlayerName());
+
     }
 }

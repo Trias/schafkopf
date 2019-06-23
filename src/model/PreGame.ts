@@ -12,7 +12,7 @@ export class PreGame {
         this.gamePhase = GamePhase.BEFORE_GAME;
     }
 
-    play(cardsInSets: Card[][]) {
+    determineGameMode(cardsInSets: Card[][]) {
         if (this.gamePhase != GamePhase.BEFORE_GAME) {
             throw Error('Invalid state transition');
         }

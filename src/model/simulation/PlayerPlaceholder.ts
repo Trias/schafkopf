@@ -23,7 +23,7 @@ export class PlayerPlaceholder implements PlayerInterface {
     }
 
     doYouWantToKlopf(): boolean {
-        return false;
+        throw new Error("Method not implemented.");
     }
 
     forcePlayCard(world: GameWorld, card: Card): Round {
