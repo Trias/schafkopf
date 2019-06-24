@@ -15,8 +15,8 @@ let runs = 120;
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
 let playerMap = {
-    [playerNames[0]]: new Player("Player 1", UctMonteCarloStrategy),
-    [playerNames[1]]: new Player("Player 2", NaiveMonteCarloStrategy),
+    [playerNames[0]]: new Player("Player 1", NaiveMonteCarloStrategy),
+    [playerNames[1]]: new Player("Player 2", UctMonteCarloStrategy),
     [playerNames[2]]: new Player("Player 3", SimpleStrategy),
     [playerNames[3]]: new Player("Player 4", SimpleStrategy),
 };

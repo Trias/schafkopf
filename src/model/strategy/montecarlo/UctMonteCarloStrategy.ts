@@ -59,13 +59,13 @@ export default class UctMonteCarloStrategy implements StrategyInterface {
 
         let gameMode = this.testGameMode(GameModeEnum.SOLO, longestColors, playerIndex, cardSet);
 
-        if (gameMode) {
+        if (gameMode.length) {
             console.log("uct-game:" + gameMode);
             return gameMode;
         }
 
         gameMode = this.testGameMode(GameModeEnum.WENZ, [undefined], playerIndex, cardSet);
-        if (gameMode) {
+        if (gameMode.length) {
             console.log("uct-game:" + gameMode);
             return gameMode;
         }
@@ -73,7 +73,7 @@ export default class UctMonteCarloStrategy implements StrategyInterface {
         let callableColors = getCallableColors(cardSet);
         gameMode = this.testGameMode(GameModeEnum.CALL_GAME, callableColors, playerIndex, cardSet);
 
-        if (gameMode) {
+        if (gameMode.length) {
             console.log("uct-game:" + gameMode);
             return gameMode;
         }
@@ -107,11 +107,11 @@ export default class UctMonteCarloStrategy implements StrategyInterface {
             let history = new GameHistory(Object.keys(playerMap), testGameMode);
             let world = new GameWorld(testGameMode, playerMap, [], round, history);
 
-            console.time('uct simulation');
+            console.time('uct simulation' + [testGameModeEnum, color]);
             let simulation = new Simulation(world, this.thisPlayer);
             let valuations = simulation.run(cardSet);
             console.log('valuations:' + consoleColors.green(JSON.stringify(valuations)));
-            console.timeEnd('uct simulation');
+            console.timeEnd('uct simulation' + [testGameModeEnum, color]);
 
             let bestValuedCard = chooseBestCard(valuations)!;
             let bestValue = valuations[bestValuedCard]!;

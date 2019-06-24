@@ -38,6 +38,13 @@ export class Simulation {
             return zeroWeightedCards(playableCards);
         }
 
+        let points = this.world.history.getOwnTeamPoints(this.thisPlayer.getName());
+        let otherTeamPoints = this.world.history.getOtherTeamPoints(this.thisPlayer.getName());
+        if (points && points > 60 || otherTeamPoints && otherTeamPoints > 60) {
+            // shortcut: we have already won or lost..
+            return zeroWeightedCards(playableCards);
+        }
+
         // parallize?
         for (let i = 0; i < simulations; i++) {
             let fakeWorld = generateRandomWorldConsistentWithGameKnowledge(this.world.clone(), this.thisPlayer.getName());
