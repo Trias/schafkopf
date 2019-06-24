@@ -1,6 +1,6 @@
 import {Card} from "../../cards/Card";
 
-export type CardToWeights = { [index in Card]?: number };
+export type CardToWeights = { [index in string]?: number };
 
 export function zeroWeightedCards(cardSet: Card[]) {
     let weights: CardToWeights = {};

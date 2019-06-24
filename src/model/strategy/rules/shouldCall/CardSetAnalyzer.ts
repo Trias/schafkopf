@@ -7,7 +7,7 @@ import {chooseBestCard} from "../../helper";
 import {includes} from "lodash";
 
 export function determineCallColorCard(cardSet: ReadonlyArray<Card>, newGameMode: GameMode) {
-    let callableColors = getCallableColors(cardSet, newGameMode);
+    let callableColors = getCallableColors(cardSet);
     let cardsByColor = getCardsByColor(cardSet, newGameMode);
     let cardWeights: CardToWeights = {};
 

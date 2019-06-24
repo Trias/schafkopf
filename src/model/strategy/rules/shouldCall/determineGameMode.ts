@@ -6,7 +6,7 @@ import {Card} from "../../../cards/Card";
 import {GameMode, GameModeEnum} from "../../../GameMode";
 import {PlainColor} from "../../../cards/Color";
 
-export function determineGameMode(previousGameMode: GameMode, cardSet: readonly Card[]): [GameModeEnum?, PlainColor?] {
+export function determineGameMode(previousGameMode: GameMode, cardSet: Card[]): [GameModeEnum?, PlainColor?] {
     if (previousGameMode.isSolo()) {
         return [];
     }

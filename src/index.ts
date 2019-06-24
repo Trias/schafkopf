@@ -3,19 +3,20 @@ import {Player} from "./model/Player";
 import Statistics from "./model/Statistics";
 import shuffleCards from "./model/cards/shuffleCards";
 import SimpleStrategy from "./model/strategy/simple/CallingRulesWithRandomPlay";
-import NaiveMonteCarlo from "./model/strategy/montecarlo/NaiveMonteCarlo";
 import {GameWorld} from "./model/GameWorld";
 import {PreGame} from "./model/PreGame";
 import {Round} from "./model/Round";
 import {GameHistory} from "./model/knowledge/GameHistory";
+import UctMonteCarloStrategy from "./model/strategy/montecarlo/UctMonteCarloStrategy";
+import NaiveMonteCarloStrategy from "./model/strategy/montecarlo/NaiveMonteCarloStrategy";
 
 let runs = 120;
 
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
 let playerMap = {
-    [playerNames[0]]: new Player("Player 1", NaiveMonteCarlo),
-    [playerNames[1]]: new Player("Player 2", SimpleStrategy),
+    [playerNames[0]]: new Player("Player 1", UctMonteCarloStrategy),
+    [playerNames[1]]: new Player("Player 2", NaiveMonteCarloStrategy),
     [playerNames[2]]: new Player("Player 3", SimpleStrategy),
     [playerNames[3]]: new Player("Player 4", SimpleStrategy),
 };

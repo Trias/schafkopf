@@ -1,7 +1,7 @@
 import {Card} from "../../../cards/Card";
 import {GameMode, GameModeEnum} from "../../../GameMode";
 import {CallableColor, ColorWithTrump} from "../../../cards/Color";
-import {allOfColor, highTrumps, sortByNaturalOrdering} from "../../../cards/CardSet";
+import {allOfColor, getCallableColors, highTrumps, sortByNaturalOrdering} from "../../../cards/CardSet";
 import {
     determineCallColorCard,
     determineGoodTrumps,
@@ -9,12 +9,14 @@ import {
     hasFehlFarbeFrei,
     hasTwoBlankAces
 } from "./CardSetAnalyzer";
-import {Player} from "../../../Player";
-import RandomStrategy from "../../random";
 
-export function shouldPlayCallGame(cardSet: readonly Card[]): [GameModeEnum, CallableColor] | null {
+export function shouldPlayCallGame(cardSet: Card[]): [GameModeEnum, CallableColor] | null {
+    let callableColors = getCallableColors(cardSet);
+    if (callableColors.length == 0) {
+        return null;
+    }
 
-    let testGameMode: GameMode = new GameMode(GameModeEnum.CALL_GAME, new Player("test", RandomStrategy), CallableColor.EICHEL);
+    let testGameMode: GameMode = new GameMode(GameModeEnum.CALL_GAME, "test", CallableColor.EICHEL);
 
     let trumpHandCards = allOfColor(sortByNaturalOrdering(cardSet), ColorWithTrump.TRUMP, testGameMode);
     let highTrumpHandCards = highTrumps(trumpHandCards, testGameMode);

@@ -19,7 +19,7 @@ const consoleColors = require('colors');
 
 const CAN_PLAY_THRESHOLD = 0.75;
 
-export default class NaiveMonteCarlo implements StrategyInterface {
+export default class NaiveMonteCarloStrategy implements StrategyInterface {
     private readonly thisPlayer: Player;
 
     constructor(thisPlayer: Player) {
@@ -58,7 +58,7 @@ export default class NaiveMonteCarlo implements StrategyInterface {
     }
 
     runSimulation(world: GameWorld, cardSet: Card[]) {
-        let simulations = 100;
+        let simulations = 10;
         let runsPerSimulation = 10;
         let valuations: CardToWeights = {};
         let wins: { [index in string]?: number[] } = {};
@@ -84,7 +84,7 @@ export default class NaiveMonteCarlo implements StrategyInterface {
             //let index = 0;
             while (fakeWorld.round.getPosition() != fakeWorld.round.getPlayerPositionByName(this.thisPlayer.getName())) {
                 let player = fakeWorld.playerMap[fakeWorld.round.getCurrentPlayerName()];
-                player.playCard(world);
+                player.playCard(fakeWorld);
                 //playerMap[fakePlayerName].onCardPlayed(card, round.getCurrentPlayerName(), index);
                 //index++;
             }
@@ -141,6 +141,7 @@ export default class NaiveMonteCarlo implements StrategyInterface {
         return [];
     }
 
+    // TODO generalize / abstract
     private testGameMode(testGameModeEnum: GameModeEnum, colors: (undefined | PlainColor)[], playerIndex: number, cardSet: Card[]): [GameModeEnum?, PlainColor?] {
         let map = new Map<GameMode, number>();
 
@@ -157,16 +158,14 @@ export default class NaiveMonteCarlo implements StrategyInterface {
 
         for (let color of colors) {
             let testGameMode = new GameMode(testGameModeEnum, playerName, color);
-            let startPlayerName = Object.keys(playerMap)[(4 - playerIndex) % 4];
+            let startPlayerName = Object.keys(playerMap)[(4 + playerIndex - 1) % 4];
 
             let round = new Round(startPlayerName, Object.keys(playerMap));
             let history = new GameHistory(Object.keys(playerMap), testGameMode);
             let world = new GameWorld(testGameMode, playerMap, [], round, history);
 
-            let playableCards = getPlayableCards(cardSet, testGameMode, round);
-
             console.time('mc-simulation' + [testGameModeEnum, color]);
-            let valuations = this.runSimulation(world, playableCards);
+            let valuations = this.runSimulation(world, cardSet);
             console.timeEnd('mc-simulation' + [testGameModeEnum, color]);
             console.log(consoleColors.green(JSON.stringify(valuations)));
 
@@ -176,7 +175,7 @@ export default class NaiveMonteCarlo implements StrategyInterface {
             map.set(testGameMode, bestValue);
         }
 
-        let possibleGame = NaiveMonteCarlo.getPossibleGame(map);
+        let possibleGame = NaiveMonteCarloStrategy.getPossibleGame(map);
 
         if (possibleGame) {
             return [possibleGame.getMode(), possibleGame.getColorOfTheGame()];

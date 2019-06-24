@@ -33,7 +33,7 @@ export function allOfColor(cards: readonly Card[], color: ColorWithTrump, gameMo
 }
 
 export function allOfCallableColor(cards: readonly Card[], color: CallableColor) {
-    return filter(cards, card => card[1] == "O" || card[1] == "U" || card[0] != color);
+    return filter(cards, card => card[1] != "O" && card[1] != "U" && card[0] == color);
 }
 
 export function highTrumps(cards: readonly Card[], gameMode: GameMode): Card[] {

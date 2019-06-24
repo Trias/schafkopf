@@ -52,7 +52,7 @@ export class SimulatedGame {
         return this.world.rounds;
     }
 
-    private getGameResult() {
+    getGameResult() {
         if (this.world.rounds.length != 8) {
             throw Error('not finished yet!');
         }
@@ -75,7 +75,7 @@ export class SimulatedGame {
         }
     }
 
-    private simulateRound() {
+    simulateRound() {
         if (this.world.rounds.length > 8) {
             throw Error('more than 8 rounds');
         }
@@ -95,5 +95,22 @@ export class SimulatedGame {
 
         this.world.round = this.world.round.nextRound(this.world.round.getRoundAnalyzer(this.world.gameMode).getWinningPlayerName());
 
+    }
+
+    simulate(playerName: string) {
+        this.simulateRounds();
+
+        let result = this.getGameResult();
+
+        // console.log(colors.blue(`${JSON.stringify(rounds.map(r => r.getCards()))}`) + colors.red(`points: ${JSON.stringify(result.getPlayersPoints(this.thisPlayer.getName()))}`));
+
+        return result.hasPlayerWon(playerName);
+    }
+
+    simulatePlayerBefore(playerName: string) {
+        while (this.world.round.getPosition() != this.world.round.getPlayerPositionByName(playerName)) {
+            let player = this.world.playerMap[this.world.round.getCurrentPlayerName()];
+            player.playCard(this.world);
+        }
     }
 }
