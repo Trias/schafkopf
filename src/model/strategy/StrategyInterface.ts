@@ -7,7 +7,7 @@ export default interface StrategyInterface {
 
     chooseCardToPlay(world: GameWorld, cardSet: readonly Card[]): Card
 
-    chooseGameToCall(cardSet: readonly Card[], gameMode: GameMode, playerIndex: number): [GameModeEnum?, PlainColor?];
+    chooseGameToCall(cardSet: readonly Card[], gameMode: GameMode, playerIndex: number, allowedGameModes: GameModeEnum[]): [GameModeEnum?, PlainColor?];
 
     chooseToRaise(cardSet: readonly Card[]): boolean;
 }

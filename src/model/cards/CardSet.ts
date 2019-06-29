@@ -252,6 +252,10 @@ export function getTrumps(cardSet: readonly Card[], gameMode: GameMode) {
     return cardsByColor[ColorWithTrump.TRUMP];
 }
 
+export function getNonTrumps(cardSet: readonly Card[], gameMode: GameMode) {
+    return cardSet.filter(card => !gameMode.getOrdering().isTrump(card));
+}
+
 export function hasSchmiers(cardSet: readonly Card[]) {
     return getSchmiers(cardSet).length > 0;
 }

@@ -12,6 +12,8 @@ interface Stats {
     ownSoloPlays: number;
     ownPlays: number;
     tournamentPoints: number;
+    mitSpielerWins: number;
+    opposingTeamWin: number;
 }
 
 export default class Statistics {
@@ -34,6 +36,8 @@ export default class Statistics {
                 ownSoloPlays: 0,
                 ownPlays: 0,
                 tournamentPoints: 0,
+                mitSpielerWins: 0,
+                opposingTeamWin: 0,
             };
         }
     }
@@ -49,7 +53,7 @@ export default class Statistics {
 
     private updateStatistics(result: GameResult) {
         for (let playerName of this.playerNames) {
-            let {wins, cents, inPlayingTeam, retries, ownPlays, ownWins, ownSoloWins, ownSoloPlays, tournamentPoints} = this.stats[playerName]!;
+            let {wins, cents, inPlayingTeam, retries, ownPlays, ownWins, ownSoloWins, ownSoloPlays, tournamentPoints, mitSpielerWins, opposingTeamWin} = this.stats[playerName]!;
 
             if (result.getGameMode().isNoRetry() && playerName == result.getGameMode().getCallingPlayerName()) {
                 ownPlays = ownPlays + 1;
@@ -76,10 +80,15 @@ export default class Statistics {
                     wins = wins + 1;
                     cents = cents + result.getGameMoneyValue();
                     tournamentPoints = tournamentPoints + result.getTournamentPointsValue();
+
+                    if (playerName != result.getGameMode().getCallingPlayerName()) {
+                        mitSpielerWins = mitSpielerWins + 1;
+                    }
                 } else if (!result.hasPlayingTeamWon() && !includes(result.getPlayingTeamNames(), playerName)) {
                     wins = wins + 1;
                     cents = cents + result.getGameMoneyValue();
                     tournamentPoints = tournamentPoints + result.getTournamentPointsValue();
+                    opposingTeamWin = opposingTeamWin + 1;
 
                 } else {
                     cents = cents - result.getGameMoneyValue();
@@ -118,7 +127,9 @@ export default class Statistics {
                 ownSoloWins,
                 ownSoloPlays,
                 ownPlays,
-                tournamentPoints
+                tournamentPoints,
+                mitSpielerWins,
+                opposingTeamWin
             };
         }
     }

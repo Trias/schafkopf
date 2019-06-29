@@ -57,7 +57,7 @@ export class GameHistory {
         };
 
         this.gameMode = gameMode;
-        this.remainingCards = clone(CardDeck);
+        this.remainingCards = clone(CardDeck) as Card[];
         this.remainingCardsByColor = {
             E: this.gameMode.getOrdering().getColorOrdering(PlainColor.EICHEL),
             G: this.gameMode.getOrdering().getColorOrdering(PlainColor.GRAS),
@@ -148,7 +148,7 @@ export class GameHistory {
         return this.angespieltByColor[color];
     }
 
-    onRoundCompleted(round: FinishedRound, roundIndex: number): void {
+    onRoundCompleted(round: FinishedRound): void {
         let roundAnalyzer = new RoundAnalyzer(round as Round, this.gameMode);
 
         let winningPlayerName = roundAnalyzer.getWinningPlayerName();
@@ -213,13 +213,16 @@ export class GameHistory {
         return colorFreeByPlayer;
     }
 
-    getCurrentRankWithEqualRanksOfCardInColor(cards: readonly Card[], color: ColorWithTrump): { [index in Card]?: number } {
+    getCurrentRankWithEqualRanksOfCardInColor(cards: readonly Card[], color: ColorWithTrump, roundCards: Card[] = []): { [index in Card]?: number } {
         let cardsInColor = allOfColor(cards, color, this.gameMode);
         let currentRank = 0;
         let result: { [index in Card]?: number } = {};
         let lastCard;
-        for (let i = 0; i < this.remainingCardsByColor[color].length; i++) {
-            let card = this.remainingCardsByColor[color][i];
+
+        let cardsToBeConsidered = [...this.remainingCardsByColor[color], ...roundCards];
+
+        for (let i = 0; i < cardsToBeConsidered.length; i++) {
+            let card = cardsToBeConsidered[i];
             if (cardsInColor.indexOf(card) !== -1) {
                 if (lastCard && result[lastCard] === currentRank - 1) {
                     currentRank = currentRank - 1;
@@ -314,10 +317,10 @@ export class GameHistory {
     }
 
     isPlayerPlaying(playerName: string, startCards: Card[] = []) {
-        if (includes(startCards, this.gameMode.getCalledAce())) {
+        if (this.gameMode.getCallingPlayerName() == playerName) {
             return true;
         }
-        if (this.gameMode.getCallingPlayerName() == playerName) {
+        if (this.gameMode.isCallGame() && includes(startCards, this.gameMode.getCalledAce())) {
             return true;
         }
         return includes(this.playingTeamNames, playerName);

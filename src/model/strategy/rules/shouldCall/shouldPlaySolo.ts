@@ -11,7 +11,7 @@ import RandomStrategy from "../../random";
 export function shouldPlaySolo(cardSet: ReadonlyArray<Card>): [GameModeEnum, PlainColor] | null {
     for (let color of plainColors) {
         let testPlayer = new Player('test', RandomStrategy);
-        let testGameMode: GameMode = new GameMode(GameModeEnum.SOLO, testPlayer, color);
+        let testGameMode: GameMode = new GameMode(GameModeEnum.SOLO, testPlayer.getName(), color);
         let trumpHandCards = allOfColor(cardSet, ColorWithTrump.TRUMP, testGameMode);
         let laufende = getLaufende(trumpHandCards, testGameMode);
 

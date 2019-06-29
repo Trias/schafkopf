@@ -112,4 +112,8 @@ export default class CardsOrdering {
             return card1;
         }
     }
+
+    getTrumpsOfCardSet(cardSet: Card[]) {
+        return cardSet.filter(card => this.isTrump(card));
+    }
 }

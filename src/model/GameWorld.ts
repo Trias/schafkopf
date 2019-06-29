@@ -77,6 +77,6 @@ export class GameWorld implements GameEventsReceiverInterface {
     }
 
     onRoundCompleted(round: FinishedRound, roundIndex: number): void {
-        this.history.onRoundCompleted(round, roundIndex);
+        this.history.onRoundCompleted(round);
     }
 }

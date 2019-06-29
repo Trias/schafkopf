@@ -12,7 +12,7 @@ export class PreGame {
         this.gamePhase = GamePhase.BEFORE_GAME;
     }
 
-    determineGameMode(cardsInSets: Card[][]) {
+    determineGameMode(cardsInSets: Card[][], allowedGameModes: GameModeEnum[] = Object.values(GameModeEnum)) {
         if (this.gamePhase != GamePhase.BEFORE_GAME) {
             throw Error('Invalid state transition');
         }
@@ -30,18 +30,18 @@ export class PreGame {
         this.dealSecondBatchOfCard(cardsInSets);
         this.setGamePhase(GamePhase.ALL_CARDS_DEALT);
 
-        let gameMode = this.askPlayersWhatTheyWantToPlay();
+        let gameMode = this.askPlayersWhatTheyWantToPlay(allowedGameModes);
         gameMode.setKlopfer(klopfer);
 
         return gameMode;
     }
 
 
-    private askPlayersWhatTheyWantToPlay(): GameMode {
+    private askPlayersWhatTheyWantToPlay(allowedGameModes: GameModeEnum[]): GameMode {
         let currentGameMode = new GameMode(GameModeEnum.RETRY);
 
         Object.values(this.playerMap).forEach((p, i) => {
-            let newGameMode = p.whatDoYouWantToPlay(currentGameMode, i);
+            let newGameMode = p.whatDoYouWantToPlay(currentGameMode, i, allowedGameModes);
             if (newGameMode && (GameMode.compareGameModes(newGameMode, currentGameMode) > 0)) {
                 currentGameMode = newGameMode;
             }

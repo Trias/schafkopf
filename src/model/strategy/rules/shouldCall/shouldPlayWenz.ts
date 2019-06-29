@@ -18,7 +18,7 @@ import {Player} from "../../../Player";
 
 export function shouldPlayWenz(cardSet: ReadonlyArray<Card>): [GameModeEnum] | null {
     let testPlayer = new Player('test', RandomStrategy);
-    let testGameMode: GameMode = new GameMode(GameModeEnum.WENZ, testPlayer);
+    let testGameMode: GameMode = new GameMode(GameModeEnum.WENZ, testPlayer.getName());
     let trumpHandCards = allOfColor(cardSet, ColorWithTrump.TRUMP, testGameMode);
 
     if (trumpHandCards.length > 3) {

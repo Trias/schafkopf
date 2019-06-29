@@ -1,15 +1,13 @@
 import StrategyInterface from "../StrategyInterface";
-import {filter} from "lodash"
+import {filter, shuffle} from "lodash"
 import {PlainColor} from "../../cards/Color";
 import {GameMode, GameModeEnum} from "../../GameMode";
 import {Card} from "../../cards/Card";
 import {canPlayCard} from "../../PlayableMoves";
-import {RandomCard} from "../rules/inplay/RandomCard";
-import {chooseBestCard} from "../helper";
 import {determineGameMode} from "../rules/shouldCall/determineGameMode";
 import {GameWorld} from "../../GameWorld";
 
-export default class SimpleStrategy implements StrategyInterface {
+export default class CallingRulesWitRandomPlay implements StrategyInterface {
 
     chooseCardToPlay(world: GameWorld, cardSet: readonly Card[]): Card {
         let playableCards = filter(cardSet, card => {
@@ -20,9 +18,9 @@ export default class SimpleStrategy implements StrategyInterface {
             throw Error(`no playable card found! ${cardSet}`);
         }
 
-        let playRandomCard = new RandomCard();
+        let shuffledPlayableCards = shuffle(playableCards);
 
-        let bestCard = chooseBestCard(playRandomCard.rateCardSet(playableCards));
+        let bestCard = shuffledPlayableCards[0];
 
         if (!bestCard) {
             throw Error('no best card found')
@@ -31,8 +29,8 @@ export default class SimpleStrategy implements StrategyInterface {
         }
     }
 
-    chooseGameToCall(cardSet: Card[], previousGameMode: GameMode, playerIndex: number): [GameModeEnum?, PlainColor?] {
-        return determineGameMode(previousGameMode, cardSet);
+    chooseGameToCall(cardSet: Card[], previousGameMode: GameMode, playerIndex: number, allowedGameModes: GameModeEnum[]): [GameModeEnum?, PlainColor?] {
+        return determineGameMode(previousGameMode, cardSet, allowedGameModes);
     }
 
     chooseToRaise(cardSet: readonly Card[]): boolean {

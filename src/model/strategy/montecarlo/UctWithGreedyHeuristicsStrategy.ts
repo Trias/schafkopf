@@ -10,7 +10,6 @@ import {Player, PlayerMap} from "../../Player";
 import {PlayerPlaceholder} from "../../simulation/PlayerPlaceholder";
 import {GameHistory} from "../../knowledge/GameHistory";
 import {Simulation} from "./UctMonteCarlo/Simulation";
-import {includes} from "lodash";
 
 const consoleColors = require('colors');
 
@@ -55,35 +54,28 @@ export default class UctMonteCarloStrategy implements StrategyInterface {
         return chooseBestCard(valuations)!;
     }
 
-    chooseGameToCall(cardSet: Card[], previousGameMode: GameMode, playerIndex: number, allowedGameModes: GameModeEnum[]): [GameModeEnum?, PlainColor?] {
+    chooseGameToCall(cardSet: Card[], previousGameMode: GameMode, playerIndex: number): [GameModeEnum?, PlainColor?] {
         let longestColors = getLongestPlainColors(cardSet);
 
-        let gameMode;
-        if (includes(allowedGameModes, GameModeEnum.SOLO)) {
-            gameMode = this.testGameMode(GameModeEnum.SOLO, longestColors, playerIndex, cardSet);
+        let gameMode = this.testGameMode(GameModeEnum.SOLO, longestColors, playerIndex, cardSet);
 
-            if (gameMode.length) {
-                console.log("uct-game:" + gameMode);
-                return gameMode;
-            }
+        if (gameMode.length) {
+            console.log("uct-game:" + gameMode);
+            return gameMode;
         }
 
-        if (includes(allowedGameModes, GameModeEnum.WENZ)) {
-            gameMode = this.testGameMode(GameModeEnum.WENZ, [undefined], playerIndex, cardSet);
-            if (gameMode.length) {
-                console.log("uct-game:" + gameMode);
-                return gameMode;
-            }
+        gameMode = this.testGameMode(GameModeEnum.WENZ, [undefined], playerIndex, cardSet);
+        if (gameMode.length) {
+            console.log("uct-game:" + gameMode);
+            return gameMode;
         }
 
-        if (includes(allowedGameModes, GameModeEnum.CALL_GAME)) {
-            let callableColors = getCallableColors(cardSet);
-            gameMode = this.testGameMode(GameModeEnum.CALL_GAME, callableColors, playerIndex, cardSet);
+        let callableColors = getCallableColors(cardSet);
+        gameMode = this.testGameMode(GameModeEnum.CALL_GAME, callableColors, playerIndex, cardSet);
 
-            if (gameMode.length) {
-                console.log("uct-game:" + gameMode);
-                return gameMode;
-            }
+        if (gameMode.length) {
+            console.log("uct-game:" + gameMode);
+            return gameMode;
         }
 
         return [];

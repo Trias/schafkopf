@@ -7,6 +7,8 @@ import {CallableColor, PlainColor} from "./cards/Color";
 import CardsOrdering from "./cards/CardsOrdering";
 import CardRank from "./cards/CardRank";
 import {Card} from "./cards/Card";
+import {intersection} from "lodash";
+import {highTrumps} from "./cards/CardSet";
 
 enum GameModeEnum {
     CALL_GAME = "CALL_GAME",
@@ -127,6 +129,14 @@ class GameMode {
 
     getTrumps() {
         return this.getOrdering().getTrumpOrdering();
+    }
+
+    getTrumpsOfCardSet(cardSet: Card[]) {
+        return intersection(this.getOrdering().getTrumpOrdering(), cardSet);
+    }
+
+    getHighTrumpsOfCardSet(cardSet: Card[]) {
+        return intersection(highTrumps(this.getOrdering().getTrumpOrdering(), this), cardSet);
     }
 
     isWenz() {

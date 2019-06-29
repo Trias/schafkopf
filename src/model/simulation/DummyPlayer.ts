@@ -1,5 +1,5 @@
 import {Card} from "../cards/Card";
-import {GameMode} from "../GameMode";
+import {GameMode, GameModeEnum} from "../GameMode";
 import StrategyInterface from "../strategy/StrategyInterface";
 import {cloneDeep, includes} from "lodash";
 import {GameWorld} from "../GameWorld";
@@ -13,12 +13,18 @@ export class DummyPlayer implements PlayerInterface {
     private readonly name: string;
     private readonly startCardSet: Card[];
     private readonly strategy: StrategyInterface;
+    private strategyConstructor: { new(name: string): StrategyInterface };
 
     constructor(playerName: string, startCardSet: Card[], currentCardSet: Card[], strategy: new (name: string) => StrategyInterface) {
         this.name = playerName;
         this.startCardSet = startCardSet;
         this.currentCardSet = currentCardSet;
         this.strategy = new strategy(this.getName());
+        this.strategyConstructor = strategy;
+    }
+
+    getStrategyName() {
+        return this.strategyConstructor.name;
     }
 
     onReceiveFirstBatchOfCards(cards: Card[]) {
@@ -86,17 +92,8 @@ export class DummyPlayer implements PlayerInterface {
         return world.round;
     }
 
-    whatDoYouWantToPlay(currentGameMode: GameMode, playerIndex: number): GameMode {
-        let gameModeTupel = this.strategy.chooseGameToCall(this.startCardSet, currentGameMode, playerIndex);
-
-        // todo: bad idea: tupel
-        if (gameModeTupel.length == 2) {
-            return new GameMode(gameModeTupel[0]!, this.getName(), gameModeTupel[1]);
-        } else if (gameModeTupel.length == 1) {
-            return new GameMode(gameModeTupel[0]!, this.getName());
-        } else {
-            return currentGameMode;
-        }
+    whatDoYouWantToPlay(currentGameMode: GameMode, playerIndex: number, allowedGameModes: GameModeEnum[]): GameMode {
+        throw Error('not implemented');
     }
 
     getDummyClone(): DummyPlayer {

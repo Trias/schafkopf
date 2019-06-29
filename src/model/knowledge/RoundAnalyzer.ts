@@ -88,7 +88,7 @@ export class RoundAnalyzer {
         return highestCard;
     }
 
-    getHighestCardIndex() {
+    getHighestCardPosition(): number {
         let highestCard = this.getHighestCard();
 
         return this.round.getPositionOfCard(highestCard);

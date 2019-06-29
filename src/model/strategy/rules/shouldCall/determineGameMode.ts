@@ -5,38 +5,45 @@ import {shouldPlayCallGame} from "./shouldPlayCallGame";
 import {Card} from "../../../cards/Card";
 import {GameMode, GameModeEnum} from "../../../GameMode";
 import {PlainColor} from "../../../cards/Color";
+import {includes} from "lodash";
 
-export function determineGameMode(previousGameMode: GameMode, cardSet: Card[]): [GameModeEnum?, PlainColor?] {
+export function determineGameMode(previousGameMode: GameMode, cardSet: Card[], allowedGameModes: GameModeEnum[]): [GameModeEnum?, PlainColor?] {
     if (previousGameMode.isSolo()) {
         return [];
     }
 
     cardSet = sortByNaturalOrdering(cardSet);
 
-    let soloPossible = shouldPlaySolo(cardSet);
+    if (includes(allowedGameModes, GameModeEnum.SOLO)) {
+        let soloPossible = shouldPlaySolo(cardSet);
 
-    if (soloPossible) {
-        return soloPossible;
+        if (soloPossible) {
+            return soloPossible;
+        }
     }
 
-    if (previousGameMode.isWenz()) {
-        return [];
+    if (includes(allowedGameModes, GameModeEnum.WENZ)) {
+        if (previousGameMode.isWenz()) {
+            return [];
+        }
+
+        let wenzPossible = shouldPlayWenz(cardSet);
+
+        if (wenzPossible) {
+            return wenzPossible;
+        }
     }
 
-    let wenzPossible = shouldPlayWenz(cardSet);
+    if (includes(allowedGameModes, GameModeEnum.CALL_GAME)) {
+        if (previousGameMode.isCallGame()) {
+            return [];
+        }
 
-    if (wenzPossible) {
-        return wenzPossible;
-    }
+        let callGamePossible = shouldPlayCallGame(cardSet);
 
-    if (previousGameMode.isCallGame()) {
-        return [];
-    }
-
-    let callGamePossible = shouldPlayCallGame(cardSet);
-
-    if (callGamePossible) {
-        return callGamePossible;
+        if (callGamePossible) {
+            return callGamePossible;
+        }
     }
 
     return [];

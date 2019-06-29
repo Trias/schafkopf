@@ -1,6 +1,6 @@
 import {removeCard, sortByNaturalOrdering} from "./cards/CardSet";
 import {Card} from "./cards/Card";
-import {GameMode} from "./GameMode";
+import {GameMode, GameModeEnum} from "./GameMode";
 import StrategyInterface from "./strategy/StrategyInterface";
 import GamePhase from "./GamePhase";
 import {clone} from "lodash";
@@ -8,6 +8,7 @@ import RandomStrategy from "./strategy/random";
 import {GameWorld} from "./GameWorld";
 import {DummyPlayer} from "./simulation/DummyPlayer";
 import {Round} from "./Round";
+import {canPlayCard} from "./PlayableMoves";
 
 export type PlayerMap = { [index in string]: PlayerInterface };
 
@@ -17,15 +18,21 @@ class Player implements PlayerInterface {
     private strategy: StrategyInterface;
     private currentCardSet: Card[];
     private gamePhase: GamePhase;
+    private strategyConstructor: { new(player: Player): StrategyInterface };
 
     constructor(name: string, strategy: new (player: Player) => (StrategyInterface)) {
         this.gamePhase = GamePhase.BEFORE_GAME;
         this.name = name;
 
         this.strategy = new strategy(this);
+        this.strategyConstructor = strategy;
 
         this.startCardSet = [];
         this.currentCardSet = [];
+    }
+
+    getStrategyName() {
+        return this.strategyConstructor.name;
     }
 
     getDummyClone() {
@@ -81,6 +88,10 @@ class Player implements PlayerInterface {
 
         let card = this.strategy.chooseCardToPlay(world, this.getCurrentCardSet());
 
+        if (!card || !canPlayCard(world.gameMode, this.currentCardSet, card, world.round)) {
+            throw Error('cannot play card!');
+        }
+
         this.currentCardSet = removeCard(this.currentCardSet, card);
         if (this.currentCardSet.length + world.rounds.length + 1 != 8) {
             throw Error('invariant violated');
@@ -95,6 +106,9 @@ class Player implements PlayerInterface {
     forcePlayCard(world: GameWorld, card: Card): Round {
         if (this.gamePhase !== GamePhase.IN_PLAY) {
             throw Error('function not available in this state');
+        }
+        if (!card || !canPlayCard(world.gameMode, this.currentCardSet, card, world.round)) {
+            throw Error('cannot play card!');
         }
         if (world.round.getCurrentPlayerName() != this.name) {
             throw Error('not to move');
@@ -114,11 +128,11 @@ class Player implements PlayerInterface {
         return world.round;
     }
 
-    whatDoYouWantToPlay(currentGameMode: GameMode, playerIndex: number) {
+    whatDoYouWantToPlay(currentGameMode: GameMode, playerIndex: number, allowedGameModes: GameModeEnum[]) {
         if (this.gamePhase !== GamePhase.ALL_CARDS_DEALT) {
             throw Error('function not available in this state');
         }
-        let [gameMode, color] = this.strategy.chooseGameToCall(this.getStartCardSet(), currentGameMode, playerIndex);
+        let [gameMode, color] = this.strategy.chooseGameToCall(this.getStartCardSet(), currentGameMode, playerIndex, allowedGameModes);
 
         if (gameMode && gameMode !== currentGameMode.getMode()) {
             return new GameMode(gameMode, this.getName(), color);
@@ -161,6 +175,8 @@ class Player implements PlayerInterface {
 
 
 interface PlayerInterface {
+    getStrategyName(): string;
+
     onNewGamePhase(gamePhase: GamePhase): void;
 
     getName(): string;
@@ -171,7 +187,7 @@ interface PlayerInterface {
 
     doYouWantToKlopf(): boolean;
 
-    whatDoYouWantToPlay(currentGameMode: GameMode, playerIndex: number): GameMode;
+    whatDoYouWantToPlay(currentGameMode: GameMode, playerIndex: number, allowedGameModes: GameModeEnum[]): GameMode;
 
     onGameStart(): void;
 

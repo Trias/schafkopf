@@ -7,7 +7,7 @@ import {getPlayableCards} from "../../PlayableMoves";
 import {chooseBestCard} from "../helper";
 import {SimulatedGame} from "../../simulation/SimulatedGame";
 import {generateRandomWorldConsistentWithGameKnowledge} from "../../simulation/generateRandomWorldConsistentWithGameKnowledge";
-import {reduce} from "lodash";
+import {includes, reduce} from "lodash";
 import {getCallableColors, getLongestPlainColors} from "../../cards/CardSet";
 import {GameWorld} from "../../GameWorld";
 import {CardToWeights, zeroWeightedCards} from "../rules/CardToWeights";
@@ -114,28 +114,37 @@ export default class NaiveMonteCarloStrategy implements StrategyInterface {
         return valuations;
     }
 
-    chooseGameToCall(cardSet: Card[], previousGameMode: GameMode, playerIndex: number): [GameModeEnum?, PlainColor?] {
+    chooseGameToCall(cardSet: Card[], previousGameMode: GameMode, playerIndex: number, allowedGameModes: GameModeEnum[]): [GameModeEnum?, PlainColor?] {
         let longestColors = getLongestPlainColors(cardSet);
 
-        let gameMode = this.testGameMode(GameModeEnum.SOLO, longestColors, playerIndex, cardSet);
+        let gameMode;
 
-        if (gameMode.length) {
-            console.log("mc-game solo:" + gameMode);
-            return gameMode;
+
+        if (includes(allowedGameModes, GameModeEnum.SOLO)) {
+            gameMode = this.testGameMode(GameModeEnum.SOLO, longestColors, playerIndex, cardSet);
+
+            if (gameMode.length) {
+                console.log("mc-game solo:" + gameMode);
+                return gameMode;
+            }
         }
 
-        gameMode = this.testGameMode(GameModeEnum.WENZ, [undefined], playerIndex, cardSet);
-        if (gameMode.length) {
-            console.log("mc-game wenz:" + gameMode);
-            return gameMode;
+        if (includes(allowedGameModes, GameModeEnum.WENZ)) {
+            gameMode = this.testGameMode(GameModeEnum.WENZ, [undefined], playerIndex, cardSet);
+            if (gameMode.length) {
+                console.log("mc-game wenz:" + gameMode);
+                return gameMode;
+            }
         }
 
-        let callableColors = getCallableColors(cardSet);
-        gameMode = this.testGameMode(GameModeEnum.CALL_GAME, callableColors, playerIndex, cardSet);
+        if (includes(allowedGameModes, GameModeEnum.CALL_GAME)) {
+            let callableColors = getCallableColors(cardSet);
+            gameMode = this.testGameMode(GameModeEnum.CALL_GAME, callableColors, playerIndex, cardSet);
 
-        if (gameMode.length) {
-            console.log("mc-game call game:" + gameMode);
-            return gameMode;
+            if (gameMode.length) {
+                console.log("mc-game call game:" + gameMode);
+                return gameMode;
+            }
         }
 
         return [];

@@ -172,6 +172,9 @@ class Round implements FinishedRound {
     }
 
     getPlayerNameAtPosition(position: number) {
+        if (position < 0) {
+            throw Error('no negative indices allowed');
+        }
         return this.playerNames[(this.getStartPlayerIndex() + position + 4) % 4];
     }
 
@@ -198,6 +201,22 @@ class Round implements FinishedRound {
             throw Error('at beginning, no player played');
         }
         return this.getPlayerNameAtPosition(this.getPosition() - 1);
+    }
+
+    isMittelHand() {
+        return this.getPosition() == 1 || this.getPosition() == 2;
+    }
+
+    isHinterHand() {
+        return this.getPosition() == 3;
+    }
+
+    getFirstPlayedCard() {
+        if (this.getPlayedCards().length == 0) {
+            throw Error('no first played card');
+        } else {
+            return this.getPlayedCards()[0];
+        }
     }
 }
 

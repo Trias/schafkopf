@@ -65,4 +65,8 @@ export class PlayerPlaceholder implements PlayerInterface {
     onNewGamePhase(gamePhase: GamePhase): void {
         throw new Error("Method not implemented.");
     }
+
+    getStrategyName(): string {
+        return "placeholder";
+    }
 }
