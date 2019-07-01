@@ -1,24 +1,19 @@
 import {GameMode, GameModeEnum} from "./GameMode";
-import CardRank from "./cards/CardRank";
 import {PlayerMap} from "./Player";
 import {FinishedRound} from "./Round";
 import {Card} from "./cards/Card";
 import {includes} from "lodash";
-import {hasCard, sortAndFilterBy} from "./cards/CardSet";
+import {sortAndFilterBy} from "./cards/CardSet";
 import {GameWorld} from "./GameWorld";
-
-/**
- * who wins with how many points
- */
 
 export default class GameResult {
     private readonly playingTeamPoints: number;
-    private readonly playingTeam: [string?, string?];
+    private readonly playingTeamNames: string[];
     private readonly pointsByPlayer: { [index in string]: number };
     private readonly playerNames: readonly string[];
     private readonly gameMode: GameMode;
     private readonly rounds: readonly FinishedRound[];
-    private playerMap: PlayerMap;
+    private readonly playerMap: PlayerMap;
 
     constructor(world: GameWorld) {
         this.gameMode = world.gameMode;
@@ -27,12 +22,12 @@ export default class GameResult {
         this.playerMap = world.playerMap;
 
         this.pointsByPlayer = this.determinePointsByPlayer();
-        this.playingTeam = this.determinePlayingTeam();
+        this.playingTeamNames = world.history.getPlayingTeamNames();
         this.playingTeamPoints = this.determinePlayingTeamPoints();
     }
 
     getPlayingTeamNames() {
-        return this.playingTeam;
+        return this.playingTeamNames;
     }
 
     getGameMode() {
@@ -49,10 +44,10 @@ export default class GameResult {
 
     determinePlayingTeamPoints(): number {
         if(this.gameMode.getMode() === GameModeEnum.CALL_GAME){
-            let playingTeam = this.playingTeam;
+            let playingTeam = this.playingTeamNames;
             return this.getPoints(playingTeam[0]!) + this.getPoints(playingTeam[1]!);
         } else if (this.gameMode.getMode() === GameModeEnum.SOLO || this.gameMode.getMode() === GameModeEnum.WENZ) {
-            let playingTeam = this.playingTeam;
+            let playingTeam = this.playingTeamNames;
             return this.getPoints(playingTeam[0]!);
         }else if(this.gameMode.getMode() === GameModeEnum.RETRY) {
             return 0;
@@ -80,26 +75,6 @@ export default class GameResult {
 
     getPoints(playerName: string): number {
         return this.pointsByPlayer[playerName]!;
-    }
-
-    determinePlayingTeam(): [string?, string?] {
-        // TODO: solve with game history?
-        if (this.gameMode.isCallGame()) {
-            let callingPlayer = this.gameMode.getCallingPlayerName();
-            let calledAce = this.gameMode.getColorOfTheGame() + CardRank.ACE as Card;
-
-            for(let i = 0; i< 4;i++){
-                if (hasCard(this.playerMap[this.playerNames[i]].getStartCardSet(), calledAce)) {
-                    return [callingPlayer, this.playerNames[i]];
-                }
-            }
-
-            throw Error('invalid call');
-        } else if (this.gameMode.isSinglePlay()) {
-            return [this.gameMode.getCallingPlayerName()!];
-        } else {
-            return [];
-        }
     }
 
     getGameMoneyValue() {
@@ -166,7 +141,7 @@ export default class GameResult {
     }
 
     hasPlayerWon(playerName: string) {
-        let isPlayer = includes(this.playingTeam, playerName);
+        let isPlayer = includes(this.playingTeamNames, playerName);
         if (isPlayer && this.hasPlayingTeamWon() || !isPlayer && !this.hasPlayingTeamWon()) {
             return true;
         } else {

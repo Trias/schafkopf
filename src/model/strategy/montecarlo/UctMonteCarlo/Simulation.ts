@@ -11,9 +11,9 @@ import {getUctValue} from "./getUctValue";
 import {fromEntries} from "../../../../utils/fromEntries";
 
 export class Simulation {
-    private thisPlayer: Player;
-    private world: GameWorld;
-    private gameTree: GameTree;
+    private readonly thisPlayer: Player;
+    private readonly world: GameWorld;
+    private readonly gameTree: GameTree;
 
     constructor(world: GameWorld, thisPlayer: Player) {
         this.thisPlayer = thisPlayer;
@@ -41,11 +41,10 @@ export class Simulation {
         let points = this.world.history.getOwnTeamPoints(this.thisPlayer.getName());
         let otherTeamPoints = this.world.history.getOtherTeamPoints(this.thisPlayer.getName());
         if (points && points > 60 || otherTeamPoints && otherTeamPoints > 60) {
-            // shortcut: we have already won or lost..
+            // shortcut: we have already won or lost....
             return zeroWeightedCards(playableCards);
         }
 
-        // parallize?
         for (let i = 0; i < simulations; i++) {
             let fakeWorld = generateRandomWorldConsistentWithGameKnowledge(this.world.clone(), this.thisPlayer.getName());
 
@@ -55,9 +54,6 @@ export class Simulation {
 
                 let selectedGameTreeNode = this.select(this.gameTree, game, cardSet);
 
-                if (fakeWorldClone.rounds.length < 8) {
-                    game.simulate(this.thisPlayer.getName());
-                }
                 let win = this.simulate(game);
                 this.backPropagation(selectedGameTreeNode, win);
             }
@@ -93,6 +89,7 @@ export class Simulation {
             }
             return gameTree;
         } else {
+            // simulate all players before this one by random play...
             game.simulatePlayerBefore(this.thisPlayer.getName());
 
             let remainingHandCards = difference(cardSet, gameTree.playedCards);
@@ -100,38 +97,46 @@ export class Simulation {
             let expandedChildrenCards = gameTree.children.map(childTree => childTree.card);
 
             if (isEqual(playableCards.sort(), expandedChildrenCards.sort())) {
+                // we need to descend deeper, all cards at this node have been explored
                 if (gameTree.children.length == 0) {
                     throw Error('no children?!');
                 }
 
-                let bestUctValue = 0;
-                let bestChild: GameTree = gameTree.children[0];
-
-                for (let childNode of gameTree.children) {
-                    let parentRuns = gameTree.runs;
-                    let {wins, runs} = childNode;
-                    let uctValue = getUctValue(wins / runs, parentRuns, runs);
-                    if (uctValue >= bestUctValue) {
-                        bestUctValue = uctValue;
-                        bestChild = childNode;
-                    }
-                    if (bestUctValue == Infinity) {
-                        // partially unexpanded node;
-                        throw Error('unexpanded node?!');
-                    }
-                }
+                let bestChild = this.getBestChild(gameTree);
                 let card = bestChild.card;
                 if (card == null) {
                     throw Error('no card?!');
                 }
+                // we simulate one round with this card, so game tree state and simulation are in corresponding states ... results may be different on every playout.
                 game.simulateOneRoundWithCard(this.thisPlayer.getName(), card);
                 return this.select(bestChild!, game, cardSet);
             } else {
+                // expand thr tree with a random card...
                 let unexploredCards = difference(playableCards, expandedChildrenCards);
                 let card = sample(unexploredCards)!;
                 return this.expand(gameTree, game, card);
             }
         }
+    }
+
+    private getBestChild(gameTree: GameTree) {
+        let bestUctValue = 0;
+        let bestChild: GameTree = gameTree.children[0];
+
+        for (let childNode of gameTree.children) {
+            let parentRuns = gameTree.runs;
+            let {wins, runs} = childNode;
+            let uctValue = getUctValue(wins / runs, parentRuns, runs);
+            if (uctValue >= bestUctValue) {
+                bestUctValue = uctValue;
+                bestChild = childNode;
+            }
+            if (bestUctValue == Infinity) {
+                // partially unexpanded node;
+                throw Error('unexpanded node?!');
+            }
+        }
+        return bestChild;
     }
 
     private backPropagation(gameTree: GameTree, win: number) {

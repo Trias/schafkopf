@@ -2,7 +2,7 @@ import StrategyInterface from "../StrategyInterface";
 import {PlainColor} from "../../cards/Color";
 import {GameMode, GameModeEnum} from "../../GameMode";
 import {Card} from "../../cards/Card";
-import {chooseBestCard} from "../helper";
+import {chooseBestCard} from "../chooseBestCard";
 import {GameWorld} from "../../GameWorld";
 import {Player} from "../../Player";
 import {Simulation} from "./UctMonteCarlo/Simulation";

@@ -16,29 +16,29 @@ interface Stats {
     opposingTeamWin: number;
 }
 
+let zeroStats = {
+    wins: 0,
+    cents: 0,
+    inPlayingTeam: 0,
+    retries: 0,
+    ownWins: 0,
+    ownSoloWins: 0,
+    ownSoloPlays: 0,
+    ownPlays: 0,
+    tournamentPoints: 0,
+    mitSpielerWins: 0,
+    opposingTeamWin: 0,
+};
+
 export default class Statistics {
-    //private readonly results: GameResult[];
-    private stats: { [index in string]: Stats };
-    private playerNames: string[];
+    private readonly stats: { [index in string]: Stats };
+    private readonly playerNames: string[];
 
     constructor(playerNames: string[]) {
         this.playerNames = playerNames;
-        //this.results = [];
         this.stats = {};
         for (let playerName of playerNames) {
-            this.stats[playerName] = {
-                wins: 0,
-                cents: 0,
-                inPlayingTeam: 0,
-                retries: 0,
-                ownWins: 0,
-                ownSoloWins: 0,
-                ownSoloPlays: 0,
-                ownPlays: 0,
-                tournamentPoints: 0,
-                mitSpielerWins: 0,
-                opposingTeamWin: 0,
-            };
+            this.stats[playerName] = zeroStats;
         }
     }
 
@@ -47,7 +47,6 @@ export default class Statistics {
     }
 
     addResult(gameResult: GameResult) {
-        // this.results.push(gameResult);
         this.updateStatistics(gameResult);
     }
 

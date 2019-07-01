@@ -4,9 +4,9 @@ import {GameMode} from "./GameMode";
 import {RoundAnalyzer} from "./knowledge/RoundAnalyzer";
 
 class Round implements FinishedRound {
-    private playedCards: Card[];
-    private startPlayerName: string;
-    private playerNames: readonly string[];
+    private readonly playedCards: Card[];
+    private readonly startPlayerName: string;
+    private readonly playerNames: readonly string[];
 
     constructor(startPlayerName: string, playerNames: readonly string[], playedCards: Card[] = []) {
         if (!startPlayerName || playerNames.indexOf(startPlayerName) == -1) {
@@ -88,12 +88,6 @@ class Round implements FinishedRound {
         return this.playedCards.indexOf(card);
     }
 
-    setPlayerNames(playerNames: string[]) {
-        // todo restrict with types
-        this.playerNames = playerNames;
-        this.startPlayerName = playerNames[0];
-    }
-
     getCardForPlayerName(playerName: string) {
         let playerIndex = this.playerNames.indexOf(playerName);
         let startPlayerIndex = this.playerNames.indexOf(this.startPlayerName);
@@ -167,10 +161,6 @@ class Round implements FinishedRound {
         return (index - this.getStartPlayerIndex() + 4) % 4;
     }
 
-    setStartPlayerName(playerName: string) {
-        this.startPlayerName = playerName;
-    }
-
     getPlayerNameAtPosition(position: number) {
         if (position < 0) {
             throw Error('no negative indices allowed');
@@ -193,6 +183,9 @@ class Round implements FinishedRound {
     }
 
     getLastPlayedCard() {
+        if (!this.getPlayedCards().length) {
+            throw Error('no last played card!');
+        }
         return this.getPlayedCards()[this.getPlayedCards().length - 1];
     }
 
@@ -220,12 +213,7 @@ class Round implements FinishedRound {
     }
 }
 
-export {Round, FinishedRound, MinimalRound};
-
-interface MinimalRound {
-    getCards(): readonly Card[];
-    isEmpty(): boolean;
-}
+export {Round, FinishedRound};
 
 interface FinishedRound {
     getPlayedCards(): readonly Card[];

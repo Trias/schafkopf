@@ -29,32 +29,29 @@ export function canPlayCard(gameMode: GameMode, cardsOnHand: readonly Card[], ca
         return true;
     }
     if (round.isEmpty()) {
-        if (gameMode.isCallGame() && isCalledColorButNotAce(gameMode, cardsOnHand, card)) {
-            // console.log('ruffarbe gespielt');
+        if (gameMode.isCallGame() && isCalledColorButNotAce(gameMode, cardsOnHand, card) && !gameMode.getHasAceBeenCalled()) {
+            // man darf davon laufen wenn man 4 von der ruffarbe hat...
             if (allOfColor(cardsOnHand, gameMode.getColorOfTheGame()!, gameMode).length > 3) {
-                // davongelaufen
                 return true;
             } else {
                 return false;
             }
         } else {
-            //  console.log('erste karte');
             return true;
         }
     } else {
         let roundAnalyzer = new RoundAnalyzer(round, gameMode);
         let roundColor = roundAnalyzer.getRoundColor();
 
+        // man darf die rufsau nicht schmieren..
         if (gameMode.isCallGame()
             && card == getCalledAce(gameMode)
             && roundColor !== gameMode.getColorOfTheGame()
-            && !gameMode.getHasAceBeenCalled()
-        ) {
-            // rufsau nicht schmieren.
+            && !gameMode.getHasAceBeenCalled()) {
             return false;
         }
-        //  console.log(`round color:${roundColor}`);
 
+        // man muss die rufsau spielen wenn ruffarbe angespielt
         if (gameMode.isCallGame()
             && roundColor === gameMode.getColorOfTheGame()
             && gameMode.getOrdering().isOfColor(card, roundColor)
@@ -63,19 +60,11 @@ export function canPlayCard(gameMode: GameMode, cardsOnHand: readonly Card[], ca
             return false;
         }
 
-        /*
-        if (gameMode.isCallGame() && round.getRoundColor() == ColorWithTrump.TRUMP) {
-            //  console.log('trumpf gespielt');
-            return gameMode.getOrdering().isOfColor(card, ColorWithTrump.TRUMP) || intersection(gameMode.getTrumps(), cardsOnHand).length == 0
-        } */
-
-        //console.log('erste karte');
-
         if (!hasColor(cardsOnHand, roundColor, gameMode)) {
-            //console.log('farbe nicht auf der hand?');
+            // keine bedienpflicht: freie Wahl
             return true;
         } else {
-            //console.log('gleiche farbe?');
+            // bedienpflicht: nur in Farbe
             return gameMode.getOrdering().isOfColor(card, roundColor);
         }
     }

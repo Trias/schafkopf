@@ -3,7 +3,7 @@ import {PlainColor} from "../../cards/Color";
 import {GameMode, GameModeEnum} from "../../GameMode";
 import {Round} from "../../Round";
 import {Card} from "../../cards/Card";
-import {chooseBestCard} from "../helper";
+import {chooseBestCard} from "../chooseBestCard";
 import {getCallableColors, getLongestPlainColors} from "../../cards/CardSet";
 import {GameWorld} from "../../GameWorld";
 import {Player, PlayerMap} from "../../Player";

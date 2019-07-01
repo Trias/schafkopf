@@ -3,7 +3,7 @@ import {GameMode} from "../../../GameMode";
 import {CallableColor, callableColors, plainColors} from "../../../cards/Color";
 import {getCallableColors, getCardsByColor} from "../../../cards/CardSet";
 import {CardToWeights} from "../CardToWeights";
-import {chooseBestCard} from "../../helper";
+import {chooseBestCard} from "../../chooseBestCard";
 import {includes} from "lodash";
 
 export function determineCallColorCard(cardSet: ReadonlyArray<Card>, newGameMode: GameMode) {

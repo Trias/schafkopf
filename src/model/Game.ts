@@ -1,7 +1,7 @@
 import {GameMode} from "./GameMode";
 import GameResult from "./GameResult";
 import {PlayerMap} from "./Player";
-import {FinishedRound, Round} from "./Round";
+import {Round} from "./Round";
 import GamePhase from "./GamePhase";
 import {sortByNaturalOrdering} from "./cards/CardSet";
 import {RoundAnalyzer} from "./knowledge/RoundAnalyzer";
@@ -9,7 +9,6 @@ import {GameWorld} from "./GameWorld";
 
 export class Game {
     private readonly playerMap: PlayerMap;
-    private readonly rounds: FinishedRound[];
     private readonly gameMode: GameMode;
     private readonly world: GameWorld;
 
@@ -20,7 +19,6 @@ export class Game {
             throw Error('not exactly 4 players!');
         }
 
-        this.rounds = world.rounds;
         this.playerMap = world.playerMap;
         this.world = world;
         this.gameMode = world.gameMode
@@ -58,13 +56,13 @@ export class Game {
                 console.log(`player ${activePlayerName} played ${this.world.round.getLastPlayedCard()} from set ${sortByNaturalOrdering(this.playerMap[activePlayerName].getCurrentCardSet().concat(this.world.round.getLastPlayedCard()))}`);
             }
             this.markCalledAce(this.world.round);
-            this.rounds.push(this.world.round.finish());
+            this.world.rounds.push(this.world.round.finish());
 
             let roundAnalyzer = new RoundAnalyzer(this.world.round, this.gameMode);
             console.log(`round winner: ${roundAnalyzer.getWinningPlayerName()} at position ${roundAnalyzer.getWinningCardPosition() + 1}; round cards: ${this.world.round.getPlayedCards()}`);
             this.world.onRoundCompleted(this.world.round.finish(), i);
             if (this.world.history.isTeamPartnerKnown()) {
-                console.log(`Playing Team (${this.world.history.getPlayingTeam()}) has ${this.world.history.getTeamPoints(this.world.history.getPlayingTeam())} points; Opposing Team (${this.world.history.getNonPlayingTeam()}) has ${this.world.history.getTeamPoints(this.world.history.getNonPlayingTeam())} points`);
+                console.log(`Playing Team (${this.world.history.getPlayingTeamNames()}) has ${this.world.history.getTeamPoints(this.world.history.getPlayingTeamNames())} points; Opposing Team (${this.world.history.getNonPlayingTeam()}) has ${this.world.history.getTeamPoints(this.world.history.getNonPlayingTeam())} points`);
             }
             console.log(`------round ${i + 1} finished-----`);
             this.world.round = new Round(roundAnalyzer.getWinningPlayerName(), Object.keys(this.playerMap));

@@ -1,7 +1,7 @@
 import {PlainColor} from "../Color";
 import {Card} from "../Card";
 
-function inColor(color: PlainColor): Card[] {
+function inColor(color: PlainColor): readonly Card[] {
     return [
         color + "A" as Card,
         color + "X" as Card,
@@ -13,7 +13,7 @@ function inColor(color: PlainColor): Card[] {
 }
 
 type ColorsType = {
-    [index in PlainColor]: Card[];
+    [index in PlainColor]: readonly Card[];
 }
 
 let CardsByColor: ColorsType = {

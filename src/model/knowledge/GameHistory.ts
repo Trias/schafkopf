@@ -16,7 +16,7 @@ type CardsInfoType = { [index in string]: Card[] };
 
 export class GameHistory {
     private readonly playedCards: Card[];
-    private gameMode: GameMode;
+    private readonly gameMode: GameMode;
     private readonly allPlayersNames: readonly string[];
     private readonly pointsForPlayerName: { [index in string]: number };
     private playingTeamNames: string[];
@@ -26,7 +26,7 @@ export class GameHistory {
     private readonly colorFreeByPlayerName: { [index in string]: ColorInfoType };
     private hasCalledAceBeenPlayed = false;
 
-    private remainingCardsByColor: CardsInfoType;
+    private readonly remainingCardsByColor: CardsInfoType;
     private remainingCards: Card[];
 
     constructor(allPlayerNames: readonly string[], gameMode: GameMode) {
@@ -63,7 +63,7 @@ export class GameHistory {
             G: this.gameMode.getOrdering().getColorOrdering(PlainColor.GRAS),
             H: this.gameMode.getOrdering().getColorOrdering(PlainColor.HERZ),
             S: this.gameMode.getOrdering().getColorOrdering(PlainColor.SCHELLE),
-            T: this.gameMode.getOrdering().getTrumpOrdering()
+            T: clone(this.gameMode.getOrdering().getTrumpOrdering()) as Card[]
         };
 
         if (this.gameMode.isSinglePlay()) {
@@ -219,7 +219,8 @@ export class GameHistory {
         let result: { [index in Card]?: number } = {};
         let lastCard;
 
-        let cardsToBeConsidered = [...this.remainingCardsByColor[color], ...roundCards];
+        // TODO. WEnz
+        let cardsToBeConsidered = sortByNaturalOrdering([...this.remainingCardsByColor[color], ...roundCards]);
 
         for (let i = 0; i < cardsToBeConsidered.length; i++) {
             let card = cardsToBeConsidered[i];
@@ -305,9 +306,8 @@ export class GameHistory {
         return this.opposingTeamNames;
     }
 
-    getPlayingTeam() {
+    getPlayingTeamNames() {
         return this.playingTeamNames;
-
     }
 
     getCurrentRankOfCardInColor(card: Card, roundCards: Card[] = []) {

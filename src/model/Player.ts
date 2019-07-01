@@ -15,10 +15,10 @@ export type PlayerMap = { [index in string]: PlayerInterface };
 class Player implements PlayerInterface {
     private startCardSet: Card[];
     private readonly name: string;
-    private strategy: StrategyInterface;
+    private readonly strategy: StrategyInterface;
     private currentCardSet: Card[];
     private gamePhase: GamePhase;
-    private strategyConstructor: { new(player: Player): StrategyInterface };
+    private readonly strategyConstructor: { new(player: Player): StrategyInterface };
 
     constructor(name: string, strategy: new (player: Player) => (StrategyInterface)) {
         this.gamePhase = GamePhase.BEFORE_GAME;

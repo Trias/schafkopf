@@ -231,7 +231,7 @@ export class GameAssumptionsInCallGame implements GameEventsReceiverInterface, G
 
             let opponentSchmiers;
             if (this.gameHistory.getNonPlayingTeam().indexOf(roundAnalyzer.getWinningPlayerName()) !== -1) {
-                opponentSchmiers = intersection(this.gameHistory.getPlayingTeam(), schmierPlayer);
+                opponentSchmiers = intersection(this.gameHistory.getPlayingTeamNames(), schmierPlayer);
             } else {
                 opponentSchmiers = intersection(this.gameHistory.getNonPlayingTeam(), schmierPlayer);
             }

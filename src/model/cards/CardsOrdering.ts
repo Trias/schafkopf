@@ -46,14 +46,14 @@ export default class CardsOrdering {
         return this.highestCard(card1, card2) == card2;
     }
 
-    getTrumpOrdering(): Card[] {
+    getTrumpOrdering(): readonly Card[] {
         if (this.gameModeEnum == GameModeEnum.CALL_GAME) {
-            return DefaultTrumpOrdering;
+            return clone(DefaultTrumpOrdering);
         } else if (this.gameModeEnum == GameModeEnum.SOLO) {
             let color = this.color as PlainColor;
             return OberAndUnter.concat(CardsByColor[color])
         } else if (this.gameModeEnum == GameModeEnum.WENZ) {
-            return Unter;
+            return clone(Unter);
         } else {
             return DefaultTrumpOrdering;
         }
@@ -65,7 +65,7 @@ export default class CardsOrdering {
                 || this.gameModeEnum == GameModeEnum.SOLO && color === this.color) {
                 return [];
             } else {
-                return CardsByColor[color];
+                return clone(CardsByColor[color]) as Card[];
             }
         } else if (this.gameModeEnum == GameModeEnum.WENZ) {
             let ober = color + "O" as Card;

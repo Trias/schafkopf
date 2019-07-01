@@ -4,7 +4,7 @@ import {GameMode, GameModeEnum} from "../../GameMode";
 import {Round} from "../../Round";
 import {Card} from "../../cards/Card";
 import {getPlayableCards} from "../../PlayableMoves";
-import {chooseBestCard} from "../helper";
+import {chooseBestCard} from "../chooseBestCard";
 import {SimulatedGame} from "../../simulation/SimulatedGame";
 import {generateRandomWorldConsistentWithGameKnowledge} from "../../simulation/generateRandomWorldConsistentWithGameKnowledge";
 import {includes, reduce} from "lodash";

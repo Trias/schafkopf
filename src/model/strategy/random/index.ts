@@ -17,7 +17,7 @@ export default class RandomStrategy implements StrategyInterface {
             throw Error(`no playable card found! ${cardSet}`);
         }
 
-        return shuffle(playableCards)[0];
+        return sample(playableCards)!;
     }
 
     chooseGameToCall(cardSet: readonly Card[], previousGameMode: GameMode, playerIndex: number, allowedGameModes: GameModeEnum[]): [GameModeEnum?, PlainColor?] {
