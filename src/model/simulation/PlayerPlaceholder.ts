@@ -1,7 +1,7 @@
 import {Card} from "../cards/Card";
 import {GameMode} from "../GameMode";
 import {GameWorld} from "../GameWorld";
-import {Round} from "../Round";
+import {FinishedRound, Round} from "../Round";
 import {PlayerInterface} from "../Player";
 import GamePhase from "../GamePhase";
 import {DummyPlayer} from "./DummyPlayer";
@@ -62,7 +62,7 @@ export class PlayerPlaceholder implements PlayerInterface {
         throw new Error("Method not implemented.");
     }
 
-    onNewGamePhase(gamePhase: GamePhase, world: GameWorld): void {
+    onNewGamePhase(gamePhase: GamePhase, world: GameWorld | null): void {
         throw new Error("Method not implemented.");
     }
 
@@ -76,5 +76,8 @@ export class PlayerPlaceholder implements PlayerInterface {
 
     onGameModeDecided(world: GameWorld): void {
         throw new Error("Method not implemented.");
+    }
+
+    onRoundCompleted(round: FinishedRound, roundIndex: number): void {
     }
 }

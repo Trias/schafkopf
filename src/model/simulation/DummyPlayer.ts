@@ -108,7 +108,7 @@ export class DummyPlayer implements PlayerInterface {
         throw new Error("Method not implemented.");
     }
 
-    onNewGamePhase(gamePhase: GamePhase): void {
+    onNewGamePhase(gamePhase: GamePhase, world: GameWorld | null): void {
         throw new Error("Method not implemented.");
     }
 

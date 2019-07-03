@@ -1,8 +1,4 @@
-
-let seedRandom = require('seedrandom');
-// replcing global Math.random.....must be first call.
-Math.random = seedRandom.alea('seed', {global: true});
-
+import {Card} from "./model/cards/Card";
 import {Game} from "./model/Game";
 import {Player} from "./model/Player";
 import Statistics from "./model/Statistics";
@@ -14,26 +10,51 @@ import {GameHistory} from "./model/knowledge/GameHistory";
 import CallingRulesWithSimpleStrategy from "./model/strategy/simple/CallingRulesWithSimpleStrategy";
 import {GameModeEnum} from "./model/GameMode";
 import CallingRulesWithUctMonteCarloStrategy from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloStrategy";
+
+let seedRandom = require('seedrandom');
+// replacing global Math.random.....must be first call.
+Math.random = seedRandom.alea('seed', {state: true});
+
 import colors = require('colors');
 
-let runs = 120;
+let fs = require('fs');
+
+let runs = 2;
 
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
 let playerMap = {
     [playerNames[0]]: new Player(playerNames[0], CallingRulesWithUctMonteCarloStrategy),
-    [playerNames[1]]: new Player(playerNames[1], CallingRulesWithSimpleStrategy),
+    [playerNames[1]]: new Player(playerNames[1], CallingRulesWithUctMonteCarloStrategy),
     [playerNames[2]]: new Player(playerNames[2], CallingRulesWithSimpleStrategy),
-    [playerNames[3]]: new Player(playerNames[3], CallingRulesWithUctMonteCarloStrategy),
+    [playerNames[3]]: new Player(playerNames[3], CallingRulesWithSimpleStrategy),
 };
 
 let allCardDeals = shuffleCardsTimes(runs);
 
 let stats = new Statistics(playerNames);
 
+let games: {
+    [index in number]: {
+        playerNames: string[],
+        startPlayer: string,
+        prngState: object,
+        cardDeal: Card[][],
+    }
+} = {};
+
 //(async () => {
 let startPlayer = playerNames[0];
 for (let i = 0; i < runs; i++) {
+    // @ts-ignore
+    let prngState = Math.random.state();
+    games[i + 1] = {
+        playerNames,
+        startPlayer,
+        prngState,
+        cardDeal: allCardDeals[i]
+    };
+
     console.log(`========game ${i + 1}===========`);
     let preGame = new PreGame(playerMap);
     let gameMode = preGame.determineGameMode(allCardDeals[i], [GameModeEnum.CALL_GAME]);
@@ -56,6 +77,15 @@ for (let i = 0; i < runs; i++) {
 
     startPlayer = rotateStartPlayer(startPlayer);
 }
+
+function saveGames() {
+    if (!fs.existsSync('generated')) {
+        fs.mkdirSync('generated');
+    }
+    fs.writeFileSync('generated/games.json', JSON.stringify(games, null, 2));
+}
+
+saveGames();
 
 //})();
 

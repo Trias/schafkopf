@@ -2,6 +2,7 @@ import GamePhase from "./GamePhase";
 import {Card} from "./cards/Card";
 import {PlayerMap} from "./Player";
 import {GameMode, GameModeEnum} from "./GameMode";
+import {GameWorld} from "./GameWorld";
 
 export class PreGame {
     private readonly playerMap: PlayerMap;
@@ -35,7 +36,6 @@ export class PreGame {
 
         return gameMode;
     }
-
 
     private askPlayersWhatTheyWantToPlay(allowedGameModes: GameModeEnum[]): GameMode {
         let currentGameMode = new GameMode(GameModeEnum.RETRY);
@@ -71,19 +71,19 @@ export class PreGame {
         return klopfer;
     }
 
-    private notifyPlayersOfGameStart() {
-        Object.values(this.playerMap).forEach(p => p.onGameStart());
+    private notifyPlayersOfGameStart(world: GameWorld | null = null) {
+        Object.values(this.playerMap).forEach(p => p.onGameStart(world));
     }
 
-    private notifyPlayersOfGamePhase() {
-        Object.values(this.playerMap).forEach(p => p.onNewGamePhase(this.gamePhase));
+    private notifyPlayersOfGamePhase(world: GameWorld | null = null) {
+        Object.values(this.playerMap).forEach(p => p.onNewGamePhase(this.gamePhase, world));
     }
 
-    private setGamePhase(gamePhase: GamePhase) {
+    private setGamePhase(gamePhase: GamePhase, world: GameWorld | null = null) {
         if (this.gamePhase > gamePhase && gamePhase != GamePhase.BEFORE_GAME) {
             throw Error('invalid state transition');
         }
         this.gamePhase = gamePhase;
-        this.notifyPlayersOfGamePhase();
+        this.notifyPlayersOfGamePhase(world);
     }
 }

@@ -28,7 +28,8 @@ function filterBadPairs(world: GameWorld, playableCards: Card[]) {
 
     for (let color of callableColors) {
         if (!(cardsByColorNoTrump[color].length == 2 && cardsByColorNoTrump[color][0][1] == "X" && cardToValue(cardsByColorNoTrump[color][1]) <= 4
-            || cardsByColorNoTrump[color].length == 1 && cardsByColorNoTrump[color][0][1] == "X"
+            || cardsByColorNoTrump[color].length == 1 && cardToValue(cardsByColorNoTrump[color][0]) >= 10
+            || cardsByColorNoTrump[color].length == 2 && cardToValue(cardsByColorNoTrump[color][0]) >= 10 && cardToValue(cardsByColorNoTrump[color][0]) >= 10
         )) {
             goodCards = goodCards.concat(cardsByColorNoTrump[color]);
         }
@@ -159,8 +160,12 @@ export default class CallingRulesWithSimpleStrategy implements StrategyInterface
 
             let potentialPartnerName = assumptions.getPossiblePartnerName();
             let potentialPartnerConfidence = this.thisPlayer.assumptions.getPossibleTeamPartnerForPlayerName(this.thisPlayer.getName());
-            let potentialPartnerHasRound = potentialPartnerName == potentialPartnerConfidence.playerName && potentialPartnerConfidence.confidence > 0.1;
+            let potentialPartnerHasRound = potentialPartnerName == roundAnalyzer.getHighestCardPlayerName() && potentialPartnerConfidence.confidence > 0.1;
+            let partnerIsBehindMe = partnerName ? world.round.getPlayerPositionByName(partnerName) > world.round.getPosition() : false;
             //let partnerHasPlayed = partnerName?(world.round.getPlayerPositionByName(partnerName) < world.round.getPosition()): false;
+            let highestCardColor = world.gameMode.getOrdering().getColor(roundAnalyzer.getHighestCard());
+
+            let cardRanksWithRoundCards = world.history.getCurrentRankWithEqualRanksOfCardInColor([...cardSet, ...world.round.getPlayedCards()], highestCardColor, world.round.getPlayedCards());
 
             if (partnerHasRound || potentialPartnerHasRound) {
                 if (partnerHasRound) {
@@ -170,8 +175,6 @@ export default class CallingRulesWithSimpleStrategy implements StrategyInterface
 
                     reasons.push(`\n\t=> potential partner (${potentialPartnerConfidence.playerName}, reasons: ${potentialPartnerConfidence.reasons} with confidence ${potentialPartnerConfidence.confidence}) has round\n`);
                 }
-                let color = world.gameMode.getOrdering().getColor(roundAnalyzer.getHighestCard());
-                let cardRanksWithRoundCards = world.history.getCurrentRankWithEqualRanksOfCardInColor([...cardSet, ...world.round.getPlayedCards()], color, world.round.getPlayedCards());
                 //let cardRanksWithoutRoundCards = world.history.getCurrentRankWithEqualRanksOfCardInColor(cardSet, color);
 
                 if (cardRanksWithRoundCards[roundAnalyzer.getHighestCard()] === 0 && roundColor == ColorWithTrump.TRUMP
@@ -275,7 +278,7 @@ export default class CallingRulesWithSimpleStrategy implements StrategyInterface
                                     reasons.push('i have non-trump cards');
                                     if (playableTrumpCards.length) {
                                         reasons.push('i have trump cards');
-                                        if (roundAnalyzer.getPoints() > 4 && world.round.getPosition() < 2 || roundAnalyzer.getPoints() > 10 && world.round.getPosition() > 2) {
+                                        if (roundAnalyzer.getPoints() > 4 && world.round.getPosition() < 2 || roundAnalyzer.getPoints() > 10 && world.round.getPosition() >= 2) {
                                             reasons.push('points in round, trying to trump');
                                             let card = sortByNaturalOrdering(playableTrumpCards)[playableTrumpCards.length - 1];
 
@@ -363,7 +366,7 @@ export default class CallingRulesWithSimpleStrategy implements StrategyInterface
                                 return card;
                             }
                         } else {
-                            let card = sortByNaturalOrdering(winningCardsWithoutPoints)[winningCardsWithoutPoints.length - 1];
+                            let card = sortByNaturalOrdering(winningCards)[winningCards.length - 1];
                             // TODO not exactly sure in these cases
                             report(reasons, 'play low points trump card', card);
 
@@ -461,7 +464,15 @@ export default class CallingRulesWithSimpleStrategy implements StrategyInterface
 
                 if (roundColor == ColorWithTrump.TRUMP) {
                     reasons.push('trump round');
-                    return this.playLowValueTrumpOrColorCard(reasons, playableCards);
+                    if (cardRanksWithRoundCards[roundAnalyzer.getHighestCard()]! > 2 && partnerIsBehindMe) {
+                        reasons.push('maybe partner will get round');
+                        let card = sortByPointsDescending(playableCards)[0];
+                        report(reasons, 'play high value card', card);
+                        return card;
+                    } else {
+                        reasons.push('partner may not be able to win round');
+                        return this.playLowValueTrumpOrColorCard(reasons, playableCards);
+                    }
                 } else if (blankCard) {
                     reasons.push('color round');
                     reasons.push('i have a blank card');
