@@ -211,6 +211,10 @@ class Round implements FinishedRound {
             return this.getPlayedCards()[0];
         }
     }
+
+    hasPlayerPlayed(playerName: string): boolean {
+        return this.getPosition() > this.getPlayerPositionByName(playerName);
+    }
 }
 
 export {Round, FinishedRound};
@@ -223,4 +227,6 @@ interface FinishedRound {
     getPlayerNameForCard(card: Card): string;
 
     getRoundAnalyzer(gameMode: GameMode): RoundAnalyzer;
+
+    hasPlayerPlayed(callingPlayerName: string): boolean;
 }

@@ -7,9 +7,6 @@ import GameEventsReceiverInterface from "./knowledge/GameEventsReceiverInterface
 import GamePhase from "./GamePhase";
 
 export class GameWorld implements GameEventsReceiverInterface {
-    private readonly _playerMap: PlayerMap;
-    private readonly _rounds: FinishedRound[];
-
     constructor(gameMode: GameMode, playerMap: PlayerMap, rounds: FinishedRound[], round: Round, history: GameHistory) {
         this._playerMap = playerMap;
         this._rounds = rounds;
@@ -19,6 +16,8 @@ export class GameWorld implements GameEventsReceiverInterface {
         this._history = history;
     }
 
+    private readonly _playerMap: PlayerMap;
+    private readonly _rounds: FinishedRound[];
     private _gamePhase: GamePhase;
 
     get gamePhase(): GamePhase {
@@ -29,7 +28,7 @@ export class GameWorld implements GameEventsReceiverInterface {
         this._gamePhase = value;
     }
 
-    private _history: GameHistory;
+    private readonly _history: GameHistory;
 
     get history(): GameHistory {
         return this._history;
@@ -37,6 +36,10 @@ export class GameWorld implements GameEventsReceiverInterface {
 
     get playerMap(): PlayerMap {
         return this._playerMap;
+    }
+
+    get playerNames(): string[] {
+        return Object.keys(this._playerMap);
     }
 
     get rounds(): FinishedRound[] {
@@ -60,7 +63,7 @@ export class GameWorld implements GameEventsReceiverInterface {
     }
 
     clone() {
-        return new GameWorld(this.gameMode, cloneDeep(this.playerMap), cloneDeep(this.rounds), cloneDeep(this.round), cloneDeep(this.history));
+        return new GameWorld(cloneDeep(this.gameMode), cloneDeep(this.playerMap), cloneDeep(this.rounds), cloneDeep(this.round), cloneDeep(this.history));
     }
 
     cloneWithNewPlayerMap(playerMap: PlayerMap) {
@@ -69,14 +72,15 @@ export class GameWorld implements GameEventsReceiverInterface {
 
     onCardPlayed(round: Round): void {
         this.history.onCardPlayed(round);
-    }
-
-    onGameModeDecided(gameMode: GameMode): void {
-        this._gameMode = gameMode;
-        this._history = new GameHistory(Object.keys(this.playerMap), this._gameMode);
+        Object.values(this.playerMap).forEach(player => player.onCardPlayed(round, this.rounds.length));
     }
 
     onRoundCompleted(round: FinishedRound, roundIndex: number): void {
         this.history.onRoundCompleted(round);
+        Object.values(this.playerMap).forEach(player => player.onRoundCompleted(round, this.rounds.length));
+
+    }
+
+    onGameModeDecided(gameMode: GameMode): void {
     }
 }

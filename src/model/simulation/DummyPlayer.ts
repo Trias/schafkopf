@@ -3,7 +3,7 @@ import {GameMode, GameModeEnum} from "../GameMode";
 import StrategyInterface from "../strategy/StrategyInterface";
 import {cloneDeep, includes} from "lodash";
 import {GameWorld} from "../GameWorld";
-import {Round} from "../Round";
+import {FinishedRound, Round} from "../Round";
 import {PlayerInterface} from "../Player";
 import GamePhase from "../GamePhase";
 import {removeCard} from "../cards/CardSet";
@@ -100,7 +100,7 @@ export class DummyPlayer implements PlayerInterface {
         return cloneDeep(this);
     }
 
-    onGameStart(): void {
+    onGameStart(world: GameWorld): void {
         throw new Error("Method not implemented.");
     }
 
@@ -110,5 +110,14 @@ export class DummyPlayer implements PlayerInterface {
 
     onNewGamePhase(gamePhase: GamePhase): void {
         throw new Error("Method not implemented.");
+    }
+
+    onCardPlayed(round: Round, roundIndex: number): void {
+    }
+
+    onGameModeDecided(world: GameWorld): void {
+    }
+
+    onRoundCompleted(round: FinishedRound, roundIndex: number): void {
     }
 }

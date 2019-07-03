@@ -54,7 +54,7 @@ export class PlayerPlaceholder implements PlayerInterface {
         throw new Error("Method not implemented.");
     }
 
-    onGameStart(): void {
+    onGameStart(world: GameWorld): void {
         throw new Error("Method not implemented.");
     }
 
@@ -62,11 +62,19 @@ export class PlayerPlaceholder implements PlayerInterface {
         throw new Error("Method not implemented.");
     }
 
-    onNewGamePhase(gamePhase: GamePhase): void {
+    onNewGamePhase(gamePhase: GamePhase, world: GameWorld): void {
         throw new Error("Method not implemented.");
     }
 
     getStrategyName(): string {
         return "placeholder";
+    }
+
+    onCardPlayed(round: Round, roundIndex: number): void {
+        throw new Error("Method not implemented.");
+    }
+
+    onGameModeDecided(world: GameWorld): void {
+        throw new Error("Method not implemented.");
     }
 }

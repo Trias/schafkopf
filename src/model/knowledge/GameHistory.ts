@@ -85,7 +85,6 @@ export class GameHistory {
 
     onCardPlayed(round: Round): void {
         let card = round.getLastPlayedCard();
-        let index = round.getPosition();
         let playerName = round.getLastPlayedPlayerName();
 
         this.playedCards.push(card);
@@ -108,11 +107,6 @@ export class GameHistory {
         }
 
         this.playedCardsByPlayerName[playerName]!.push(card);
-
-        if (index == 0) {
-            let roundColor = this.gameMode.getOrdering().getColor(card);
-            this.angespieltByColor[roundColor] = true;
-        }
     }
 
     getOwnTeamPoints(playerName: string): number | null {
@@ -157,6 +151,10 @@ export class GameHistory {
         if (this.isDavongelaufen(round)) {
             this.determineTeamsFromDavongelaufeneRufsau(round);
         }
+
+        let card = round.getPlayedCards()[0];
+        let roundColor = this.gameMode.getOrdering().getColor(card);
+        this.angespieltByColor[roundColor] = true;
     }
 
     doIHaveAllCardsOfColor(playerName: string, cardSet: Card[], color: ColorWithTrump) {

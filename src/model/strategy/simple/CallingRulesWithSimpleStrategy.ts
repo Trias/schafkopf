@@ -8,7 +8,6 @@ import {GameWorld} from "../../GameWorld";
 import {
     allOfColor,
     getAces,
-    getCardLengthsByColor,
     getCardsByColor,
     getNonTrumps,
     getShortestColors,
@@ -80,10 +79,11 @@ export default class CallingRulesWithSimpleStrategy implements StrategyInterface
         // TODO: schmieren/ abwerfen
         // todo combine with monte carlo
         // todo compare with monte carlo
+        let assumptions = this.thisPlayer.assumptions;
 
         let playableCards = getPlayableCards(cardSet, world.gameMode, world.round);
         let roundAnalyzer = world.round.getRoundAnalyzer(world.gameMode);
-        let partnerName = world.history.getTeamPartnerNameForPlayerName(this.thisPlayer.getName());
+        let partnerName = world.history.getTeamPartnerNameForPlayerName(this.thisPlayer.getName(), this.thisPlayer.getStartCardSet());
         let partnerHasRound = !world.round.isEmpty() && partnerName && world.round.getPlayerNameAtPosition(roundAnalyzer.getHighestCardPosition()) === partnerName;
 
         if (!playableCards.length) {
@@ -114,7 +114,7 @@ export default class CallingRulesWithSimpleStrategy implements StrategyInterface
 
                     let highTrumpsArray = highTrumps(trumps, world.gameMode);
 
-                    if (highTrumpsArray.length * 2 > trumps.length) {
+                    if (highTrumpsArray.length * 2 > trumps.length && trumps.length > 2) {
                         reasons.push('has a lot of high trumps');
 
                         let card = trumps[0];
@@ -122,6 +122,8 @@ export default class CallingRulesWithSimpleStrategy implements StrategyInterface
                         return card;
                     } else {
                         let card = trumps[trumps.length - 1];
+
+                        // TODO: exclude trump ace if caller... and after midgame
                         report(reasons, 'playLowestTrump', card);
                         return card;
                     }
@@ -150,53 +152,227 @@ export default class CallingRulesWithSimpleStrategy implements StrategyInterface
         } else {
             let playableCardsByPointsAscending = sortByPointsAscending(playableCards);
             reasons.push('not at start position');
-            // TODO: abspatzen??
-            let winningCards = sortByNaturalOrdering(getWinningCards(playableCards, world.round, world.gameMode));
 
-            if (winningCards.length && !partnerHasRound) {
+            let winningCards = sortByNaturalOrdering(getWinningCards(playableCards, world.round, world.gameMode));
+            let roundColor = roundAnalyzer.getRoundColor();
+            let partnerName = world.history.getTeamPartnerNameForPlayerName(this.thisPlayer.getName(), this.thisPlayer.getStartCardSet());
+
+            let potentialPartnerName = assumptions.getPossiblePartnerName();
+            let potentialPartnerConfidence = this.thisPlayer.assumptions.getPossibleTeamPartnerForPlayerName(this.thisPlayer.getName());
+            let potentialPartnerHasRound = potentialPartnerName == potentialPartnerConfidence.playerName && potentialPartnerConfidence.confidence > 0.1;
+            //let partnerHasPlayed = partnerName?(world.round.getPlayerPositionByName(partnerName) < world.round.getPosition()): false;
+
+            if (partnerHasRound || potentialPartnerHasRound) {
+                if (partnerHasRound) {
+                    reasons.push('partner has round');
+                } else if (potentialPartnerHasRound) {
+                    reasons.push('potential partner has round');
+
+                    reasons.push(`\n\t=> potential partner (${potentialPartnerConfidence.playerName}, reasons: ${potentialPartnerConfidence.reasons} with confidence ${potentialPartnerConfidence.confidence}) has round\n`);
+                }
+                let color = world.gameMode.getOrdering().getColor(roundAnalyzer.getHighestCard());
+                let cardRanksWithRoundCards = world.history.getCurrentRankWithEqualRanksOfCardInColor([...cardSet, ...world.round.getPlayedCards()], color, world.round.getPlayedCards());
+                //let cardRanksWithoutRoundCards = world.history.getCurrentRankWithEqualRanksOfCardInColor(cardSet, color);
+
+                if (cardRanksWithRoundCards[roundAnalyzer.getHighestCard()] === 0 && roundColor == ColorWithTrump.TRUMP
+                    || world.round.isHinterHand()
+                    || cardRanksWithRoundCards[roundAnalyzer.getHighestCard()] === 0 && allOfColor(playableCards, roundColor, world.gameMode).length > 2
+                ) {
+                    reasons.push('we will probably win this round');
+                    // todo: ober/punkte dilemma
+                    let roundColor = roundAnalyzer.getRoundColor();
+                    if (roundColor != world.gameMode.getOrdering().getColor(playableCardsByPointsAscending[0])) {
+                        // schmieren !
+                        reasons.push('i dont have round color');
+
+                        let playableCardsByPointsAscendingNoTrumps = playableCardsByPointsAscending.filter(card => !world.gameMode.getOrdering().isTrump(card));
+
+                        if (playableCardsByPointsAscendingNoTrumps.length) {
+                            reasons.push('i have non trump cards');
+                            return this.schmierOrFreimachen(playableCardsByPointsAscending, world, reasons);
+                        } else {
+                            reasons.push('i only have trump cards');
+                            let playableCardsByPointsAscendingNoHighTrumps = playableCardsByPointsAscending.filter(card => card[1] != "O" && card[1] != "U");
+                            if (playableCardsByPointsAscendingNoHighTrumps.length) {
+                                reasons.push('i have low trumps');
+                                let card = playableCardsByPointsAscending[playableCardsByPointsAscending.length - 1];
+                                report(reasons, 'play high value trump', card);
+                                return card;
+                            } else {
+                                let playableCardsByPointsAscendingNoOber = playableCardsByPointsAscending.filter(card => card[1] != "O");
+                                if (playableCardsByPointsAscendingNoOber.length) {
+                                    let card = playableCardsByPointsAscendingNoOber[playableCardsByPointsAscendingNoOber.length - 1];
+                                    report(reasons, 'play high value trump including unter', card);
+                                    return card;
+                                } else {
+                                    let playableCardsByNatSort = sortByNaturalOrdering(playableCards);
+                                    let card = playableCardsByNatSort[playableCardsByNatSort.length - 1];
+                                    report(reasons, 'play lowest trump', card);
+                                    return card;
+                                }
+                            }
+                        }
+                    } else {
+                        reasons.push('i have the same color');
+
+                        if (roundColor == ColorWithTrump.TRUMP) {
+                            reasons.push('trump round');
+
+                            let playableCardsNoOber = playableCardsByPointsAscending.filter(card => card[1] != "O");
+                            let playableCardsNoHighTrumps = playableCardsByPointsAscending.filter(card => card[1] != "O" && card[1] != "U");
+
+                            if (playableCardsNoHighTrumps.length) {
+                                reasons.push('have low trumps');
+                                let card = playableCardsNoHighTrumps[playableCardsNoHighTrumps.length - 1];
+                                report(reasons, 'play maximum points but no hightrump', card);
+                                return card;
+                            } else if (playableCardsNoOber.length) {
+                                let card = playableCardsNoOber[playableCardsNoOber.length - 1];
+                                report(reasons, 'play maximum points but no ober', card);
+                                return card;
+                            } else {
+                                let card = playableCardsByPointsAscending[playableCardsByPointsAscending.length - 1];
+                                report(reasons, 'play maximum points but no ober', card);
+                                return card;
+                            }
+                        } else {
+                            reasons.push('color round');
+
+                            if (potentialPartnerHasRound && potentialPartnerConfidence.confidence < 0.5) {
+                                reasons.push('partner not known with enough confidence');
+                                let card = playableCardsByPointsAscending[0];
+                                report(reasons, 'play minimal points', card);
+                                return card;
+                            } else {
+                                let card = playableCardsByPointsAscending[playableCardsByPointsAscending.length - 1];
+                                report(reasons, 'play maximum points', card);
+                                return card;
+                            }
+                        }
+                    }
+                } else {
+                    reasons.push('round may be lost anyways...');
+                    if (roundColor != world.gameMode.getOrdering().getColor(playableCardsByPointsAscending[0])) {
+                        reasons.push('no bedienpflicht');
+
+                        if (roundColor == ColorWithTrump.TRUMP) {
+                            reasons.push('trump round');
+                            let card = playableCardsByPointsAscending[0];
+                            report(reasons, 'play lowest valued card', card);
+
+                            return card;
+                        } else {
+                            reasons.push('color round');
+                            if (world.gameMode.getOrdering().isTrump(roundAnalyzer.getHighestCard())) {
+                                reasons.push('round was trumped by partner');
+                                let card = playableCardsByPointsAscending[playableCardsByPointsAscending.length - 1];
+                                report(reasons, 'play highest valued card', card);
+                                return card;
+                            } else {
+                                let playableCardsNoTrumps = playableCardsByPointsAscending.filter(card => !world.gameMode.getOrdering().isTrump(card));
+                                let playableTrumpCards = playableCardsByPointsAscending.filter(card => world.gameMode.getOrdering().isTrump(card));
+                                if (playableCardsNoTrumps.length) {
+                                    reasons.push('i have non-trump cards');
+                                    if (playableTrumpCards.length) {
+                                        reasons.push('i have trump cards');
+                                        if (roundAnalyzer.getPoints() > 4 && world.round.getPosition() < 2 || roundAnalyzer.getPoints() > 10 && world.round.getPosition() > 2) {
+                                            reasons.push('points in round, trying to trump');
+                                            let card = sortByNaturalOrdering(playableTrumpCards)[playableTrumpCards.length - 1];
+
+                                            report(reasons, 'trump round with lowest trump', card);
+
+                                            return card;
+                                        } else {
+                                            reasons.push('not enough points in round, trying to play low value card');
+                                            let blankCard = this.getLowValueBlankCard(world, playableCards);
+
+                                            if (blankCard) {
+                                                reasons.push('i have a blank card');
+                                                let card = blankCard;
+                                                report(reasons, 'play blank card', card);
+                                                return card;
+                                            } else {
+                                                let card = playableCardsNoTrumps[0];
+                                                report(reasons, 'play lowest valued card but no trump', card);
+                                                return card;
+                                            }
+                                        }
+                                    } else {
+                                        let card = playableCardsNoTrumps[0];
+                                        report(reasons, 'play lowest valued card but no trump', card);
+                                        return card;
+                                    }
+                                } else {
+                                    reasons.push('i have only trump cards');
+                                    let card = playableCardsByPointsAscending[0];
+                                    report(reasons, 'play lowest valued card', card);
+                                    return card;
+                                }
+                            }
+                        }
+                    } else {
+                        reasons.push('bedienpflicht');
+                        return this.playLowValueTrumpOrColorCard(reasons, playableCards);
+                    }
+                }
+            } else if (winningCards.length) {
                 reasons.push('has winning cards');
                 reasons.push('partner does not have round');
 
                 let winningCardsWithoutPoints = winningCards.filter(card => card[1] != "A" && card[1] != "X");
-                let winningCardsWithPoints = winningCards.filter(card => card[1] == "A" || card[1] == "X" || card[1] == "K");
 
                 let color = world.gameMode.getOrdering().getColor(winningCards[0]);
 
                 if (color == ColorWithTrump.TRUMP
                     && roundAnalyzer.getRoundColor() != ColorWithTrump.TRUMP) {
+                    reasons.push('color round but can trump round');
 
-                    if (winningCardsWithPoints.length && !world.history.hasColorBeenAngespielt(roundAnalyzer.getRoundColor())) {
-                        reasons.push('color round but can trump round');
-                        reasons.push('i have trump ace/10/king');
-                        reasons.push('color has not been played yet');
+                    if (!world.history.hasColorBeenAngespielt(roundAnalyzer.getRoundColor()) || weAreHinterhand(world, partnerName)) {
+                        if (world.history.hasColorBeenAngespielt(roundAnalyzer.getRoundColor())) {
+                            reasons.push('color has not been played yet');
+                        }
 
-                        let card = sortByPointsDescending(winningCardsWithPoints)[0];
+                        if (weAreHinterhand(world, partnerName)) {
+                            reasons.push('we are hinterhand')
+                        }
+
+                        let card = sortByPointsDescending(winningCards)[0];
 
                         report(reasons, 'play highest valued trump card', card);
                         return card;
-                    } else if (world.history.hasColorBeenAngespielt(roundAnalyzer.getRoundColor())) {
+                    } else {
+                        reasons.push('color has been angespielt');
                         if (winningCardsWithoutPoints.length) {
+                            reasons.push('has low value trump');
+
                             let withoutOber = winningCardsWithoutPoints.filter(card => card[1] != "O");
 
                             if (withoutOber.length) {
-                                reasons.push('color round but can trump round');
-                                reasons.push('color has been played');
-                                reasons.push('has low value trump');
                                 reasons.push('has low value trump without ober');
 
-                                let card = withoutOber[0];
+                                let card = sortByNaturalOrdering(withoutOber)[withoutOber.length - 1];
                                 // TODO consider playing unter instead of low trumps..
-                                // todo abspatzen (?)
-                                // todo maybe not play ober...
+                                report(reasons, 'play low points trump card', card);
+
+                                return card;
+                            } else {
+                                let card = sortByNaturalOrdering(winningCardsWithoutPoints)[winningCardsWithoutPoints.length - 1];
+                                // TODO not exactly sure in these cases
                                 report(reasons, 'play low points trump card', card);
 
                                 return card;
                             }
+                        } else {
+                            let card = sortByNaturalOrdering(winningCardsWithoutPoints)[winningCardsWithoutPoints.length - 1];
+                            // TODO not exactly sure in these cases
+                            report(reasons, 'play low points trump card', card);
+
+                            return card;
                         }
                     }
                 }
 
-                if (color == ColorWithTrump.TRUMP && roundAnalyzer.getRoundColor() == ColorWithTrump.TRUMP) {
+                if (color == ColorWithTrump.TRUMP && roundColor == ColorWithTrump.TRUMP) {
                     reasons.push('trump round');
 
                     if (weAreHinterhand(world, partnerName)) {
@@ -278,97 +454,20 @@ export default class CallingRulesWithSimpleStrategy implements StrategyInterface
                         return card;
                     }
                 }
-            } else if (partnerHasRound) {
-                reasons.push('partner has round');
-                let color = world.gameMode.getOrdering().getColor(roundAnalyzer.getHighestCard());
-                let cardRanksWithRoundCards = world.history.getCurrentRankWithEqualRanksOfCardInColor([...cardSet, ...world.round.getPlayedCards()], color, world.round.getPlayedCards());
-                //let cardRanksWithoutRoundCards = world.history.getCurrentRankWithEqualRanksOfCardInColor(cardSet, color);
-
-                if (cardRanksWithRoundCards[roundAnalyzer.getHighestCard()] === 0 || world.round.isHinterHand()) {
-                    reasons.push('we will win this round');
-                    // todo: ober/punkte dilemma
-                    let roundColor = roundAnalyzer.getRoundColor();
-                    if (roundColor != world.gameMode.getOrdering().getColor(playableCardsByPointsAscending[0])) {
-                        // schmieren !
-                        reasons.push('i dont have round color');
-
-                        let playableCardsByPointsAscendingNoTrumps = playableCardsByPointsAscending.filter(card => !world.gameMode.getOrdering().isTrump(card));
-
-                        if (playableCardsByPointsAscendingNoTrumps.length) {
-                            reasons.push('i have non trump cards');
-                            return this.schmierOrFreimachen(playableCardsByPointsAscending, world, reasons);
-                        } else {
-                            reasons.push('i only have trump cards');
-                            let playableCardsByPointsAscendingNoHighTrumps = playableCardsByPointsAscending.filter(card => card[1] != "O" && card[1] != "U");
-                            if (playableCardsByPointsAscendingNoHighTrumps.length) {
-                                reasons.push('i have low value trumps');
-                                let card = playableCardsByPointsAscending[playableCardsByPointsAscending.length - 1];
-                                report(reasons, 'play high value trump', card);
-                                return card;
-                            } else {
-                                let playableCardsByPointsAscendingNoOber = playableCardsByPointsAscending.filter(card => card[1] != "O");
-                                if (playableCardsByPointsAscendingNoOber.length) {
-                                    let card = playableCardsByPointsAscendingNoOber[playableCardsByPointsAscendingNoOber.length - 1];
-                                    report(reasons, 'play high value trump including unter', card);
-                                    return card;
-                                } else {
-                                    let playableCardsByNatSort = sortByNaturalOrdering(playableCards);
-                                    let card = playableCardsByNatSort[playableCardsByNatSort.length - 1];
-                                    report(reasons, 'play lowest trump', card);
-                                    return card;
-                                }
-                            }
-                        }
-                    } else {
-                        reasons.push('i have the same color');
-
-                        if (roundColor == ColorWithTrump.TRUMP) {
-                            reasons.push('trump round');
-
-                            let playableCardsNoOber = playableCardsByPointsAscending.filter(card => card[1] != "O");
-                            let playableCardsNoHighTrumps = playableCardsByPointsAscending.filter(card => card[1] != "O" && card[1] != "U");
-
-                            if (playableCardsNoHighTrumps.length) {
-                                reasons.push('have low trumps');
-                                let card = playableCardsNoHighTrumps[playableCardsNoHighTrumps.length - 1];
-                                report(reasons, 'play maximum points but no hightrump', card);
-                                return card;
-                            } else if (playableCardsNoOber.length) {
-                                let card = playableCardsNoOber[playableCardsNoOber.length - 1];
-                                report(reasons, 'play maximum points but no ober', card);
-                                return card;
-                            } else {
-                                let card = playableCardsByPointsAscending[playableCardsByPointsAscending.length - 1];
-                                report(reasons, 'play maximum points but no ober', card);
-                                return card;
-                            }
-                        } else {
-                            reasons.push('color round');
-
-                            let card = playableCardsByPointsAscending[playableCardsByPointsAscending.length - 1];
-                            report(reasons, 'play maximum points', card);
-                            return card;
-                        }
-                    }
-                } else {
-                    reasons.push('round may be lost anyways...');
-                    let roundColor = roundAnalyzer.getRoundColor();
-                    if (roundColor != world.gameMode.getOrdering().getColor(playableCardsByPointsAscending[0])) {
-                        // throw new Error('todo');
-                    }
-
-                    let card = playableCardsByPointsAscending[0];
-                    report(reasons, 'play lowest valued card', card);
-
-                    return card;
-                }
             } else {
-                reasons.push('partner does no have round, round is lost');
-                let blankCard = this.getLowValueBlackCard(world, playableCards);
+                reasons.push('partner does no have round');
+                reasons.push('cannot win round');
+                let blankCard = this.getLowValueBlankCard(world, playableCards);
 
-                if (blankCard) {
+                if (roundColor == ColorWithTrump.TRUMP) {
+                    reasons.push('trump round');
+                    return this.playLowValueTrumpOrColorCard(reasons, playableCards);
+                } else if (blankCard) {
+                    reasons.push('color round');
+                    reasons.push('i have a blank card');
                     return this.freimachen(reasons, blankCard);
                 } else {
+                    reasons.push('color round');
                     let cardsFilteredByBadPairs = filterBadPairs(world, playableCards);
 
                     if (cardsFilteredByBadPairs.length) {
@@ -379,14 +478,9 @@ export default class CallingRulesWithSimpleStrategy implements StrategyInterface
                         report(reasons, 'play lowest value but no 10/x pair', card);
                         return card;
                     } else {
-                        reasons.push('i have only 10-x pairs, playing low value card.. :(...');
+                        reasons.push('i have only 10-x pairs, playing low value card.');
 
                         let card = playableCardsByPointsAscending[0];
-
-                        let cardsNoOber = playableCardsByPointsAscending.filter(card => card[1] == "O");
-                        if (cardsNoOber.length) {
-
-                        }
 
                         report(reasons, 'play lowest valued card', card);
 
@@ -422,6 +516,7 @@ export default class CallingRulesWithSimpleStrategy implements StrategyInterface
             reasons.push('i have only trump cards');
             let card = shuffle(playableCards)[0];
 
+            // possibly a bad choice in endgame...
             report(reasons, 'play random card', card);
 
             return card;
@@ -429,16 +524,18 @@ export default class CallingRulesWithSimpleStrategy implements StrategyInterface
     }
 
     private schmierOrFreimachen(playableCardsByPointsAscending: Card[], world: GameWorld, reasons: string[]) {
-        let blankCard = this.getHighValueBlackCard(world, playableCardsByPointsAscending);
+        let blankCard = this.getHighValueBlankCard(world, playableCardsByPointsAscending);
 
         if (blankCard) {
             return this.freimachen(reasons, blankCard);
         } else {
             reasons.push('can schmier');
 
-            let playableCardsByPointsAscendingNoAces = playableCardsByPointsAscending.filter(card => card[1] != "A");
-            if (playableCardsByPointsAscendingNoAces.length) {
-                let card = playableCardsByPointsAscendingNoAces[playableCardsByPointsAscendingNoAces.length - 1];
+            let playableCardsByPointsAscendingNoAcesOrTrump = playableCardsByPointsAscending
+                .filter(card => card[1] != "A")
+                .filter(card => !world.gameMode.getOrdering().isTrump(card));
+            if (playableCardsByPointsAscendingNoAcesOrTrump.length) {
+                let card = playableCardsByPointsAscendingNoAcesOrTrump[playableCardsByPointsAscendingNoAcesOrTrump.length - 1];
                 report(reasons, 'play maximum points but no aces', card);
 
                 return card;
@@ -451,30 +548,22 @@ export default class CallingRulesWithSimpleStrategy implements StrategyInterface
         }
     }
 
-    private getHighValueBlackCard(world: GameWorld, playableCardsByPointsAscending: Card[]) {
-        let shortestColors = getShortestColors(playableCardsByPointsAscending, world.gameMode);
-        let cardLengthsByColor = getCardLengthsByColor(playableCardsByPointsAscending, world.gameMode);
-        let cardsByColor = getCardsByColor(playableCardsByPointsAscending, world.gameMode);
-
-        let blankCard = null;
-        if (cardLengthsByColor[shortestColors[0]] == 1) {
-            let card = cardsByColor[shortestColors[0]][0]!;
-            if (!blankCard && card[1] != "A" || card[1] != "A" && blankCard && cardToValue(card) > cardToValue(blankCard)) {
-                blankCard = card;
-            }
-        }
-        return blankCard;
+    private getHighValueBlankCard(world: GameWorld, playableCards: Card[]) {
+        return this.getBlankCardWithComparison(world, playableCards, (a, b) => cardToValue(a) > cardToValue(b));
     }
 
-    private getLowValueBlackCard(world: GameWorld, playableCards: Card[]) {
-        let cardLengths = getCardLengthsByColor(playableCards, world.gameMode);
+    private getLowValueBlankCard(world: GameWorld, playableCards: Card[]) {
+        return this.getBlankCardWithComparison(world, playableCards, (a, b) => cardToValue(a) < cardToValue(b));
+    }
+
+    private getBlankCardWithComparison(world: GameWorld, playableCards: Card[], compare: (a: Card, b: Card) => boolean) {
         let shortestColors = getShortestColors(playableCards, world.gameMode);
         let cardsByColor = getCardsByColor(playableCards, world.gameMode);
 
         let blankCard = null;
-        if (cardLengths[shortestColors[0]] == 1) {
-            let card = cardsByColor[shortestColors[0]][0]!;
-            if (!blankCard && card[1] != "A" || card[1] != "A" && blankCard && cardToValue(card) < cardToValue(blankCard)) {
+        if (cardsByColor[shortestColors[0]].length == 1) {
+            let card = cardsByColor[shortestColors[0]][0];
+            if (!blankCard && card[1] != "A" || card[1] != "A" && blankCard && compare(card, blankCard)) {
                 blankCard = card;
             }
         }
@@ -482,7 +571,7 @@ export default class CallingRulesWithSimpleStrategy implements StrategyInterface
     }
 
     private freimachen(reasons: string[], bestCard: any) {
-        reasons.push('can freimachen');
+        reasons.push('i have a blank card');
         let card = bestCard;
         report(reasons, 'play freimachen', card);
 
@@ -495,5 +584,15 @@ export default class CallingRulesWithSimpleStrategy implements StrategyInterface
 
     chooseToRaise(cardSet: readonly Card[]): boolean {
         return false;
+    }
+
+    private playLowValueTrumpOrColorCard(reasons: string[], playableCards: Card[]) {
+        let order = ['7', '8', '9', 'K', 'U', 'X', 'A', 'O'];
+
+        let playableCardsSorted = playableCards.sort((a, b) => order.indexOf(a[1]) > order.indexOf(b[1]) ? 1 : -1);
+
+        let card = playableCardsSorted[0];
+        report(reasons, 'play low value trump or color card', card);
+        return card;
     }
 }

@@ -17,7 +17,7 @@ export class RoundAnalyzer {
         for (let card of this.round.getPlayedCards()) {
             if (this.gameMode.getOrdering().getColor(card) !== this.getRoundColor()
                 && CardRankToValue[card[1] as CardRank] >= 10
-                && card != this.getWinningCard()
+                && card != this.getHighestCard()
             ) {
                 return true;
             }
@@ -28,7 +28,7 @@ export class RoundAnalyzer {
 
     hasSchmier() {
         for (let card of this.round.getPlayedCards()) {
-            if (CardRankToValue[card[1] as CardRank] >= 10 && card != this.getWinningCard()) {
+            if (CardRankToValue[card[1] as CardRank] >= 10 && card != this.getHighestCard()) {
                 return true;
             }
         }
@@ -39,7 +39,7 @@ export class RoundAnalyzer {
     getSchmierPlayerNames() {
         let schmierPlayerName = [];
         for (let card of this.round.getPlayedCards()) {
-            if (CardRankToValue[card[1] as CardRank] >= 10 && card != this.getWinningCard()) {
+            if (CardRankToValue[card[1] as CardRank] >= 10 && card != this.getHighestCard()) {
                 schmierPlayerName.push(this.round.getPlayerNameForCard(card));
             }
         }
@@ -52,7 +52,7 @@ export class RoundAnalyzer {
         for (let i = 0; i < cards.length; i++) {
             let card = cards[i];
             if (CardRankToValue[card[1] as CardRank] >= 10) {
-                if (i != this.getWinningCardPosition()) {
+                if (i != this.getHighestCardPosition()) {
                     return i;
                 }
             }
@@ -86,6 +86,12 @@ export class RoundAnalyzer {
             }
         }
         return highestCard;
+    }
+
+    getHighestCardPlayerName() {
+        let position = this.getHighestCardPosition();
+
+        return this.round.getPlayerNameAtPosition(position);
     }
 
     getHighestCardPosition(): number {

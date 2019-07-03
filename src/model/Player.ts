@@ -7,18 +7,28 @@ import {clone} from "lodash";
 import RandomStrategy from "./strategy/random";
 import {GameWorld} from "./GameWorld";
 import {DummyPlayer} from "./simulation/DummyPlayer";
-import {Round} from "./Round";
+import {FinishedRound, Round} from "./Round";
 import {canPlayCard} from "./PlayableMoves";
+import {GameAssumptionsInCallGame} from "./knowledge/GameAssumptionsInCallGame";
+import GameAssumptions from "./knowledge/GameAssumptions";
 
 export type PlayerMap = { [index in string]: PlayerInterface };
 
 class Player implements PlayerInterface {
+    private _assumptions?: GameAssumptions;
     private startCardSet: Card[];
     private readonly name: string;
     private readonly strategy: StrategyInterface;
     private currentCardSet: Card[];
     private gamePhase: GamePhase;
     private readonly strategyConstructor: { new(player: Player): StrategyInterface };
+
+    get assumptions(): GameAssumptions {
+        if (!this._assumptions) {
+            throw Error('assumptions not set!');
+        }
+        return this._assumptions;
+    }
 
     constructor(name: string, strategy: new (player: Player) => (StrategyInterface)) {
         this.gamePhase = GamePhase.BEFORE_GAME;
@@ -39,8 +49,8 @@ class Player implements PlayerInterface {
         return new DummyPlayer(this.name, clone(this.startCardSet), clone(this.currentCardSet!), RandomStrategy);
     }
 
-    onGameStart() {
-        this.onNewGamePhase(GamePhase.GAME_STARTED);
+    onGameStart(world: GameWorld) {
+        this.onNewGamePhase(GamePhase.GAME_STARTED, world);
     }
 
     onReceiveFirstBatchOfCards(cards: Card[]) {
@@ -160,7 +170,7 @@ class Player implements PlayerInterface {
         return this.name;
     }
 
-    onNewGamePhase(gamePhase: GamePhase) {
+    onNewGamePhase(gamePhase: GamePhase, world: GameWorld) {
         if (gamePhase < this.gamePhase && gamePhase !== GamePhase.BEFORE_GAME) {
             throw Error('invalid state transition!');
         }
@@ -169,7 +179,20 @@ class Player implements PlayerInterface {
         if (gamePhase === GamePhase.BEFORE_GAME) {
             this.currentCardSet = [];
             this.startCardSet = [];
+            this._assumptions = undefined;
         }
+
+        if (gamePhase === GamePhase.IN_PLAY) {
+            this._assumptions = new GameAssumptionsInCallGame(world, this);
+        }
+    }
+
+    onRoundCompleted(round: FinishedRound, roundIndex: number) {
+        this.assumptions.onRoundCompleted(round, roundIndex);
+    }
+
+    onCardPlayed(round: Round, roundIndex: number) {
+        this.assumptions.onCardPlayed(round, roundIndex);
     }
 }
 
@@ -177,7 +200,7 @@ class Player implements PlayerInterface {
 interface PlayerInterface {
     getStrategyName(): string;
 
-    onNewGamePhase(gamePhase: GamePhase): void;
+    onNewGamePhase(gamePhase: GamePhase, world: GameWorld): void;
 
     getName(): string;
 
@@ -189,7 +212,7 @@ interface PlayerInterface {
 
     whatDoYouWantToPlay(currentGameMode: GameMode, playerIndex: number, allowedGameModes: GameModeEnum[]): GameMode;
 
-    onGameStart(): void;
+    onGameStart(world: GameWorld): void;
 
     playCard(world: GameWorld): Round;
 
@@ -202,6 +225,10 @@ interface PlayerInterface {
     forcePlayCard(world: GameWorld, card: Card): Round;
 
     getDummyClone(): PlayerInterface;
+
+    onCardPlayed(round: Round, roundIndex: number): void;
+
+    onRoundCompleted(round: FinishedRound, roundIndex: number): void;
 }
 
 export {Player, PlayerInterface}

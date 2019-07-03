@@ -17,7 +17,7 @@ export class Simulation {
 
     constructor(world: GameWorld, thisPlayer: Player) {
         this.thisPlayer = thisPlayer;
-        this.world = world;
+        this.world = world.clone();
         this.gameTree = {
             card: null,
             runs: 0,

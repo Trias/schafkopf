@@ -1,3 +1,4 @@
+
 let seedRandom = require('seedrandom');
 // replcing global Math.random.....must be first call.
 Math.random = seedRandom.alea('seed', {global: true});
@@ -20,8 +21,8 @@ let runs = 120;
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
 let playerMap = {
-    [playerNames[0]]: new Player(playerNames[0], CallingRulesWithSimpleStrategy),
-    [playerNames[1]]: new Player(playerNames[1], CallingRulesWithUctMonteCarloStrategy),
+    [playerNames[0]]: new Player(playerNames[0], CallingRulesWithUctMonteCarloStrategy),
+    [playerNames[1]]: new Player(playerNames[1], CallingRulesWithSimpleStrategy),
     [playerNames[2]]: new Player(playerNames[2], CallingRulesWithSimpleStrategy),
     [playerNames[3]]: new Player(playerNames[3], CallingRulesWithUctMonteCarloStrategy),
 };
@@ -68,6 +69,6 @@ function reportCents(i: number) {
     console.log(`balance after ${i + 1} games`);
     for (let i = 0; i < 4; i++) {
         let playerStats = stats.getStatsForPlayer(playerNames[i]);
-        console.log(colors.blue(`${playerNames[i]} (${playerMap[playerNames[i]].getStrategyName()}): ${playerStats.cents} (${playerStats.tournamentPoints} points, ${playerStats.wins} wins, ${playerStats.inPlayingTeam} playing)`));
+        console.log(colors.blue(`${playerNames[i]} [${playerMap[playerNames[i]].getStartCardSet()}] (${playerMap[playerNames[i]].getStrategyName()}): ${playerStats.cents} (${playerStats.tournamentPoints} points, ${playerStats.wins} wins, ${playerStats.inPlayingTeam} playing)`));
     }
 }

@@ -1,7 +1,11 @@
-import {Round} from "../Round";
+import {FinishedRound, Round} from "../Round";
 import {Card} from "../cards/Card";
 import {ColorWithTrump} from "../cards/Color";
 import {ColorFreeAssumption} from "./GameAssumptionsInCallGame";
+
+export type PlayerConfidence = {
+    playerName?: string, confidence: number, reasons: string[],
+}
 
 export default interface GameAssumptions {
     isThisRoundProbablyWon(round: Round, currentHandCards: Card[]): boolean;
@@ -21,5 +25,11 @@ export default interface GameAssumptions {
     isOpposingTeamPossiblyColorFree(color: ColorWithTrump): boolean;
 
     willLikelyWinRoundWithCard(round: Round, card: Card, currentHandCards: Card[]): boolean;
+
+    onCardPlayed(round: Round, roundIndex: number): void;
+
+    onRoundCompleted(round: FinishedRound, roundIndex: number): void;
+
+    getPossibleTeamPartnerForPlayerName(playerName: string): PlayerConfidence;
 
 }

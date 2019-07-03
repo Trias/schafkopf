@@ -88,6 +88,6 @@ export class Game {
     }
 
     private notifyPlayersOfGamePhase(gamePhase: GamePhase) {
-        Object.values(this.playerMap).forEach(p => p.onNewGamePhase(gamePhase));
+        Object.values(this.playerMap).forEach(p => p.onNewGamePhase(gamePhase, this.world));
     }
 }
