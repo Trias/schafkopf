@@ -1,3 +1,7 @@
+let seedRandom = require('seedrandom');
+// replacing global Math.random.....must be first call.
+Math.random = seedRandom.alea('seed', {state: true});
+
 import {Card} from "./model/cards/Card";
 import {Game} from "./model/Game";
 import {Player} from "./model/Player";
@@ -10,16 +14,12 @@ import {GameHistory} from "./model/knowledge/GameHistory";
 import CallingRulesWithSimpleStrategy from "./model/strategy/simple/CallingRulesWithSimpleStrategy";
 import {GameModeEnum} from "./model/GameMode";
 import CallingRulesWithUctMonteCarloStrategy from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloStrategy";
-
-let seedRandom = require('seedrandom');
-// replacing global Math.random.....must be first call.
-Math.random = seedRandom.alea('seed', {state: true});
-
+import {clone} from "lodash";
 import colors = require('colors');
 
 let fs = require('fs');
 
-let runs = 2;
+let runs = 200;
 
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
@@ -51,7 +51,7 @@ for (let i = 0; i < runs; i++) {
     games[i + 1] = {
         playerNames,
         startPlayer,
-        prngState,
+        prngState: clone(prngState),
         cardDeal: allCardDeals[i]
     };
 

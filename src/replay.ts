@@ -1,16 +1,13 @@
-let gameId = 1;
-
-let seedRandom = require('seedrandom');
-
+let gameId = 100;
 let games = require('../generated/games.json');
 
+let seedRandom = require('seedrandom');
 Math.random = seedRandom.alea("", {state: games[gameId].prngState});
 
 let cardDeal = games[gameId].cardDeal;
 let startPlayer = games[gameId].startPlayer;
 
 import {Player} from "./model/Player";
-import CallingRulesWithUctMonteCarloStrategy from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloStrategy";
 import CallingRulesWithSimpleStrategy from "./model/strategy/simple/CallingRulesWithSimpleStrategy";
 import Statistics from "./model/Statistics";
 import {PreGame} from "./model/PreGame";
@@ -25,8 +22,8 @@ let colors = require('colors');
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
 let playerMap = {
-    [playerNames[0]]: new Player(playerNames[0], CallingRulesWithUctMonteCarloStrategy),
-    [playerNames[1]]: new Player(playerNames[1], CallingRulesWithUctMonteCarloStrategy),
+    [playerNames[0]]: new Player(playerNames[0], CallingRulesWithSimpleStrategy),
+    [playerNames[1]]: new Player(playerNames[1], CallingRulesWithSimpleStrategy),
     [playerNames[2]]: new Player(playerNames[2], CallingRulesWithSimpleStrategy),
     [playerNames[3]]: new Player(playerNames[3], CallingRulesWithSimpleStrategy),
 };

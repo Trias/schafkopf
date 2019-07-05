@@ -14,6 +14,8 @@ interface Stats {
     tournamentPoints: number;
     mitSpielerWins: number;
     opposingTeamWin: number;
+    ownGameWins: number;
+    ownCallGames: number;
 }
 
 let zeroStats = {
@@ -28,6 +30,8 @@ let zeroStats = {
     tournamentPoints: 0,
     mitSpielerWins: 0,
     opposingTeamWin: 0,
+    ownGameWins: 0,
+    ownCallGames: 0,
 };
 
 export default class Statistics {
@@ -52,7 +56,7 @@ export default class Statistics {
 
     private updateStatistics(result: GameResult) {
         for (let playerName of this.playerNames) {
-            let {wins, cents, inPlayingTeam, retries, ownPlays, ownWins, ownSoloWins, ownSoloPlays, tournamentPoints, mitSpielerWins, opposingTeamWin} = this.stats[playerName]!;
+            let {wins, cents, inPlayingTeam, retries, ownPlays, ownWins, ownSoloWins, ownSoloPlays, tournamentPoints, mitSpielerWins, opposingTeamWin, ownGameWins, ownCallGames} = this.stats[playerName]!;
 
             if (result.getGameMode().isNoRetry() && playerName == result.getGameMode().getCallingPlayerName()) {
                 ownPlays = ownPlays + 1;
@@ -73,6 +77,7 @@ export default class Statistics {
             if (result.getGameMode().getMode() === GameModeEnum.CALL_GAME) {
                 if (includes(result.getPlayingTeamNames(), playerName)) {
                     inPlayingTeam = inPlayingTeam + 1;
+                    ownCallGames = ownCallGames + 1;
                 }
 
                 if (result.hasPlayingTeamWon() && includes(result.getPlayingTeamNames(), playerName)) {
@@ -82,6 +87,8 @@ export default class Statistics {
 
                     if (playerName != result.getGameMode().getCallingPlayerName()) {
                         mitSpielerWins = mitSpielerWins + 1;
+                    } else {
+                        ownGameWins = ownGameWins + 1;
                     }
                 } else if (!result.hasPlayingTeamWon() && !includes(result.getPlayingTeamNames(), playerName)) {
                     wins = wins + 1;
@@ -101,6 +108,7 @@ export default class Statistics {
                     wins = wins + 1;
                     cents = cents + result.getGameMoneyValue() * 3;
                     tournamentPoints = tournamentPoints + result.getTournamentPointsValue() * 3;
+                    ownGameWins = ownGameWins + 1;
                 } else if (result.hasPlayingTeamWon() && !includes(result.getPlayingTeamNames(), playerName)) {
                     cents = cents - result.getGameMoneyValue();
                     tournamentPoints = tournamentPoints - result.getTournamentPointsValue();
@@ -128,7 +136,9 @@ export default class Statistics {
                 ownPlays,
                 tournamentPoints,
                 mitSpielerWins,
-                opposingTeamWin
+                opposingTeamWin,
+                ownGameWins,
+                ownCallGames
             };
         }
     }

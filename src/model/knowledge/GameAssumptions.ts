@@ -4,7 +4,7 @@ import {ColorWithTrump} from "../cards/Color";
 import {ColorFreeAssumption} from "./GameAssumptionsInCallGame";
 
 export type PlayerConfidence = {
-    playerName?: string, confidence: number, reasons: string[],
+    playerName: string | null, confidence: number, reasons: string[],
 }
 
 export default interface GameAssumptions {
@@ -14,7 +14,7 @@ export default interface GameAssumptions {
 
     isTeampartnerProbablyKnown(): boolean;
 
-    getPossiblePartnerName(): string | undefined;
+    getPossiblePartnerName(): string | null;
 
     getPossiblyHighestTrumpOfPartner(): Card;
 

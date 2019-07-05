@@ -72,10 +72,9 @@ export class GameAssumptionsInCallGame implements GameAssumptions {
             return {playerName: partnerName, confidence: 1, reasons: reasons}
         }
         let highestScore = 0;
-        let partner = undefined;
+        let partner = null;
         let reasons = ["no tells"];
         let confidence = 0;
-
 
         for (let playerCandidateName of this.playerNames) {
             if (playerCandidateName in this.possibleTeamPartnerScores) {
@@ -84,10 +83,10 @@ export class GameAssumptionsInCallGame implements GameAssumptions {
                     partner = playerCandidateName;
                     highestScore = scoreWithReasons.score;
                     reasons = scoreWithReasons.reasons;
-                    confidence = highestScore / this.roundsWithTell;
+                    confidence = highestScore; // / this.roundsWithTell;
                 } else if (scoreWithReasons.score == highestScore && highestScore > 0) {
                     reasons = [`equal score of player ${playerName} and ${playerCandidateName}`].concat(scoreWithReasons.reasons).concat(reasons);
-                    partner = undefined;
+                    partner = null;
                     confidence = 0;
                 }
             }
@@ -206,7 +205,7 @@ export class GameAssumptionsInCallGame implements GameAssumptions {
 
                         if (!this.isPlayerLikelyMitspieler(player)) {
                             let {reasons} = this.possiblyColorFreeScores[player + roundAnalyzer.getRoundColor()] || {reasons: []};
-                            reasons.push(`player ${player} possibly forced to play high value card ${card} to opponent in round ${roundIndex}`);
+                            reasons.push(`player ${player} possibly forced to play high value card ${card} to opponent in round ${roundIndex + 1}`);
                             this.possiblyColorFreeScores[player + ColorWithTrump.TRUMP] = {assumption: true, reasons};
                         }
                     }
@@ -230,13 +229,13 @@ export class GameAssumptionsInCallGame implements GameAssumptions {
 
             for (let player of opponentSchmiers) {
                 let {reasons} = this.possiblyColorFreeScores[player + roundAnalyzer.getRoundColor()] || {reasons: []};
-                reasons.push(`player ${player} schmiers opponent in round ${roundIndex}`);
+                reasons.push(`player ${player} schmiers opponent in round ${roundIndex + 1}`);
                 this.possiblyColorFreeScores[player + roundAnalyzer.getRoundColor()] = {assumption: true, reasons};
             }
         }
     }
 
-    getPossiblePartnerName(): string | undefined {
+    getPossiblePartnerName(): string | null {
         return this.getPossibleTeamPartnerForPlayerName(this.thisPlayer.getName()).playerName;
     }
 
@@ -395,33 +394,33 @@ export class GameAssumptionsInCallGame implements GameAssumptions {
     private markPlayerAsPossiblePartnerByTrump(round: FinishedRound, roundIndex: number) {
         if (this.thisPlayer.getName() === this.gameMode!.getCallingPlayerName()) {
             let player = round.getStartPlayerName();
-            this.scorePlayer(player, 0.9, `${player} begins with trump in round ${roundIndex}`);
+            this.scorePlayer(player, 0.7, `${player} begins with trump in round ${roundIndex + 1}`);
         } else {
             let potentialPartner = difference(this.otherPlayerNamesWithoutCaller, [round.getStartPlayerName()]).pop()!;
-            this.scorePlayer(potentialPartner, 0.9, `${round.getStartPlayerName()} begins with trump in round ${roundIndex}`);
+            this.scorePlayer(potentialPartner, 0.7, `${round.getStartPlayerName()} begins with trump in round ${roundIndex + 1}`);
         }
     }
 
     private markPlayerAsPossiblePartnerBySchmier(schmierer: string, roundIndex: number) {
         if (this.thisPlayer.getName() === this.gameMode!.getCallingPlayerName()) {
-            this.scorePlayer(schmierer, 0.8, `${schmierer} schmiers calling player in round ${roundIndex}`);
+            this.scorePlayer(schmierer, 0.8, `${schmierer} schmiers calling player in round ${roundIndex + 1}`);
         } else {
             let potentialPartner = difference(this.otherPlayerNamesWithoutCaller, [schmierer]).pop()!;
-            this.scorePlayer(potentialPartner, 0.8, `${schmierer} schmiers calling player in round ${roundIndex}`);
+            this.scorePlayer(potentialPartner, 0.8, `${schmierer} schmiers calling player in round ${roundIndex + 1}`);
         }
     }
 
     private markPlayerAsPossiblePartnerByColorPlay(player: string, roundIndex: number) {
-        let reason = `${player} plays color calling player in round ${roundIndex}`;
+        let reason = `${player} plays color calling player in round ${roundIndex + 1}`;
         if (this.thisPlayer.getName() === this.gameMode!.getCallingPlayerName()) {
-            this.scorePlayer(player, -0.5, reason);
+            this.scorePlayer(player, -0.3, reason);
         } else {
-            this.scorePlayer(player, 0.5, reason);
+            this.scorePlayer(player, 0.3, reason);
         }
     }
 
     private markPlayerAsPossiblePartnerBySchmierToOtherPlayer(player: string, roundIndex: number) {
-        let reason = `${player} schmiers color in round ${roundIndex} to other player`;
+        let reason = `${player} schmiers color in round ${roundIndex + 1} to other player`;
         if (this.thisPlayer.getName() === this.gameMode!.getCallingPlayerName()) {
             this.scorePlayer(player, -0.25, reason);
         } else {
@@ -448,7 +447,10 @@ export class GameAssumptionsInCallGame implements GameAssumptions {
         if (playerName && playerName == this.gameMode.getCallingPlayerName()) {
             return {assumption: true, confidence, reasons};
         } else {
-            reasons.push(`likely partner ${playerName} is not calling player!`);
+            let reason = `likely partner ${playerName} is not calling player!`;
+            if (!includes(reasons, reason)) {
+                reasons.push(reason);
+            }
             return {assumption: false, confidence, reasons};
         }
     }
