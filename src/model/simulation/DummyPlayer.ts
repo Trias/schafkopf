@@ -1,26 +1,37 @@
 import {Card} from "../cards/Card";
 import {GameMode, GameModeEnum} from "../GameMode";
-import StrategyInterface from "../strategy/StrategyInterface";
 import {cloneDeep, includes} from "lodash";
 import {GameWorld} from "../GameWorld";
 import {FinishedRound, Round} from "../Round";
 import {PlayerInterface} from "../Player";
 import GamePhase from "../GamePhase";
 import {removeCard} from "../cards/CardSet";
+import {CardPlayStrategy} from "../strategy/rulebased/heuristic/CardPlayStrategy";
+import GameAssumptions from "../knowledge/GameAssumptions";
+import {GameAssumptionsInCallGame} from "../knowledge/GameAssumptionsInCallGame";
+import {GameHistory} from "../knowledge/GameHistory";
 
 export class DummyPlayer implements PlayerInterface {
     private currentCardSet: Card[];
-    private readonly name: string;
-    private readonly startCardSet: Card[];
-    private readonly strategy: StrategyInterface;
-    private strategyConstructor: { new(name: string): StrategyInterface };
+    readonly name: string;
+    readonly startCardSet: Card[];
+    readonly strategy: CardPlayStrategy;
+    readonly strategyConstructor: new (name: string, startCardSet: Card[], assumptions: GameAssumptions) => CardPlayStrategy;
+    readonly assumptions: GameAssumptions;
+    readonly gamePhase: GamePhase;
 
-    constructor(playerName: string, startCardSet: Card[], currentCardSet: Card[], strategy: new (name: string) => StrategyInterface) {
+    constructor(playerName: string, playerNames: string[], gameMode: GameMode, history: GameHistory, startCardSet: Card[], currentCardSet: Card[], rounds: FinishedRound[], round: Round, strategy: new (name: string, startCardSet: Card[], assumptions: GameAssumptions) => CardPlayStrategy) {
         this.name = playerName;
         this.startCardSet = startCardSet;
         this.currentCardSet = currentCardSet;
-        this.strategy = new strategy(this.getName());
         this.strategyConstructor = strategy;
+
+        // dummy prop....
+        this.gamePhase = GamePhase.IN_PLAY;
+
+        this.assumptions = new GameAssumptionsInCallGame(history, playerName, playerNames, gameMode, startCardSet, rounds, round);
+        this.strategy = new strategy(playerName, startCardSet, this.assumptions);
+
     }
 
     getStrategyName() {
@@ -36,7 +47,7 @@ export class DummyPlayer implements PlayerInterface {
     }
 
     doYouWantToKlopf(): boolean {
-        return this.strategy.chooseToRaise(this.startCardSet);
+        return false;
     }
 
     forcePlayCard(world: GameWorld, card: Card): Round {
@@ -82,7 +93,7 @@ export class DummyPlayer implements PlayerInterface {
         if (world.round.getCurrentPlayerName() != this.name) {
             throw Error('not to move');
         }
-        let card = this.strategy.chooseCardToPlay(world, this.currentCardSet);
+        let card = this.strategy.determineCardToPlay(world, this.currentCardSet);
 
         this.currentCardSet = removeCard(this.currentCardSet, card);
 
@@ -96,7 +107,7 @@ export class DummyPlayer implements PlayerInterface {
         throw Error('not implemented');
     }
 
-    getDummyClone(): DummyPlayer {
+    getDummyClone(world: GameWorld): DummyPlayer {
         return cloneDeep(this);
     }
 

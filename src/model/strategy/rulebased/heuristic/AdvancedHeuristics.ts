@@ -1,10 +1,6 @@
-import StrategyInterface from "../StrategyInterface";
-import {callableColors, ColorWithTrump, PlainColor} from "../../cards/Color";
-import {GameMode, GameModeEnum} from "../../GameMode";
-import {Card, cardToValue} from "../../cards/Card";
-import {getPlayableCards} from "../../PlayableMoves";
-import {determineGameMode} from "../rules/shouldCall/determineGameMode";
-import {GameWorld} from "../../GameWorld";
+import {GameWorld} from "../../../GameWorld";
+import {Card, cardToValue} from "../../../cards/Card";
+import {getPlayableCards} from "../../../PlayableMoves";
 import {
     allOfColor,
     getAces,
@@ -14,93 +10,47 @@ import {
     getTrumps,
     highTrumps,
     sortByNaturalOrdering
-} from "../../cards/CardSet";
-import {clone, remove, reverse, shuffle} from "lodash";
-import {Player} from "../../Player";
-import {Round} from "../../Round";
+} from "../../../cards/CardSet";
+import {ColorWithTrump} from "../../../cards/Color";
+import {
+    canForceWinTrumpRound,
+    filterBadPairs,
+    getWinningCards,
+    opponentsAreHinterhand,
+    sortByPointsAscending,
+    sortByPointsDescending,
+    weAreHinterhand
+} from "./helper";
+import {cloneDeep, remove, sample} from "lodash";
+import {CardPlayStrategy} from "./CardPlayStrategy";
+import GameAssumptions from "../../../knowledge/GameAssumptions";
 
-let colors = require("colors");
+let colors = require('colors');
 
-function filterBadPairs(world: GameWorld, playableCards: Card[]) {
-    let cardsByColorNoTrump = getCardsByColor(playableCards.filter(card => !world.gameMode.getOrdering().isTrump(card)), world.gameMode);
+export class AdvancedHeuristic implements CardPlayStrategy {
+    private readonly startCardSet: Card[];
+    private readonly name: string;
+    private readonly assumptions: GameAssumptions;
 
-    let goodCards: Card[] = [];
-
-    for (let color of callableColors) {
-        if (!(cardsByColorNoTrump[color].length == 2 && cardsByColorNoTrump[color][0][1] == "X" && cardToValue(cardsByColorNoTrump[color][1]) <= 4
-            || cardsByColorNoTrump[color].length == 1 && cardToValue(cardsByColorNoTrump[color][0]) >= 10
-            || cardsByColorNoTrump[color].length == 2 && cardToValue(cardsByColorNoTrump[color][0]) >= 10 && cardToValue(cardsByColorNoTrump[color][0]) >= 10
-        )) {
-            goodCards = goodCards.concat(cardsByColorNoTrump[color]);
-        }
+    constructor(name: string, startCardSet: Card[], assumptions: GameAssumptions) {
+        this.name = name;
+        this.assumptions = assumptions;
+        this.startCardSet = cloneDeep(startCardSet); // meh....
     }
 
-    return goodCards;
-}
-
-function getWinningCards(playableCards: Card[], round: Round, gameMode: GameMode) {
-    let winningCards = [];
-    let roundAnalyzer = round.getRoundAnalyzer(gameMode);
-
-    for (let card of playableCards) {
-        if (gameMode.getOrdering().rightBeatsLeftCard(roundAnalyzer.getHighestCard(), card)) {
-            winningCards.push(card);
-        }
-    }
-
-    return winningCards;
-}
-
-function sortByPointsAscending(cardSet: Card[]) {
-    let pointsRanking = ["A", "X", "K", "O", "U", "9", "8", "7"];
-    return clone(cardSet).sort((a, b) => pointsRanking.indexOf(b[1]) - pointsRanking.indexOf(a[1]));
-}
-
-function sortByPointsDescending(cardSet: Card[]) {
-    return reverse(sortByPointsAscending(cardSet));
-}
-
-function weAreHinterhand(world: GameWorld, partnerName: string | null) {
-    return world.round.isHinterHand() || world.round.getPosition() == 2 && world.round.getLastPlayerName() === partnerName;
-}
-
-function opponentsAreHinterhand(world: GameWorld, partnerName: string | null) {
-    return world.round.getPosition() == 0 && world.round.getNextPlayerName() === partnerName || world.round.getPosition() == 1 && world.round.getStartPlayerName() === partnerName;
-}
-
-function canForceWinTrumpRound(remainingTrumps: Card[], card: Card) {
-
-    if (remainingTrumps[0] == card) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-export default class CallingRulesWithSimpleStrategy implements StrategyInterface {
-    private thisPlayer: Player;
-
-    constructor(thisPlayer: Player) {
-        this.thisPlayer = thisPlayer;
-    }
-
-    chooseCardToPlay(world: GameWorld, cardSet: Card[]): Card {
-        // TODO: assumptions
-        // TODO: schmieren/ abwerfen
-        // todo combine with monte carlo
-        // todo compare with monte carlo
+    determineCardToPlay(world: GameWorld, cardSet: Card[]) {
         let reasons: string[] = [];
         let secondOrderReasons: string[] = [];
 
         function report(conclusion: string, card: Card) {
             console.log(colors.green(reasons.toString() + (secondOrderReasons.length ? '\n-->' : '') + secondOrderReasons.toString() + ' => ' + conclusion + ': ' + card));
         }
-        
-        let assumptions = this.thisPlayer.assumptions;
+
+        let assumptions = this.assumptions;
 
         let playableCards = getPlayableCards(cardSet, world.gameMode, world.round);
         let roundAnalyzer = world.round.getRoundAnalyzer(world.gameMode);
-        let partnerName = world.history.getTeamPartnerNameForPlayerName(this.thisPlayer.getName(), this.thisPlayer.getStartCardSet());
+        let partnerName = world.history.getTeamPartnerNameForPlayerName(this.name, this.startCardSet);
         let partnerHasRound = !world.round.isEmpty() && partnerName && world.round.getPlayerNameAtPosition(roundAnalyzer.getHighestCardPosition()) === partnerName;
 
         if (!playableCards.length) {
@@ -116,12 +66,12 @@ export default class CallingRulesWithSimpleStrategy implements StrategyInterface
         }
 
         let potentialPartnerName = assumptions.getPossiblePartnerName();
-        let potentialPartnerConfidence = this.thisPlayer.assumptions.getPossibleTeamPartnerForPlayerName(this.thisPlayer.getName());
-        let isCaller = world.gameMode.getCallingPlayerName() == this.thisPlayer.getName();
+        let potentialPartnerConfidence = this.assumptions.getPossibleTeamPartnerForPlayerName(this.name);
+        let isCaller = world.gameMode.getCallingPlayerName() == this.name;
 
         if (world.round.isEmpty()) {
             reasons.push('start player');
-            let isInPlayingTeam = world.history.isPlayerPlaying(this.thisPlayer.getName(), this.thisPlayer.getStartCardSet());
+            let isInPlayingTeam = world.history.isPlayerPlaying(this.name, this.startCardSet);
             if (isInPlayingTeam) {
                 reasons.push('in playing team');
                 let trumps = getTrumps(playableCards, world.gameMode);
@@ -258,7 +208,7 @@ export default class CallingRulesWithSimpleStrategy implements StrategyInterface
                 if (cardRanksWithRoundCards[roundAnalyzer.getHighestCard()] === 0 && roundColor == ColorWithTrump.TRUMP
                     || world.round.isHinterHand()
                     || cardRanksWithRoundCards[roundAnalyzer.getHighestCard()] === 0
-                    && !world.history.hasColorBeenAngespielt(roundColor) && allOfColor(this.thisPlayer.getStartCardSet(), roundColor, world.gameMode).length < 4
+                    && !world.history.hasColorBeenAngespielt(roundColor) && allOfColor(this.startCardSet, roundColor, world.gameMode).length < 4
                 ) {
                     reasons.push('we will probably win this round');
                     // todo: ober/punkte dilemma
@@ -667,7 +617,6 @@ export default class CallingRulesWithSimpleStrategy implements StrategyInterface
             }
         }
 
-
         function playTrumpPreferPoints(playableCards: Card[], reasons: string[]) {
             let playableCardsByPointsAscending = sortByPointsAscending(playableCards);
             let playableCardsNoOber = playableCardsByPointsAscending.filter(card => card[1] != "O");
@@ -696,7 +645,7 @@ export default class CallingRulesWithSimpleStrategy implements StrategyInterface
 
             if (aces.length) {
                 reasons.push('has aces of color');
-                let card = shuffle(aces)[0];
+                let card = sample(aces)!;
                 report('play ace', card);
                 return card;
             }
@@ -704,14 +653,14 @@ export default class CallingRulesWithSimpleStrategy implements StrategyInterface
             let colorCards = getNonTrumps(playableCards, world.gameMode);
             if (colorCards.length) {
                 reasons.push('i have color cards');
-                let card = shuffle(colorCards)[0];
+                let card = sample(colorCards)!;
 
                 report('play random color card', card);
 
                 return card;
             } else {
                 reasons.push('i have only trump cards');
-                let card = shuffle(playableCards)[0];
+                let card = sample(playableCards)!;
 
                 // possibly a bad choice in endgame...
                 report('play random card', card);
@@ -787,13 +736,4 @@ export default class CallingRulesWithSimpleStrategy implements StrategyInterface
 
         throw Error('return path missed?');
     }
-
-    chooseGameToCall(cardSet: Card[], previousGameMode: GameMode, playerIndex: number, allowedGameModes: GameModeEnum[]): [GameModeEnum?, PlainColor?] {
-        return determineGameMode(previousGameMode, cardSet, allowedGameModes);
-    }
-
-    chooseToRaise(cardSet: readonly Card[]): boolean {
-        return false;
-    }
-
 }

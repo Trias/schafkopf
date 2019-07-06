@@ -14,6 +14,7 @@ import {CardToWeights, zeroWeightedCards} from "../rules/CardToWeights";
 import {Player, PlayerMap} from "../../Player";
 import {PlayerPlaceholder} from "../../simulation/PlayerPlaceholder";
 import {GameHistory} from "../../knowledge/GameHistory";
+import {RandomCardPlay} from "../rulebased/heuristic/RandomCardPlay";
 
 const consoleColors = require('colors');
 
@@ -79,7 +80,7 @@ export default class NaiveMonteCarloStrategy implements StrategyInterface {
 
         // parallize?
         for (let i = 0; i < simulations; i++) {
-            let fakeWorld = generateRandomWorldConsistentWithGameKnowledge(world.clone(), this.thisPlayer.getName());
+            let fakeWorld = generateRandomWorldConsistentWithGameKnowledge(world.clone(), this.thisPlayer.getName(), RandomCardPlay);
             //console.log(colors.grey(`${JSON.stringify(fakePlayers.map(p => p.currentCardSet))}`));
             //let index = 0;
             while (fakeWorld.round.getPosition() != fakeWorld.round.getPlayerPositionByName(this.thisPlayer.getName())) {

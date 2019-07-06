@@ -1,4 +1,4 @@
-let gameId = 100;
+let gameId = 200;
 let games = require('../generated/games.json');
 
 let seedRandom = require('seedrandom');
@@ -8,7 +8,6 @@ let cardDeal = games[gameId].cardDeal;
 let startPlayer = games[gameId].startPlayer;
 
 import {Player} from "./model/Player";
-import CallingRulesWithSimpleStrategy from "./model/strategy/simple/CallingRulesWithSimpleStrategy";
 import Statistics from "./model/Statistics";
 import {PreGame} from "./model/PreGame";
 import {GameModeEnum} from "./model/GameMode";
@@ -16,16 +15,18 @@ import {GameHistory} from "./model/knowledge/GameHistory";
 import {Game} from "./model/Game";
 import {GameWorld} from "./model/GameWorld";
 import {Round} from "./model/Round";
+import {CallingRulesWithUctMonteCarloAndHeuristic} from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloAndHeuristic";
+import CallingRulesWithHeuristic from "./model/strategy/rulebased/CallingRulesWithHeuristic";
 
 let colors = require('colors');
 
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
 let playerMap = {
-    [playerNames[0]]: new Player(playerNames[0], CallingRulesWithSimpleStrategy),
-    [playerNames[1]]: new Player(playerNames[1], CallingRulesWithSimpleStrategy),
-    [playerNames[2]]: new Player(playerNames[2], CallingRulesWithSimpleStrategy),
-    [playerNames[3]]: new Player(playerNames[3], CallingRulesWithSimpleStrategy),
+    [playerNames[0]]: new Player(playerNames[0], CallingRulesWithHeuristic),
+    [playerNames[1]]: new Player(playerNames[1], CallingRulesWithHeuristic),
+    [playerNames[2]]: new Player(playerNames[2], CallingRulesWithHeuristic),
+    [playerNames[3]]: new Player(playerNames[3], CallingRulesWithUctMonteCarloAndHeuristic),
 };
 
 

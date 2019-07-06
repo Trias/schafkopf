@@ -189,4 +189,12 @@ export default class GameResult {
             return 2 + add;
         }
     }
+
+    getTeamPoints(playerName: string) {
+        if (includes(this.playingTeamNames, playerName)) {
+            return this.playingTeamPoints;
+        } else {
+            return 120 - this.playingTeamPoints;
+        }
+    }
 }

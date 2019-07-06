@@ -3,24 +3,24 @@ import {Card} from "./cards/Card";
 import {GameMode, GameModeEnum} from "./GameMode";
 import StrategyInterface from "./strategy/StrategyInterface";
 import GamePhase from "./GamePhase";
-import {clone} from "lodash";
-import RandomStrategy from "./strategy/random";
+import {clone, cloneDeep} from "lodash";
 import {GameWorld} from "./GameWorld";
 import {DummyPlayer} from "./simulation/DummyPlayer";
 import {FinishedRound, Round} from "./Round";
 import {canPlayCard} from "./PlayableMoves";
 import {GameAssumptionsInCallGame} from "./knowledge/GameAssumptionsInCallGame";
 import GameAssumptions from "./knowledge/GameAssumptions";
+import {CardPlayStrategy} from "./strategy/rulebased/heuristic/CardPlayStrategy";
 
 export type PlayerMap = { [index in string]: PlayerInterface };
 
 class Player implements PlayerInterface {
     private _assumptions?: GameAssumptions;
     private startCardSet: Card[];
-    private readonly name: string;
+    readonly name: string;
     private readonly strategy: StrategyInterface;
     private currentCardSet: Card[];
-    private gamePhase: GamePhase;
+    gamePhase: GamePhase;
     private readonly strategyConstructor: { new(player: Player): StrategyInterface };
 
     get assumptions(): GameAssumptions {
@@ -45,8 +45,8 @@ class Player implements PlayerInterface {
         return this.strategyConstructor.name;
     }
 
-    getDummyClone() {
-        return new DummyPlayer(this.name, clone(this.startCardSet), clone(this.currentCardSet!), RandomStrategy);
+    getDummyClone(world: GameWorld, strategy: new (name: string, startCardSet: Card[], assumptions: GameAssumptions) => CardPlayStrategy) {
+        return new DummyPlayer(this.name, clone(world.playerNames), cloneDeep(world.gameMode), cloneDeep(world.history), cloneDeep(this.startCardSet), cloneDeep(this.currentCardSet), world.rounds, world.round, strategy);
     }
 
     onGameStart(world: GameWorld | null) {
@@ -186,7 +186,7 @@ class Player implements PlayerInterface {
             if (!world) {
                 throw Error('no world...');
             }
-            this._assumptions = new GameAssumptionsInCallGame(world, this);
+            this._assumptions = new GameAssumptionsInCallGame(world.history, this.getName(), world.playerNames, world.gameMode, this.getStartCardSet());
         }
     }
 
@@ -227,7 +227,7 @@ interface PlayerInterface {
 
     forcePlayCard(world: GameWorld, card: Card): Round;
 
-    getDummyClone(): PlayerInterface;
+    getDummyClone(world: GameWorld, strategy: new (name: string, startCardSet: Card[], assumptions: GameAssumptions) => CardPlayStrategy): PlayerInterface;
 
     onCardPlayed(round: Round, roundIndex: number): void;
 

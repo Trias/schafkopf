@@ -4,9 +4,10 @@ import {Card} from "../cards/Card";
 import {removeCard} from "../cards/CardSet";
 import {GameWorld} from "../GameWorld";
 import {DummyPlayer} from "./DummyPlayer";
-import RandomStrategy from "../strategy/random";
+import {CardPlayStrategy} from "../strategy/rulebased/heuristic/CardPlayStrategy";
+import GameAssumptions from "../knowledge/GameAssumptions";
 
-export function generateRandomWorldConsistentWithGameKnowledge(world: GameWorld, playerName: string): GameWorld {
+export function generateRandomWorldConsistentWithGameKnowledge(world: GameWorld, playerName: string, strategyConstructor: new (name: string, startCardSet: Card[], assumptions: GameAssumptions) => CardPlayStrategy): GameWorld {
     let thisPlayer = world.playerMap[playerName];
 
     let remainingCardsWithoutHandCards = difference(world.history.getRemainingCards(), [...thisPlayer.getStartCardSet(), ...world.round.getPlayedCards()]);
@@ -148,13 +149,13 @@ export function generateRandomWorldConsistentWithGameKnowledge(world: GameWorld,
     }
 
     let playerMap: PlayerMap = {};
-    playerMap[playerName] = thisPlayer.getDummyClone();
+    playerMap[playerName] = thisPlayer.getDummyClone(world, strategyConstructor);
     for (let playerName of otherPlayerNames) {
         let startCardSet = playerToCards[playerName]!.concat(world.history.getPlayedCardsByPlayer(playerName));
 
         let currentCardSet = playerToCards[playerName]!;
 
-        playerMap[playerName] = new DummyPlayer(playerName, startCardSet, currentCardSet, RandomStrategy);
+        playerMap[playerName] = new DummyPlayer(playerName, world.playerNames, world.gameMode, world.history, startCardSet, currentCardSet, world.rounds, world.round, strategyConstructor);
 
         if (startCardSet.length != 8) {
             throw Error('startcardset must have 8 cards');

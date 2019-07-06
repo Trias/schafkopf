@@ -6,16 +6,21 @@ import {getPlayableCards} from "../../../PlayableMoves";
 import {CardToWeights, zeroWeightedCards} from "../../rules/CardToWeights";
 import {generateRandomWorldConsistentWithGameKnowledge} from "../../../simulation/generateRandomWorldConsistentWithGameKnowledge";
 import {GameTree} from "./GameTree";
-import {clone, difference, isEqual, sample} from "lodash";
+import {clone, cloneDeep, difference, isEqual} from "lodash";
 import {getUctValue} from "./getUctValue";
 import {fromEntries} from "../../../../utils/fromEntries";
+import {CardPlayStrategy} from "../../rulebased/heuristic/CardPlayStrategy";
+import {RandomCardPlay} from "../../rulebased/heuristic/RandomCardPlay";
+import GameAssumptions from "../../../knowledge/GameAssumptions";
 
 export class Simulation {
     private readonly thisPlayer: Player;
     private readonly world: GameWorld;
     private readonly gameTree: GameTree;
+    private readonly heuristicConstructor: new (name: string, startCardSet: Card[], assumptions: GameAssumptions) => CardPlayStrategy;
+    private heuristicForPlayer: CardPlayStrategy;
 
-    constructor(world: GameWorld, thisPlayer: Player) {
+    constructor(world: GameWorld, thisPlayer: Player, heuristicConstructor: (new (name: string, startCardSet: Card[], assumptions: GameAssumptions) => CardPlayStrategy) | null) {
         this.thisPlayer = thisPlayer;
         this.world = world.clone();
         this.gameTree = {
@@ -26,12 +31,11 @@ export class Simulation {
             playedCards: [],
             parent: null,
         };
+        this.heuristicConstructor = heuristicConstructor || RandomCardPlay;
+        this.heuristicForPlayer = new this.heuristicConstructor(this.thisPlayer.getName(), this.thisPlayer.getStartCardSet(), cloneDeep(thisPlayer.assumptions));
     }
 
-    run(cardSet: Card[]) {
-        let simulations = 100;
-        let runsPerSimulation = 10;
-
+    run(cardSet: Card[], simulations: number = 100, runsPerSimulation: number = 10) {
         let playableCards = getPlayableCards(cardSet, this.world.gameMode, this.world.round);
 
         if (playableCards.length == 1) {
@@ -46,7 +50,7 @@ export class Simulation {
         }
 
         for (let i = 0; i < simulations; i++) {
-            let fakeWorld = generateRandomWorldConsistentWithGameKnowledge(this.world.clone(), this.thisPlayer.getName());
+            let fakeWorld = generateRandomWorldConsistentWithGameKnowledge(this.world.clone(), this.thisPlayer.getName(), this.heuristicConstructor);
 
             for (let j = 0; j < runsPerSimulation; j++) {
                 let fakeWorldClone = fakeWorld.clone();
@@ -58,7 +62,6 @@ export class Simulation {
                 this.backPropagation(selectedGameTreeNode, win);
             }
         }
-
         return fromEntries(this.gameTree.children.map(node => [node.card as string, node.wins / node.runs])) as CardToWeights;
     }
 
@@ -94,7 +97,7 @@ export class Simulation {
 
             let remainingHandCards = difference(cardSet, gameTree.playedCards);
             let playableCards = getPlayableCards(remainingHandCards, this.world.gameMode, this.world.round);
-            let expandedChildrenCards = gameTree.children.map(childTree => childTree.card);
+            let expandedChildrenCards = gameTree.children.map(childTree => childTree.card!);
 
             if (isEqual(playableCards.sort(), expandedChildrenCards.sort())) {
                 // we need to descend deeper, all cards at this node have been explored
@@ -112,8 +115,8 @@ export class Simulation {
                 return this.select(bestChild!, game, cardSet);
             } else {
                 // expand thr tree with a random card...
-                let unexploredCards = difference(playableCards, expandedChildrenCards);
-                let card = sample(unexploredCards)!;
+                let unexploredCards = difference(playableCards, expandedChildrenCards)!;
+                let card = this.heuristicForPlayer.determineCardToPlay(this.world, unexploredCards);
                 return this.expand(gameTree, game, card);
             }
         }

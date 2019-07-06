@@ -2,6 +2,8 @@ let seedRandom = require('seedrandom');
 // replacing global Math.random.....must be first call.
 Math.random = seedRandom.alea('seed', {state: true});
 
+import {CallingRulesWithUctMonteCarloAndHeuristic} from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloAndHeuristic";
+import CallingRulesWithUctMonteCarloStrategy from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloStrategy";
 import {Card} from "./model/cards/Card";
 import {Game} from "./model/Game";
 import {Player} from "./model/Player";
@@ -11,9 +13,7 @@ import {GameWorld} from "./model/GameWorld";
 import {PreGame} from "./model/PreGame";
 import {Round} from "./model/Round";
 import {GameHistory} from "./model/knowledge/GameHistory";
-import CallingRulesWithSimpleStrategy from "./model/strategy/simple/CallingRulesWithSimpleStrategy";
 import {GameModeEnum} from "./model/GameMode";
-import CallingRulesWithUctMonteCarloStrategy from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloStrategy";
 import {clone} from "lodash";
 import colors = require('colors');
 
@@ -24,10 +24,10 @@ let runs = 200;
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
 let playerMap = {
-    [playerNames[0]]: new Player(playerNames[0], CallingRulesWithUctMonteCarloStrategy),
-    [playerNames[1]]: new Player(playerNames[1], CallingRulesWithUctMonteCarloStrategy),
-    [playerNames[2]]: new Player(playerNames[2], CallingRulesWithSimpleStrategy),
-    [playerNames[3]]: new Player(playerNames[3], CallingRulesWithSimpleStrategy),
+    [playerNames[0]]: new Player(playerNames[0], CallingRulesWithUctMonteCarloAndHeuristic),
+    [playerNames[1]]: new Player(playerNames[1], CallingRulesWithUctMonteCarloAndHeuristic),
+    [playerNames[2]]: new Player(playerNames[2], CallingRulesWithUctMonteCarloAndHeuristic),
+    [playerNames[3]]: new Player(playerNames[3], CallingRulesWithUctMonteCarloStrategy),
 };
 
 let allCardDeals = shuffleCardsTimes(runs);
@@ -99,6 +99,6 @@ function reportCents(i: number) {
     console.log(`balance after ${i + 1} games`);
     for (let i = 0; i < 4; i++) {
         let playerStats = stats.getStatsForPlayer(playerNames[i]);
-        console.log(colors.blue(`${playerNames[i]} [${playerMap[playerNames[i]].getStartCardSet()}] (${playerMap[playerNames[i]].getStrategyName()}): ${playerStats.cents} (${playerStats.tournamentPoints} points, ${playerStats.wins} wins, ${playerStats.inPlayingTeam} playing)`));
+        console.log(colors.blue(`${playerNames[i]} [${playerMap[playerNames[i]].getStartCardSet()}] (${playerMap[playerNames[i]].getStrategyName()}): ${playerStats.cents} (${playerStats.tournamentPoints} points, ${playerStats.wins} wins, ${playerStats.losses} losses, ${playerStats.inPlayingTeam} playing, ${playerStats.points / playerStats.games} points on average`));
     }
 }
