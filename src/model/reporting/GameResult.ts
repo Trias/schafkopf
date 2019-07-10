@@ -1,10 +1,10 @@
-import {GameMode, GameModeEnum} from "./GameMode";
-import {PlayerMap} from "./Player";
-import {FinishedRound} from "./Round";
-import {Card} from "./cards/Card";
+import {GameMode, GameModeEnum} from "../GameMode";
+import {PlayerMap} from "../Player";
+import {FinishedRound} from "../Round";
+import {Card} from "../cards/Card";
 import {includes} from "lodash";
-import {sortAndFilterBy} from "./cards/CardSet";
-import {GameWorld} from "./GameWorld";
+import {sortAndFilterBy} from "../cards/CardSet";
+import {GameWorld} from "../GameWorld";
 
 export default class GameResult {
     private readonly playingTeamPoints: number;

@@ -2,7 +2,7 @@ import {GameMode} from "../GameMode";
 import {PlayerMap} from "../Player";
 import {FinishedRound, Round} from "../Round";
 import {Card} from "../cards/Card";
-import GameResult from "../GameResult";
+import GameResult from "../reporting/GameResult";
 import {RoundAnalyzer} from "../knowledge/RoundAnalyzer";
 import {GameWorld} from "../GameWorld";
 

@@ -7,7 +7,7 @@ import CallingRulesWithUctMonteCarloStrategy from "./model/strategy/montecarlo/C
 import {Card} from "./model/cards/Card";
 import {Game} from "./model/Game";
 import {Player} from "./model/Player";
-import Statistics from "./model/Statistics";
+import Statistics from "./model/reporting/Statistics";
 import {shuffleCardsTimes} from "./model/cards/shuffleCards";
 import {GameWorld} from "./model/GameWorld";
 import {PreGame} from "./model/PreGame";

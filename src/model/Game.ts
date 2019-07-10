@@ -1,5 +1,5 @@
 import {GameMode} from "./GameMode";
-import GameResult from "./GameResult";
+import GameResult from "./reporting/GameResult";
 import {PlayerMap} from "./Player";
 import {Round} from "./Round";
 import GamePhase from "./GamePhase";

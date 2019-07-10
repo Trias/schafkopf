@@ -3,13 +3,13 @@ let seedRandom = require('seedrandom');
 Math.random = seedRandom.alea('seed', {state: true});
 
 import CallingRulesWithUctMonteCarloStrategy from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloStrategy";
-import {StrategyEvaluation} from "./model/StrategyEvaluation";
+import {StrategyEvaluation} from "./model/reporting/StrategyEvaluation";
 import CallingRulesWithHeuristic from "./model/strategy/rulebased/CallingRulesWithHeuristic";
 import {CallingRulesWithUctMonteCarloAndHeuristic} from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloAndHeuristic";
 import {Card} from "./model/cards/Card";
 import {Game} from "./model/Game";
 import {Player, PlayerMap} from "./model/Player";
-import Statistics from "./model/Statistics";
+import Statistics from "./model/reporting/Statistics";
 import {shuffleCardsTimes} from "./model/cards/shuffleCards";
 import {GameWorld} from "./model/GameWorld";
 import {PreGame} from "./model/PreGame";

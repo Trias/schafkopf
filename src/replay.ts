@@ -8,7 +8,7 @@ let cardDeal = games[gameId].cardDeal;
 let startPlayer = games[gameId].startPlayer;
 
 import {Player} from "./model/Player";
-import Statistics from "./model/Statistics";
+import Statistics from "./model/reporting/Statistics";
 import {PreGame} from "./model/PreGame";
 import {GameModeEnum} from "./model/GameMode";
 import {GameHistory} from "./model/knowledge/GameHistory";

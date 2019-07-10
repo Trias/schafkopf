@@ -1,5 +1,5 @@
 import GameResult from "./GameResult";
-import {shiftRightWithBase} from "../util/shiftRightWithBase";
+import {shiftRightWithBase} from "../../util/shiftRightWithBase";
 
 export class StrategyEvaluation {
     // constructor types are too damn complicated!

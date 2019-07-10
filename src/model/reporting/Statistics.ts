@@ -1,5 +1,5 @@
 import GameResult from "./GameResult";
-import {GameModeEnum} from "./GameMode";
+import {GameModeEnum} from "../GameMode";
 import {includes} from "lodash";
 
 interface Stats {
