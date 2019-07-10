@@ -45,10 +45,10 @@ export default class UctMonteCarloStrategy implements StrategyInterface {
             throw Error('player not to move');
         }
 
-        console.time('uct simulation');
+        console.time(consoleColors.grey('uct simulation'));
         let simulation = new Simulation(world, this.thisPlayer);
         let valuations = simulation.run(cardSet);
-        console.timeEnd('uct simulation');
+        console.timeEnd(consoleColors.grey('uct simulation'));
 
         console.log('valuations:' + consoleColors.green(JSON.stringify(valuations)));
 
@@ -101,7 +101,7 @@ export default class UctMonteCarloStrategy implements StrategyInterface {
 
         for (let i = 0; i < 4; i++) {
             if (i == playerIndex) {
-                playerMap[playerName] = this.thisPlayer.getDummyClone();
+                playerMap[playerName] = new PlayerPlaceholder(playerName);
             } else {
                 playerMap["FakePlayer " + i] = new PlayerPlaceholder("FakePlayer " + i);
             }
@@ -115,11 +115,11 @@ export default class UctMonteCarloStrategy implements StrategyInterface {
             let history = new GameHistory(Object.keys(playerMap), testGameMode);
             let world = new GameWorld(testGameMode, playerMap, [], round, history);
 
-            console.time('uct simulation' + [testGameModeEnum, color]);
+            console.time(consoleColors.grey('uct simulation' + [testGameModeEnum, color]));
             let simulation = new Simulation(world, this.thisPlayer);
             let valuations = simulation.run(cardSet);
             console.log('valuations:' + consoleColors.green(JSON.stringify(valuations)));
-            console.timeEnd('uct simulation' + [testGameModeEnum, color]);
+            console.timeEnd(consoleColors.grey('uct simulation' + [testGameModeEnum, color]));
 
             let bestValuedCard = chooseBestCard(valuations)!;
             let bestValue = valuations[bestValuedCard]!;

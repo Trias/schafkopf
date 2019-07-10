@@ -6,6 +6,7 @@ import GamePhase from "./GamePhase";
 import {sortByNaturalOrdering} from "./cards/CardSet";
 import {RoundAnalyzer} from "./knowledge/RoundAnalyzer";
 import {GameWorld} from "./GameWorld";
+import colors = require('colors');
 
 export class Game {
     private readonly playerMap: PlayerMap;
@@ -53,7 +54,7 @@ export class Game {
                 }
                 let activePlayerName = this.world.round.getCurrentPlayerName();
                 this.playerMap[activePlayerName].playCard(this.world);
-                console.log(`player ${activePlayerName} played ${this.world.round.getLastPlayedCard()} from set ${sortByNaturalOrdering(this.playerMap[activePlayerName].getCurrentCardSet().concat(this.world.round.getLastPlayedCard()))}`);
+                console.log(colors.italic(`player ${activePlayerName} played ${colors.bold(this.world.round.getLastPlayedCard())} from set ${sortByNaturalOrdering(this.playerMap[activePlayerName].getCurrentCardSet().concat(this.world.round.getLastPlayedCard()))})`));
             }
             this.markCalledAce(this.world.round);
             this.world.rounds.push(this.world.round.finish());

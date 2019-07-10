@@ -149,6 +149,10 @@ export default class GameResult {
         }
     }
 
+    hasPlayerPositionWon(position: number) {
+        return this.hasPlayerWon(this.playerNames[position]);
+    }
+
     private getSortedWinnerTrumpSet(trumpSet: readonly Card[]) {
         let playingTeam = this.getPlayingTeamNames();
         let winnerTrumpSet;

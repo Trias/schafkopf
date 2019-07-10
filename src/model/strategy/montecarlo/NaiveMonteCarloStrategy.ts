@@ -160,7 +160,7 @@ export default class NaiveMonteCarloStrategy implements StrategyInterface {
 
         for (let i = 0; i < 4; i++) {
             if (i == playerIndex) {
-                playerMap[playerName] = this.thisPlayer.getDummyClone();
+                playerMap[playerName] = new PlayerPlaceholder(this.thisPlayer.getName());
             } else {
                 playerMap["FakePlayer " + i] = new PlayerPlaceholder("FakePlayer " + i);
             }
