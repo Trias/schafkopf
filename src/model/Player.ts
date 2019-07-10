@@ -11,6 +11,9 @@ import {canPlayCard} from "./PlayableMoves";
 import {GameAssumptionsInCallGame} from "./knowledge/GameAssumptionsInCallGame";
 import GameAssumptions from "./knowledge/GameAssumptions";
 import {CardPlayStrategy} from "./strategy/rulebased/heuristic/CardPlayStrategy";
+import {RuleEvaluation} from "./reporting/RuleEvaluation";
+import {CallingRulesWithHeuristic} from "./strategy/rulebased/CallingRulesWithHeuristic";
+import {CallingRulesWithHeuristicWithRuleBlacklist} from "./strategy/rulebased/CallingRulesWithHeuristicWithRuleBlacklist";
 
 export type PlayerMap = { [index in string]: PlayerInterface };
 
@@ -30,12 +33,25 @@ class Player implements PlayerInterface {
         return this._assumptions;
     }
 
-    constructor(name: string, strategy: new (player: Player) => (StrategyInterface)) {
+    constructor(name: string, strategy: new (player: Player) => (StrategyInterface), ruleEvaluation: RuleEvaluation | null = null, callingRuleEvaluation: RuleEvaluation | null = null, ruleBlackList: string[] = []) {
         this.gamePhase = GamePhase.BEFORE_GAME;
         this.name = name;
 
         this.strategy = new strategy(this);
         this.strategyConstructor = strategy;
+
+        if (this.strategy instanceof CallingRulesWithHeuristic && ruleEvaluation) {
+            this.strategy.injectEvaluation(ruleEvaluation);
+        }
+
+        if (this.strategy instanceof CallingRulesWithHeuristicWithRuleBlacklist && ruleEvaluation && ruleBlackList) {
+            this.strategy.injectEvaluation(ruleEvaluation);
+            this.strategy.injectRuleBlackList(ruleBlackList);
+        }
+
+        if (this.strategy instanceof CallingRulesWithHeuristic && callingRuleEvaluation) {
+            this.strategy.injectCallingRulesEvaluation(callingRuleEvaluation);
+        }
 
         this.startCardSet = [];
         this.currentCardSet = [];

@@ -49,19 +49,23 @@ export class Simulation {
             return zeroWeightedCards(playableCards);
         }
 
+        let fakeWorlds: GameWorld[] = [];
+
+        // generate them eagerly to avoid biasing early results...
         for (let i = 0; i < simulations; i++) {
-            let fakeWorld = generateRandomWorldConsistentWithGameKnowledge(this.world.clone(), this.thisPlayer.getName(), this.heuristicConstructor);
-
-            for (let j = 0; j < runsPerSimulation; j++) {
-                let fakeWorldClone = fakeWorld.clone();
-                let game = new SimulatedGame(fakeWorldClone);
-
-                let selectedGameTreeNode = this.select(this.gameTree, game, cardSet);
-
-                let win = this.simulate(game);
-                this.backPropagation(selectedGameTreeNode, win);
-            }
+            fakeWorlds[i] = generateRandomWorldConsistentWithGameKnowledge(this.world.clone(), this.thisPlayer.getName(), this.heuristicConstructor);
         }
+
+        for (let j = 0; j < runsPerSimulation * simulations; j++) {
+            let fakeWorldClone = fakeWorlds[j % simulations].clone();
+            let game = new SimulatedGame(fakeWorldClone);
+
+            let selectedGameTreeNode = this.select(this.gameTree, game, cardSet);
+
+            let win = this.simulate(game);
+            this.backPropagation(selectedGameTreeNode, win);
+        }
+
         return fromEntries(this.gameTree.children.map(node => [node.card as string, node.wins / node.runs])) as CardToWeights;
     }
 

@@ -93,7 +93,7 @@ export default class UctMonteCarloStrategy implements StrategyInterface {
 
         for (let i = 0; i < 4; i++) {
             if (i == playerIndex) {
-                playerMap[playerName] = this.thisPlayer.getDummyClone();
+                playerMap[playerName] = new PlayerPlaceholder(playerName);
             } else {
                 playerMap["FakePlayer " + i] = new PlayerPlaceholder("FakePlayer " + i);
             }

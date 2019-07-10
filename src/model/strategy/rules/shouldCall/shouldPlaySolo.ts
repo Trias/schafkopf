@@ -8,7 +8,7 @@ import {Player} from "../../../Player";
 import RandomStrategy from "../../random";
 
 // rather conservative estimates from sauspiel.de
-export function shouldPlaySolo(cardSet: ReadonlyArray<Card>): [GameModeEnum, PlainColor] | null {
+export function shouldPlaySolo(cardSet: ReadonlyArray<Card>, report: (reasons: string[]) => void): [GameModeEnum, PlainColor] | null {
     for (let color of plainColors) {
         let testPlayer = new Player('test', RandomStrategy);
         let testGameMode: GameMode = new GameMode(GameModeEnum.SOLO, testPlayer.getName(), color);

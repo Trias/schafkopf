@@ -11,7 +11,7 @@ import {includes, sample} from "lodash";
 import {getPlayableCards} from "../../PlayableMoves";
 import colors = require('colors');
 
-export class CallingRulesWithHeuristic implements StrategyInterface {
+export class CallingRulesWithHeuristicWithRuleBlacklist implements StrategyInterface {
     private readonly thisPlayer: Player;
     private ruleEvaluation: RuleEvaluation | null = null;
     private callingRuleEvaluation: RuleEvaluation | null = null;

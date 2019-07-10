@@ -2,10 +2,7 @@ let seedRandom = require('seedrandom');
 // replacing global Math.random.....must be first call.
 Math.random = seedRandom.alea('seed', {state: true});
 
-import CallingRulesWithUctMonteCarloStrategy from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloStrategy";
 import {StrategyEvaluation} from "./model/reporting/StrategyEvaluation";
-import CallingRulesWithHeuristic from "./model/strategy/rulebased/CallingRulesWithHeuristic";
-import {CallingRulesWithUctMonteCarloAndHeuristic} from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloAndHeuristic";
 import {Card} from "./model/cards/Card";
 import {Game} from "./model/Game";
 import {Player, PlayerMap} from "./model/Player";
@@ -17,11 +14,14 @@ import {Round} from "./model/Round";
 import {GameHistory} from "./model/knowledge/GameHistory";
 import {GameModeEnum} from "./model/GameMode";
 import {clone} from "lodash";
+import {RuleEvaluation} from "./model/reporting/RuleEvaluation";
+import {CallingRulesWithHeuristic} from "./model/strategy/rulebased/CallingRulesWithHeuristic";
+import {CallingRulesWithHeuristicWithRuleBlacklist} from "./model/strategy/rulebased/CallingRulesWithHeuristicWithRuleBlacklist";
 import colors = require('colors');
 
 let fs = require('fs');
 
-let runs = 51;
+let runs = 100;
 
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
@@ -29,7 +29,9 @@ let allCardDeals = shuffleCardsTimes(runs);
 
 let stats = new Statistics(playerNames);
 
-let evaluation = new StrategyEvaluation([CallingRulesWithHeuristic, CallingRulesWithUctMonteCarloStrategy, CallingRulesWithUctMonteCarloAndHeuristic]);
+let evaluation = new StrategyEvaluation([CallingRulesWithHeuristicWithRuleBlacklist, CallingRulesWithHeuristic]);
+let callingRuleEvaluation = new RuleEvaluation();
+let ruleEvaluation = new RuleEvaluation();
 
 let games: {
     [index in number]: {
@@ -40,9 +42,11 @@ let games: {
     }
 } = {};
 
+let blacklist = ["start player,in playing team,has trumps,not calling player"];
+
 //(async () => {
 let startPlayer = playerNames[0];
-for (let i = 48; i < 51; i++) {
+for (let i = 0; i < runs; i++) {
     // @ts-ignore
     let prngState = Math.random.state();
     games[i + 1] = {
@@ -54,13 +58,13 @@ for (let i = 48; i < 51; i++) {
 
     for (let j = 0; j < evaluation.strategies.length ** 4; j++) {
         let playerMap = {
-            [playerNames[0]]: new Player(playerNames[0], evaluation.getStrategyToEvaluate(j, 0)),
-            [playerNames[1]]: new Player(playerNames[1], evaluation.getStrategyToEvaluate(j, 1)),
-            [playerNames[2]]: new Player(playerNames[2], evaluation.getStrategyToEvaluate(j, 2)),
-            [playerNames[3]]: new Player(playerNames[3], evaluation.getStrategyToEvaluate(j, 3)),
+            [playerNames[0]]: new Player(playerNames[0], evaluation.getStrategyToEvaluate(j, 0), ruleEvaluation, callingRuleEvaluation, blacklist),
+            [playerNames[1]]: new Player(playerNames[1], evaluation.getStrategyToEvaluate(j, 1), ruleEvaluation, callingRuleEvaluation, blacklist),
+            [playerNames[2]]: new Player(playerNames[2], evaluation.getStrategyToEvaluate(j, 2), ruleEvaluation, callingRuleEvaluation, blacklist),
+            [playerNames[3]]: new Player(playerNames[3], evaluation.getStrategyToEvaluate(j, 3), ruleEvaluation, callingRuleEvaluation, blacklist),
         };
 
-        console.log(`========game ${i + 1} run ${j + 1} ===========`);
+        console.log(`========game ${i + 1} run ${j + 1} blacklisted rule: ${JSON.stringify(blacklist)}===========`);
         let preGame = new PreGame(playerMap);
         let gameMode = preGame.determineGameMode(allCardDeals[i], [GameModeEnum.CALL_GAME]);
         let history = new GameHistory(Object.keys(playerMap), gameMode);
@@ -71,6 +75,8 @@ for (let i = 48; i < 51; i++) {
 
         stats.addResult(gameResult);
         evaluation.addResult(gameResult, j);
+        ruleEvaluation.gradeRules(gameResult);
+        callingRuleEvaluation.gradeRules(gameResult);
 
         if (game.getGameResult().getGameMode().isNoRetry()) {
             console.log(`Team (${gameResult.getPlayingTeamNames()}) ${gameResult.hasPlayingTeamWon() ? 'wins' : 'looses'} ` +
@@ -81,7 +87,8 @@ for (let i = 48; i < 51; i++) {
         }
         reportCents(playerMap, i);
     }
-
+    reportOnRules(i);
+    reportOnCallingRules(i);
     reportOnStrategies(i);
 
     startPlayer = rotateStartPlayer(startPlayer);
@@ -92,6 +99,33 @@ function reportCents(playerMap: PlayerMap, i: number) {
     for (let i = 0; i < 4; i++) {
         let playerStats = stats.getStatsForPlayer(playerNames[i]);
         console.log(colors.blue(`${playerNames[i]} [${playerMap[playerNames[i]].getStartCardSet()}] (${playerMap[playerNames[i]].getStrategyName()}): ${playerStats.cents} (${playerStats.tournamentPoints} points, ${playerStats.wins} wins, ${playerStats.losses} losses, ${playerStats.inPlayingTeam} playing, ${playerStats.points / playerStats.games} points on average`));
+    }
+}
+
+function reportOnRules(i: number) {
+    console.log(`rule evaluation after ${i + 1} games`);
+    let ruleStatistics = ruleEvaluation.getRuleStatistics();
+    let blackListedRuleStatistics = ruleEvaluation.getBlackListedRuleStatistics();
+    let rules = Object.keys(ruleStatistics).sort();
+    for (let rule of rules) {
+        let evalu = ruleStatistics[rule];
+        let blacklistedRuleStat = blackListedRuleStatistics[rule];
+        if (blacklistedRuleStat && evalu) {
+            let winRatio = evalu.wins / (evalu.losses + evalu.wins);
+            let randomPlayWinRatio = blacklistedRuleStat.wins / (blacklistedRuleStat.losses + blacklistedRuleStat.wins);
+            let edge = winRatio / randomPlayWinRatio * 100 - 100;
+            console.log(`evaluation for rule "${rule}" has ${evalu.wins} wins and ${evalu.losses} losses which gives a win ratio of ${winRatio}` + (blacklistedRuleStat ? ` compared to ${randomPlayWinRatio} in random play which makes an edge of ${edge}%` : ''));
+        }
+    }
+}
+
+function reportOnCallingRules(i: number) {
+    console.log(`calling rule evaluation after ${i + 1} games`);
+    let ruleStatistics = callingRuleEvaluation.getRuleStatistics();
+    let rules = Object.keys(ruleStatistics).sort();
+    for (let rule of rules) {
+        let evalu = ruleStatistics[rule];
+        console.log(`evaluation for calling rule "${rule}" has ${evalu.wins} wins and ${evalu.losses} losses which gives a win ratio of ${evalu.wins / (evalu.losses + evalu.wins)}}`);
     }
 }
 

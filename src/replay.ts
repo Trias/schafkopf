@@ -1,3 +1,4 @@
+
 let gameId = 200;
 let games = require('../generated/games.json');
 
@@ -16,7 +17,7 @@ import {Game} from "./model/Game";
 import {GameWorld} from "./model/GameWorld";
 import {Round} from "./model/Round";
 import {CallingRulesWithUctMonteCarloAndHeuristic} from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloAndHeuristic";
-import CallingRulesWithHeuristic from "./model/strategy/rulebased/CallingRulesWithHeuristic";
+import {CallingRulesWithHeuristic} from "./model/strategy/rulebased/CallingRulesWithHeuristic";
 
 let colors = require('colors');
 
@@ -28,7 +29,6 @@ let playerMap = {
     [playerNames[2]]: new Player(playerNames[2], CallingRulesWithHeuristic),
     [playerNames[3]]: new Player(playerNames[3], CallingRulesWithUctMonteCarloAndHeuristic),
 };
-
 
 let stats = new Statistics(playerNames);
 let preGame = new PreGame(playerMap);

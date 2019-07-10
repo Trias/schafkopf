@@ -25,26 +25,27 @@ import {cloneDeep, remove, sample} from "lodash";
 import {CardPlayStrategy} from "./CardPlayStrategy";
 import GameAssumptions from "../../../knowledge/GameAssumptions";
 
-let colors = require('colors');
-
 export class AdvancedHeuristic implements CardPlayStrategy {
     private readonly startCardSet: Card[];
     private readonly name: string;
     private readonly assumptions: GameAssumptions;
+    private readonly report: (reasons: string[], secondOrderReasons: string[], conclusion: string, card: Card) => void;
 
-    constructor(name: string, startCardSet: Card[], assumptions: GameAssumptions) {
+    constructor(name: string, startCardSet: Card[], assumptions: GameAssumptions, report: ((reasons: string[], secondOrderReasons: string[], conclusion: string, card: Card) => void) | null = null) {
         this.name = name;
         this.assumptions = assumptions;
         this.startCardSet = cloneDeep(startCardSet); // meh....
+        this.report = report || (() => {
+        });
     }
 
     determineCardToPlay(world: GameWorld, cardSet: Card[]) {
         let reasons: string[] = [];
         let secondOrderReasons: string[] = [];
 
-        function report(conclusion: string, card: Card) {
-            console.log(colors.green(reasons.toString() + (secondOrderReasons.length ? '\n-->' : '') + secondOrderReasons.toString() + ' => ' + conclusion + ': ' + card));
-        }
+        let report = (conclusion: string, card: Card) => {
+            this.report(reasons, secondOrderReasons, conclusion, card);
+        };
 
         let assumptions = this.assumptions;
 
