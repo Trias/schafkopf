@@ -42,8 +42,6 @@ let games: {
     }
 } = {};
 
-let blacklist = ["start player,in playing team,has trumps,not calling player"];
-
 //(async () => {
 let startPlayer = playerNames[0];
 for (let i = 0; i < runs; i++) {
@@ -58,13 +56,13 @@ for (let i = 0; i < runs; i++) {
 
     for (let j = 0; j < evaluation.strategies.length ** 4; j++) {
         let playerMap = {
-            [playerNames[0]]: new Player(playerNames[0], evaluation.getStrategyToEvaluate(j, 0), ruleEvaluation, callingRuleEvaluation, blacklist),
-            [playerNames[1]]: new Player(playerNames[1], evaluation.getStrategyToEvaluate(j, 1), ruleEvaluation, callingRuleEvaluation, blacklist),
-            [playerNames[2]]: new Player(playerNames[2], evaluation.getStrategyToEvaluate(j, 2), ruleEvaluation, callingRuleEvaluation, blacklist),
-            [playerNames[3]]: new Player(playerNames[3], evaluation.getStrategyToEvaluate(j, 3), ruleEvaluation, callingRuleEvaluation, blacklist),
+            [playerNames[0]]: new Player(playerNames[0], evaluation.getStrategyToEvaluate(j, 0), ruleEvaluation, callingRuleEvaluation),
+            [playerNames[1]]: new Player(playerNames[1], evaluation.getStrategyToEvaluate(j, 1), ruleEvaluation, callingRuleEvaluation),
+            [playerNames[2]]: new Player(playerNames[2], evaluation.getStrategyToEvaluate(j, 2), ruleEvaluation, callingRuleEvaluation),
+            [playerNames[3]]: new Player(playerNames[3], evaluation.getStrategyToEvaluate(j, 3), ruleEvaluation, callingRuleEvaluation),
         };
 
-        console.log(`========game ${i + 1} run ${j + 1} blacklisted rule: ${JSON.stringify(blacklist)}===========`);
+        console.log(`========game ${i + 1} run ${j + 1} }===========`);
         let preGame = new PreGame(playerMap);
         let gameMode = preGame.determineGameMode(allCardDeals[i], [GameModeEnum.CALL_GAME]);
         let history = new GameHistory(Object.keys(playerMap), gameMode);

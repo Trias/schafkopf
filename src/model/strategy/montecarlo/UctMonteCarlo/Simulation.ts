@@ -6,9 +6,8 @@ import {getPlayableCards} from "../../../PlayableMoves";
 import {CardToWeights, zeroWeightedCards} from "../../rules/CardToWeights";
 import {generateRandomWorldConsistentWithGameKnowledge} from "../../../simulation/generateRandomWorldConsistentWithGameKnowledge";
 import {GameTree} from "./GameTree";
-import {clone, cloneDeep, difference, isEqual} from "lodash";
+import {clone, cloneDeep, difference, fromPairs, isEqual} from "lodash";
 import {getUctValue} from "./getUctValue";
-import {fromEntries} from "../../../../utils/fromEntries";
 import {CardPlayStrategy} from "../../rulebased/heuristic/CardPlayStrategy";
 import {RandomCardPlay} from "../../rulebased/heuristic/RandomCardPlay";
 import GameAssumptions from "../../../knowledge/GameAssumptions";
@@ -66,7 +65,7 @@ export class Simulation {
             this.backPropagation(selectedGameTreeNode, win);
         }
 
-        return fromEntries(this.gameTree.children.map(node => [node.card as string, node.wins / node.runs])) as CardToWeights;
+        return fromPairs(this.gameTree.children.map(node => [node.card as string, node.wins / node.runs])) as CardToWeights;
     }
 
     private expand(gameTreeNode: GameTree, game: SimulatedGame, card: Card) {

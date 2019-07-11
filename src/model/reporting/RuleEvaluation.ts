@@ -1,10 +1,13 @@
 import GameResult from "./GameResult";
-import {clone} from "lodash";
+import {clone, intersection} from "lodash";
+
+type RuleStats = { [index in string]: { wins: number; losses: number; } };
+type RulesByPlayer = { [index in string]: string[][] };
 
 export class RuleEvaluation {
     private ruleStats: { [index in string]: { wins: number; losses: number; } } = {};
     private blackListedRuleStats: { [index in string]: { wins: number; losses: number; } } = {};
-    private usedRulesByPlayer: { [index in string]: string[][] } = {};
+    private usedRulesByPlayer: RulesByPlayer = {};
     private usedBlacklistedRulesByPlayer: { [index in string]: string[][] } = {};
 
     addRule(playerName: string, rule: string[]) {
@@ -12,34 +15,29 @@ export class RuleEvaluation {
         this.usedRulesByPlayer[playerName].push(clone(rule));
     }
 
-    gradeRules(gameResult: GameResult) {
-        for (let playerName of Object.keys(this.usedRulesByPlayer)) {
-            for (let rule of this.usedRulesByPlayer[playerName]) {
+    private static updateStats(gameResult: GameResult, ruleStats: RuleStats, usedRulesByPlayer: RulesByPlayer) {
+        for (let playerName of Object.keys(usedRulesByPlayer)) {
+            let usedRulesUniq = intersection(usedRulesByPlayer[playerName]);
+
+            for (let rule of usedRulesUniq) {
                 let rulePath = rule;//.slice(0, i + 1);
-                this.ruleStats[rulePath.toString()] = this.ruleStats[rulePath.toString()] || {wins: 0, losses: 0};
+                ruleStats[rulePath.toString()] = ruleStats[rulePath.toString()] || {wins: 0, losses: 0};
 
                 if (gameResult.hasPlayerWon(playerName)) {
-                    this.ruleStats[rulePath.toString()].wins = this.ruleStats[rulePath.toString()].wins + 1;
+                    ruleStats[rulePath.toString()].wins = ruleStats[rulePath.toString()].wins + 1;
                 } else {
-                    this.ruleStats[rulePath.toString()].losses = this.ruleStats[rulePath.toString()].losses + 1;
+                    ruleStats[rulePath.toString()].losses = ruleStats[rulePath.toString()].losses + 1;
                 }
             }
         }
+    }
 
-        for (let playerName of Object.keys(this.usedBlacklistedRulesByPlayer)) {
-            for (let rule of this.usedBlacklistedRulesByPlayer[playerName]) {
-                let rulePath = rule;//.slice(0, i + 1);
-                this.blackListedRuleStats[rulePath.toString()] = this.blackListedRuleStats[rulePath.toString()] || {
-                    wins: 0,
-                    losses: 0
-                };
-
-                if (gameResult.hasPlayerWon(playerName)) {
-                    this.blackListedRuleStats[rulePath.toString()].wins = this.blackListedRuleStats[rulePath.toString()].wins + 1;
-                } else {
-                    this.blackListedRuleStats[rulePath.toString()].losses = this.blackListedRuleStats[rulePath.toString()].losses + 1;
-                }
-            }
+    gradeRules(gameResult: GameResult) {
+        // compare blacklisted with normal results...
+        if (!Object.keys(this.usedBlacklistedRulesByPlayer).length) {
+            RuleEvaluation.updateStats(gameResult, this.ruleStats, this.usedRulesByPlayer);
+        } else {
+            RuleEvaluation.updateStats(gameResult, this.blackListedRuleStats, this.usedBlacklistedRulesByPlayer);
         }
         this.usedRulesByPlayer = {};
         this.usedBlacklistedRulesByPlayer = {};

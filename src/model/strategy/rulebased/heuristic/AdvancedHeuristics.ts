@@ -21,7 +21,7 @@ import {
     sortByPointsDescending,
     weAreHinterhand
 } from "./helper";
-import {cloneDeep, remove, sample} from "lodash";
+import {cloneDeep, remove} from "lodash";
 import {CardPlayStrategy} from "./CardPlayStrategy";
 import GameAssumptions from "../../../knowledge/GameAssumptions";
 
@@ -255,12 +255,13 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                         } else {
                             reasons.push('color round');
 
-                            if (potentialPartnerHasRound && potentialPartnerConfidence.confidence < 0.5) {
+                            if (potentialPartnerHasRound && potentialPartnerConfidence.confidence < 1) {
                                 reasons.push('partner not known with enough confidence');
                                 let card = playableCardsByPointsAscending[0];
                                 report('play minimal points', card);
                                 return card;
                             } else {
+                                reasons.push('partner known with enough confidence');
                                 let card = playableCardsByPointsAscending[playableCardsByPointsAscending.length - 1];
                                 report('play maximum points', card);
                                 return card;
@@ -646,7 +647,7 @@ export class AdvancedHeuristic implements CardPlayStrategy {
 
             if (aces.length) {
                 reasons.push('has aces of color');
-                let card = sample(aces)!;
+                let card = aces[0]; //sample(aces)!;
                 report('play ace', card);
                 return card;
             }
@@ -654,14 +655,14 @@ export class AdvancedHeuristic implements CardPlayStrategy {
             let colorCards = getNonTrumps(playableCards, world.gameMode);
             if (colorCards.length) {
                 reasons.push('i have color cards');
-                let card = sample(colorCards)!;
+                let card = colorCards[0]; //sample(colorCards)!;
 
                 report('play random color card', card);
 
                 return card;
             } else {
                 reasons.push('i have only trump cards');
-                let card = sample(playableCards)!;
+                let card = playableCards[0]; //sample(playableCards)!;
 
                 // possibly a bad choice in endgame...
                 report('play random card', card);

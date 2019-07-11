@@ -44,7 +44,7 @@ export function shouldPlayCallGame(cardSet: Card[], report: (reasons: string[]) 
 
     if (trumpHandCards.length > 3 && highTrumpHandCards.length > 2 && determineGoodTrumps(highTrumpHandCards)) {
         if (hasFehlFarbeFrei(cardSet, testGameMode) && hasBlankAce(cardSet, testGameMode)) {
-            report(['more than 3 trump cards', 'more than 2 high trump', 'good trumps', 'fehlfarbe frei or blank ace']);
+            report(['more than 3 trump cards', 'more than 2 high trump', 'good trumps', 'fehlfarbe frei and blank ace']);
 
             return [GameModeEnum.CALL_GAME, bestCallColorCard[0] as CallableColor];
         }

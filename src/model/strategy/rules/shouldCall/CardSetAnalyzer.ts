@@ -72,7 +72,7 @@ export function getFehlfarbenFreiCount(cardSet: ReadonlyArray<Card>, gameMode: G
 export function hasBlankAce(cardSet: ReadonlyArray<Card>, gameMode: GameMode) {
     let cardsByColor = getCardsByColor(cardSet, gameMode);
     for (let color of callableColors) {
-        if (cardsByColor[color].length == 1 && cardsByColor[color][0][0] == "A") {
+        if (cardsByColor[color].length == 1 && cardsByColor[color][0][1] == "A") {
             return true;
         }
     }
@@ -84,7 +84,7 @@ export function hasTwoBlankAces(cardSet: ReadonlyArray<Card>, gameMode: GameMode
     let blankAcesCount = 0;
     let cardsByColor = getCardsByColor(cardSet, gameMode);
     for (let color of callableColors) {
-        if (cardsByColor[color].length == 1 && cardsByColor[color][0][0] == "A") {
+        if (cardsByColor[color].length == 1 && cardsByColor[color][0][1] == "A") {
             blankAcesCount = blankAcesCount + 1;
         }
     }
