@@ -21,7 +21,7 @@ import {
     sortByPointsDescending,
     weAreHinterhand
 } from "./helper";
-import {cloneDeep, remove} from "lodash";
+import {cloneDeep, includes, remove} from "lodash";
 import {CardPlayStrategy} from "./CardPlayStrategy";
 import GameAssumptions from "../../../knowledge/GameAssumptions";
 
@@ -50,9 +50,6 @@ export class AdvancedHeuristic implements CardPlayStrategy {
         let assumptions = this.assumptions;
 
         let playableCards = getPlayableCards(cardSet, world.gameMode, world.round);
-        let roundAnalyzer = world.round.getRoundAnalyzer(world.gameMode);
-        let partnerName = world.history.getTeamPartnerNameForPlayerName(this.name, this.startCardSet);
-        let partnerHasRound = !world.round.isEmpty() && partnerName && world.round.getPlayerNameAtPosition(roundAnalyzer.getHighestCardPosition()) === partnerName;
 
         if (!playableCards.length) {
             throw Error(`no playable card found! ${cardSet}`);
@@ -66,10 +63,33 @@ export class AdvancedHeuristic implements CardPlayStrategy {
             return playableCards[0];
         }
 
+        let roundAnalyzer = world.round.getRoundAnalyzer(world.gameMode);
+        let partnerName = world.history.getTeamPartnerNameForPlayerName(this.name, this.startCardSet);
+        let partnerHasRound = !world.round.isEmpty() && partnerName && world.round.getPlayerNameAtPosition(roundAnalyzer.getHighestCardPosition()) === partnerName;
         let potentialPartnerName = assumptions.getPossiblePartnerName();
         let potentialPartnerConfidence = this.assumptions.getPossibleTeamPartnerForPlayerName(this.name);
         let isCaller = world.gameMode.getCallingPlayerName() == this.name;
+        let playableCardsByPointsAscending = sortByPointsAscending(playableCards);
+        let playableCardsNoTrumps = playableCardsByPointsAscending.filter(card => !world.gameMode.getOrdering().isTrump(card));
+        let playableTrumpCards = playableCardsByPointsAscending.filter(card => world.gameMode.getOrdering().isTrump(card));
 
+
+        function playAbspatzenOrLowNonTrump(playableCards: Card[]) {
+            let blankCard = getLowValueBlankCard(world, playableCards);
+
+            if (blankCard) {
+                reasons.push('i have a blank card');
+                let card = blankCard;
+                report('play blank card', card);
+                return card;
+            } else {
+                reasons.push('i dont have a blank card');
+
+                let card = playableCardsNoTrumps[0];
+                report('play lowest valued card but no trump', card);
+                return card;
+            }
+        }
         if (world.round.isEmpty()) {
             reasons.push('start player');
             let isInPlayingTeam = world.history.isPlayerPlaying(this.name, this.startCardSet);
@@ -104,12 +124,12 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                             let card = trumps[0];
                             report('play trump', card);
                             return card;
-                        } else if (remainingTrumps.length > 8) {
-                            reasons.push('early game, lots of trumps, better loose my trump now......');
+                        } /*else if (remainingTrumps.length > 8) {
+                            reasons.push('lots of trumps of trump in the game');
                             let card = trumps[0];
                             report('play trump', card);
                             return card;
-                        } else {
+                        } */ else {
                             reasons.push('cannot win trump round by force');
                             return playAceOrColorOrTrump(playableCards, world, reasons);
                         }
@@ -181,7 +201,6 @@ export class AdvancedHeuristic implements CardPlayStrategy {
             let cardRanks = world.history.getCurrentRankWithEqualRanksOfCardInColor(cardSet, roundColor, world.round.getPlayedCards());
 
             let winningCards = sortByNaturalOrdering(getWinningCards(playableCards, world.round, world.gameMode));
-            let playableCardsByPointsAscending = sortByPointsAscending(playableCards);
             // confidence is not working.....
             let potentialPartnerHasRound = potentialPartnerName == roundAnalyzer.getHighestCardPlayerName(); // && potentialPartnerConfidence.confidence > 0.0;
             let partnerIsBehindMe = partnerName ? world.round.getPlayerPositionByName(partnerName) > world.round.getPosition() : false;
@@ -211,9 +230,14 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                     || cardRanksWithRoundCards[roundAnalyzer.getHighestCard()] === 0
                     && !world.history.hasColorBeenAngespielt(roundColor) && allOfColor(this.startCardSet, roundColor, world.gameMode).length < 4
                 ) {
-                    reasons.push('we will probably win this round');
+                    if (cardRanksWithRoundCards[roundAnalyzer.getHighestCard()] === 0 && roundColor == ColorWithTrump.TRUMP) {
+                        reasons.push('highest trump played');
+                    } else if (world.round.isHinterHand()) {
+                        reasons.push('hinterhand');
+                    } else {
+                        reasons.push('color round with ace by partner');
+                    }
                     // todo: ober/punkte dilemma
-                    let roundColor = roundAnalyzer.getRoundColor();
                     if (roundColor != world.gameMode.getOrdering().getColor(playableCardsByPointsAscending[0])) {
                         // schmieren !
                         reasons.push('i dont have round color');
@@ -255,15 +279,22 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                         } else {
                             reasons.push('color round');
 
-                            if (potentialPartnerHasRound && potentialPartnerConfidence.confidence < 1) {
+                            if (potentialPartnerConfidence.confidence < 1) {
                                 reasons.push('partner not known with enough confidence');
                                 let card = playableCardsByPointsAscending[0];
                                 report('play minimal points', card);
                                 return card;
-                            } else {
+                            } else if (potentialPartnerHasRound) {
                                 reasons.push('partner known with enough confidence');
+                                reasons.push('partner has round');
                                 let card = playableCardsByPointsAscending[playableCardsByPointsAscending.length - 1];
                                 report('play maximum points', card);
+                                return card;
+                            } else {
+                                reasons.push('partner not known with enough confidence');
+                                reasons.push('partner has not round');
+                                let card = playableCardsByPointsAscending[0];
+                                report('play minimal points', card);
                                 return card;
                             }
                         }
@@ -287,14 +318,12 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                                 report('play highest valued card', card);
                                 return card;
                             } else {
-                                let playableCardsNoTrumps = playableCardsByPointsAscending.filter(card => !world.gameMode.getOrdering().isTrump(card));
-                                let playableTrumpCards = playableCardsByPointsAscending.filter(card => world.gameMode.getOrdering().isTrump(card));
                                 if (playableCardsNoTrumps.length) {
                                     reasons.push('i have non-trump cards');
                                     if (playableTrumpCards.length) {
                                         reasons.push('i have trump cards');
                                         if (roundIsExpensive) {
-                                            reasons.push('points in round, trying to trump');
+                                            reasons.push('round is expensive');
                                             let card = sortByNaturalOrdering(playableTrumpCards)[playableTrumpCards.length - 1];
 
                                             report('trump round with lowest trump', card);
@@ -306,27 +335,32 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                                             if (opponentsAreHinterhand(world, potentialPartnerName!) || potentialPartnerName != world.round.getLastPlayerName()) {
                                                 reasons.push('opponents are hinterhand');
 
-                                                let card = sortByNaturalOrdering(playableTrumpCards)[playableTrumpCards.length - 1];
+                                                if (includes(world.history.getRemainingCardsByColor()[roundColor], roundColor + 'X' as Card)) {
+                                                    reasons.push('10 is still in play');
 
-                                                report('trump round with lowest trump', card);
+                                                    let unter = playableTrumpCards.filter(card => card[1] != "U");
 
-                                                return card;
+                                                    if (unter.length) {
+                                                        reasons.push('has unter');
 
+                                                        let card = unter[unter.length - 1];
+                                                        report('play lowest unter', card);
+                                                        return card;
+                                                    } else {
+                                                        let card = sortByNaturalOrdering(playableTrumpCards)[0];
+                                                        report('play highest trump', card);
+                                                        return card;
+                                                    }
+                                                } else {
+                                                    reasons.push('10 is not in play');
+
+                                                    return playAbspatzenOrLowNonTrump(playableCardsNoTrumps);
+
+                                                }
                                             } else {
                                                 reasons.push('opponents are not hinterhand');
 
-                                                let blankCard = getLowValueBlankCard(world, playableCards);
-
-                                                if (blankCard) {
-                                                    reasons.push('i have a blank card');
-                                                    let card = blankCard;
-                                                    report('play blank card', card);
-                                                    return card;
-                                                } else {
-                                                    let card = playableCardsNoTrumps[0];
-                                                    report('play lowest valued card but no trump', card);
-                                                    return card;
-                                                }
+                                                return playAbspatzenOrLowNonTrump(playableCardsNoTrumps);
                                             }
                                         }
                                     } else {
@@ -338,15 +372,18 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                                     reasons.push('i have only trump cards');
 
                                     if (roundIsExpensive) {
-                                        reasons.push('points in round, trying to trump');
+                                        reasons.push('round is expensive');
                                         let unter = playableCardsByPointsAscending.filter(card => card[1] == "U");
 
                                         if (unter.length) {
+                                            reasons.push('have unter');
+
                                             let card = unter[unter.length - 1];
                                             report('play unter', card);
                                             return card;
                                         } else {
                                             // TODO: not very considerate...
+                                            reasons.push('dont have unter');
 
                                             let card = playableCardsByPointsAscending[0];
                                             report('play lowest valued card', card);
@@ -398,15 +435,18 @@ export class AdvancedHeuristic implements CardPlayStrategy {
 
                             if (winningCards.length) {
                                 reasons.push('i can win round');
-                                if (winningCards[0][1] == "A" && !world.history.hasColorBeenAngespielt(roundColor)) {
-                                    reasons.push('i have ace');
+                                if (winningCards[0][1] == "A" && !world.history.hasColorBeenAngespielt(roundColor) && !world.history.isAnyoneDefinitelyFreeOfColor(this.startCardSet, roundColor)) {
+                                    reasons.push('i have ace and it may run');
 
                                     let card = winningCards[0];
                                     report('play ace', winningCards[0]);
                                     return card;
-                                }
-                                if (opponentsAreHinterhand(world, potentialPartnerName)) {
-                                    reasons.push('opponents are hinterhand');
+                                } else if (opponentsAreHinterhand(world, potentialPartnerName) || world.history.isAnyoneDefinitelyFreeOfColor(this.startCardSet, roundColor)) {
+                                    if (opponentsAreHinterhand(world, potentialPartnerName)) {
+                                        reasons.push('opponents are hinterhand');
+                                    } else {
+                                        reasons.push('someone is color free');
+                                    }
                                     let card = sortByPointsAscending(playableCards)[0];
                                     report('play lowest points', card);
                                     return card;
@@ -497,6 +537,7 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                             return card;
                         }
                     } else if (!winningCardsWithoutPoints.length) {
+                        reasons.push('we are not hinterhand');
                         reasons.push('no cheap trump cards');
 
                         let card = sortByPointsAscending(winningCards)[0];
@@ -504,8 +545,9 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                         return card;
                     } else {
                         reasons.push('we are not hinterhand');
-                        let card = winningCards[0];
-                        report('play highest trump card', card);
+                        reasons.push('have cheap trump cards');
+                        let card = winningCards[winningCards.length - 1];
+                        report('play lowest winning trump card', card);
                         return card;
                     }
                 } else {
@@ -567,7 +609,7 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                 if (roundColor == ColorWithTrump.TRUMP) {
                     reasons.push('trump round');
                     if (cardRanksWithRoundCards[roundAnalyzer.getHighestCard()]! > 1 && partnerIsBehindMe) {
-                        reasons.push('maybe partner will get round');
+                        reasons.push('partner is behind me and highest card unplayed');
                         let card = sortByPointsDescending(playableCards)[0];
                         report('play high value card', card);
                         return card;
@@ -584,8 +626,8 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                     let cardsFilteredByBadPairs = filterBadPairs(world, playableCards);
 
                     let callColorCards = allOfColor(playableCards, world.gameMode.getCalledColor(), world.gameMode);
-                    if (partnerName != world.gameMode.getCallingPlayerName() && callColorCards.length) {
-                        reasons.push('Im not the calling player');
+                    if (partnerName != world.gameMode.getCallingPlayerName() && callColorCards.length == 1 && myTrumps.length) {
+                        reasons.push('Im not the calling player and have one call color card and have trump');
                         let card = callColorCards[0];
                         report('play call color', card);
                         return card;
@@ -675,20 +717,23 @@ export class AdvancedHeuristic implements CardPlayStrategy {
             let blankCard = getHighValueBlankCard(world, playableCardsByPointsAscending);
 
             if (blankCard) {
+                reasons.push('i have a blank card');
                 return freimachen(reasons, blankCard);
             } else {
-                reasons.push('can schmier');
+                reasons.push('i have no blank card');
 
                 let playableCardsByPointsAscendingNoAcesOrTrump = playableCardsByPointsAscending
                     .filter(card => card[1] != "A")
                     .filter(card => !world.gameMode.getOrdering().isTrump(card));
                 if (playableCardsByPointsAscendingNoAcesOrTrump.length) {
                     let card = playableCardsByPointsAscendingNoAcesOrTrump[playableCardsByPointsAscendingNoAcesOrTrump.length - 1];
+                    reasons.push('have color non-aces');
                     report('play maximum points but no aces', card);
 
                     return card;
                 } else {
                     let card = playableCardsByPointsAscending[playableCardsByPointsAscending.length - 1];
+                    reasons.push('have only color aces and trump');
                     report('play maximum points', card);
 
                     return card;
@@ -719,7 +764,6 @@ export class AdvancedHeuristic implements CardPlayStrategy {
         }
 
         function freimachen(reasons: string[], bestCard: any) {
-            reasons.push('i have a blank card');
             let card = bestCard;
             report('play freimachen', card);
 

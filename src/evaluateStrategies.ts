@@ -1,3 +1,4 @@
+
 let seedRandom = require('seedrandom');
 // replacing global Math.random.....must be first call.
 Math.random = seedRandom.alea('seed', {state: true});
@@ -16,7 +17,7 @@ import {GameModeEnum} from "./model/GameMode";
 import {clone} from "lodash";
 import {RuleEvaluation} from "./model/reporting/RuleEvaluation";
 import {CallingRulesWithHeuristic} from "./model/strategy/rulebased/CallingRulesWithHeuristic";
-import {CallingRulesWithHeuristicWithRuleBlacklist} from "./model/strategy/rulebased/CallingRulesWithHeuristicWithRuleBlacklist";
+import CallingRulesWithUctMonteCarloStrategy from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloStrategy";
 import colors = require('colors');
 
 let fs = require('fs');
@@ -29,7 +30,7 @@ let allCardDeals = shuffleCardsTimes(runs);
 
 let stats = new Statistics(playerNames);
 
-let evaluation = new StrategyEvaluation([CallingRulesWithHeuristicWithRuleBlacklist, CallingRulesWithHeuristic]);
+let evaluation = new StrategyEvaluation([CallingRulesWithUctMonteCarloStrategy, CallingRulesWithHeuristic]);
 let callingRuleEvaluation = new RuleEvaluation();
 let ruleEvaluation = new RuleEvaluation();
 

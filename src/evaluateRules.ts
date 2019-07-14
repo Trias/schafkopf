@@ -20,7 +20,7 @@ import {CallingRulesWithHeuristicWithRuleBlacklist} from "./model/strategy/ruleb
 
 let fs = require('fs');
 
-let runs = 50;
+let runs = 1000;
 
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
@@ -74,7 +74,7 @@ for (let i = 0; i < runs; i++) {
 
             stats.addResult(gameResult);
             evaluation.addResult(gameResult, j);
-            ruleEvaluation.gradeRules(gameResult);
+            ruleEvaluation.gradeRules(gameResult, blacklist);
             callingRuleEvaluation.gradeRules(gameResult);
 
             if (game.getGameResult().getGameMode().isNoRetry()) {
