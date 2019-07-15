@@ -1,7 +1,7 @@
 import {Card} from "../../../cards/Card";
 import {GameMode, GameModeEnum} from "../../../GameMode";
 import {CallableColor, ColorWithTrump} from "../../../cards/Color";
-import {allOfColor, getCallableColors, highTrumps, sortByNaturalOrdering} from "../../../cards/CardSet";
+import {allOfColor, getCallableColors, getHighTrumps, sortByNaturalOrdering} from "../../../cards/CardSet";
 import {
     determineCallColorCard,
     determineGoodTrumps,
@@ -19,7 +19,7 @@ export function shouldPlayCallGame(cardSet: Card[], report: (reasons: string[]) 
     let testGameMode: GameMode = new GameMode(GameModeEnum.CALL_GAME, "test", CallableColor.EICHEL);
 
     let trumpHandCards = allOfColor(sortByNaturalOrdering(cardSet), ColorWithTrump.TRUMP, testGameMode);
-    let highTrumpHandCards = highTrumps(trumpHandCards, testGameMode);
+    let highTrumpHandCards = getHighTrumps(trumpHandCards, testGameMode);
     let bestCallColorCard = determineCallColorCard(cardSet, testGameMode);
 
     if (!bestCallColorCard) {

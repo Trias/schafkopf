@@ -45,16 +45,15 @@ export function sortByPointsDescending(cardSet: Card[]) {
     return reverse(sortByPointsAscending(cardSet));
 }
 
-export function weAreHinterhand(world: GameWorld, partnerName: string | null) {
+export function areWeBothHinterhand(world: GameWorld, partnerName: string | null) {
     return world.round.isHinterHand() || world.round.getPosition() == 2 && world.round.getLastPlayerName() === partnerName;
 }
 
-export function opponentsAreHinterhand(world: GameWorld, partnerName: string | null) {
+export function areOpponentsBothHinterhand(world: GameWorld, partnerName: string | null) {
     return world.round.getPosition() == 0 && world.round.getNextPlayerName() === partnerName || world.round.getPosition() == 1 && world.round.getStartPlayerName() === partnerName;
 }
 
 export function canForceWinTrumpRound(remainingTrumps: Card[], card: Card) {
-
     if (remainingTrumps[0] == card) {
         return true;
     } else {

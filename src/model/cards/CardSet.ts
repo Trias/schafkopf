@@ -36,7 +36,7 @@ export function allOfCallableColor(cards: readonly Card[], color: CallableColor)
     return filter(cards, card => card[1] != "O" && card[1] != "U" && card[0] == color);
 }
 
-export function highTrumps(cards: readonly Card[], gameMode: GameMode): Card[] {
+export function getHighTrumps(cards: readonly Card[], gameMode: GameMode): Card[] {
     if (gameMode.getMode() == GameModeEnum.WENZ) {
         return filter(cards, card => card[1] == "U");
     }
@@ -44,7 +44,7 @@ export function highTrumps(cards: readonly Card[], gameMode: GameMode): Card[] {
 }
 
 export function getLowerTrumps(cards: readonly Card[], gameMode: GameMode): Card[] {
-    return difference(getTrumps(cards, gameMode), highTrumps(cards, gameMode));
+    return difference(getTrumps(cards, gameMode), getHighTrumps(cards, gameMode));
 }
 
 export function sortAndFilterBy(allTrumpsSorted: readonly Card[], winnerCardSet: readonly Card[]): readonly Card[] {

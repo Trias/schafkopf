@@ -13,7 +13,7 @@ import {PreGame} from "./model/PreGame";
 import {Round} from "./model/Round";
 import {GameHistory} from "./model/knowledge/GameHistory";
 import {GameModeEnum} from "./model/GameMode";
-import {clone, zip} from "lodash";
+import {clone, fromPairs, zip} from "lodash";
 import {RuleEvaluation} from "./model/reporting/RuleEvaluation";
 import {CallingRulesWithHeuristic} from "./model/strategy/rulebased/CallingRulesWithHeuristic";
 import {CallingRulesWithHeuristicWithRuleBlacklist} from "./model/strategy/rulebased/CallingRulesWithHeuristicWithRuleBlacklist";
@@ -98,6 +98,8 @@ function reportOnRules(i: number) {
     let ruleStatistics = ruleEvaluation.getRuleStatistics();
     let blackListedRuleStatistics = ruleEvaluation.getBlackListedRuleStatistics();
     let rules = Object.keys(ruleStatistics).sort();
+
+    let badRules = [];
     for (let rule of rules) {
         let evalu = ruleStatistics[rule];
         let blacklistedRuleStat = blackListedRuleStatistics[rule];
@@ -105,9 +107,21 @@ function reportOnRules(i: number) {
             let winRatio = evalu.wins / (evalu.losses + evalu.wins);
             let randomPlayWinRatio = blacklistedRuleStat.wins / (blacklistedRuleStat.losses + blacklistedRuleStat.wins);
             let edge = winRatio / randomPlayWinRatio * 100 - 100;
-            console.log(`evaluation for rule "${rule}" has ${evalu.wins} wins and ${evalu.losses} losses which gives a win ratio of ${winRatio}` + (blacklistedRuleStat ? ` compared to ${randomPlayWinRatio} in random play which makes an edge of ${edge}%` : ''));
+            console.log(`${evalu.wins} wins and ${evalu.losses} losses; win ratio of ${winRatio}` +
+                (blacklistedRuleStat ?
+                    ` compared to ${blacklistedRuleStat.wins} wins and ${blacklistedRuleStat.losses} losses; win ratio of ${randomPlayWinRatio} in random play ` +
+                    +` which gives an edge of ${edge}%` : '')
+                + `for rule "${rule}"`);
+            if (edge < 0) {
+                badRules.push([rule, edge]);
+            }
         }
     }
+    if (!fs.existsSync('generated')) {
+        fs.mkdirSync('generated');
+    }
+    fs.writeFileSync('generated/badRules.json', JSON.stringify(fromPairs(badRules), null, 2));
+
 }
 
 function saveGames() {
@@ -118,17 +132,6 @@ function saveGames() {
 }
 
 saveGames();
-
-function saveRules() {
-    let ruleStatistics = ruleEvaluation.getRuleStatistics();
-    let rules = Object.keys(ruleStatistics);
-    if (!fs.existsSync('generated')) {
-        fs.mkdirSync('generated');
-    }
-    fs.writeFileSync('generated/rules.json', JSON.stringify(rules.sort(), null, 2));
-}
-
-saveRules();
 
 //})();
 

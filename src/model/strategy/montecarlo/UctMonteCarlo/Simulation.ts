@@ -9,7 +9,7 @@ import {GameTree} from "./GameTree";
 import {clone, cloneDeep, difference, fromPairs, isEqual} from "lodash";
 import {getUctValue} from "./getUctValue";
 import {CardPlayStrategy} from "../../rulebased/heuristic/CardPlayStrategy";
-import {RandomCardPlay} from "../../rulebased/heuristic/RandomCardPlay";
+import {RandomCardPlay} from "../../random/RandomCardPlay";
 import GameAssumptions from "../../../knowledge/GameAssumptions";
 
 export class Simulation {

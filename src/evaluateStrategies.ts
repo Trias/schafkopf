@@ -1,4 +1,3 @@
-
 let seedRandom = require('seedrandom');
 // replacing global Math.random.....must be first call.
 Math.random = seedRandom.alea('seed', {state: true});
@@ -144,6 +143,17 @@ function saveGames() {
 }
 
 saveGames();
+
+function saveRules() {
+    let ruleStatistics = ruleEvaluation.getRuleStatistics();
+    let rules = Object.keys(ruleStatistics);
+    if (!fs.existsSync('generated')) {
+        fs.mkdirSync('generated');
+    }
+    fs.writeFileSync('generated/rules.json', JSON.stringify(rules.sort(), null, 2));
+}
+
+saveRules();
 
 //})();
 

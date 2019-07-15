@@ -14,7 +14,7 @@ import {CardToWeights, zeroWeightedCards} from "../rules/CardToWeights";
 import {Player, PlayerMap} from "../../Player";
 import {PlayerPlaceholder} from "../../simulation/PlayerPlaceholder";
 import {GameHistory} from "../../knowledge/GameHistory";
-import {RandomCardPlay} from "../rulebased/heuristic/RandomCardPlay";
+import {RandomCardPlay} from "../random/RandomCardPlay";
 
 const consoleColors = require('colors');
 

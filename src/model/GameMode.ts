@@ -8,7 +8,7 @@ import CardsOrdering from "./cards/CardsOrdering";
 import CardRank from "./cards/CardRank";
 import {Card} from "./cards/Card";
 import {intersection} from "lodash";
-import {highTrumps} from "./cards/CardSet";
+import {getHighTrumps} from "./cards/CardSet";
 
 enum GameModeEnum {
     CALL_GAME = "CALL_GAME",
@@ -136,7 +136,7 @@ class GameMode {
     }
 
     getHighTrumpsOfCardSet(cardSet: Card[]) {
-        return intersection(highTrumps(this.getOrdering().getTrumpOrdering(), this), cardSet);
+        return intersection(getHighTrumps(this.getOrdering().getTrumpOrdering(), this), cardSet);
     }
 
     isWenz() {
