@@ -83,7 +83,7 @@ export class AdvancedHeuristic implements CardPlayStrategy {
             if (inPlayConditions.partnerHasRound()) {
                 if (inPlayConditions.roundIsProbablySafe()) {
                     if (inPlayConditions.mustFollowSuit()) {
-                        if (inPlayConditions.trumpRound()) {
+                        if (inPlayConditions.isTrumpRound()) {
                             return actions.playTrumpPreferPoints(cardFilter.playableCards);
                         } else {
                             if (inPlayConditions.highConfidenceInPotentialPartner()) {
@@ -93,19 +93,19 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                             }
                         }
                     } else {
-                        if (inPlayConditions.haveNonTrumpCards()) {
-                            return actions.playBlankCardOrSchmier(cardFilter.playableCards);
-                        } else {
+                        if (inPlayConditions.hasOnlyTrumpCards()) {
                             if (inPlayConditions.hasLowTrumps()) {
                                 return actions.playHighestCardByPoints(cardFilter.lowTrumps);
                             } else {
                                 return actions.playLowestCardByRank(cardFilter.trumps);
                             }
+                        } else {
+                            return actions.playBlankCardOrSchmier(cardFilter.playableCards);
                         }
                     }
                 } else {
                     if (inPlayConditions.mustFollowSuit()) {
-                        if (inPlayConditions.trumpRound()) {
+                        if (inPlayConditions.isTrumpRound()) {
                             if (inPlayConditions.highestTrumpMayBeOvertrumped()) {
                                 if (inPlayConditions.roundIsExpensive()) {
                                     return actions.playHighestCardByRank(cardFilter.winningCards);
@@ -131,13 +131,23 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                             }
                         }
                     } else {
-                        if (inPlayConditions.trumpRound()) {
+                        if (inPlayConditions.isTrumpRound()) {
                             return actions.playLowestCardByPoints(cardFilter.playableCards);
                         } else {
                             if (inPlayConditions.isColorRoundTrumped()) {
                                 return actions.playHighestCardByPoints(cardFilter.playableCards);
                             } else {
-                                if (inPlayConditions.haveNonTrumpCards()) {
+                                if (inPlayConditions.hasOnlyTrumpCards()) {
+                                    if (inPlayConditions.roundIsExpensive()) {
+                                        if (inPlayConditions.hasUnter()) {
+                                            return actions.playLowestCardByRank(cardFilter.unter);
+                                        } else {
+                                            return actions.playLowestCardByPoints(cardFilter.playableCards);
+                                        }
+                                    } else {
+                                        return actions.playLowestCardByPoints(cardFilter.playableCards);
+                                    }
+                                } else {
                                     if (inPlayConditions.hasTrumps()) {
                                         if (inPlayConditions.roundIsExpensive()) {
                                             if (inPlayConditions.hasUnter()) {
@@ -163,16 +173,6 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                                     } else {
                                         return actions.playLowestCardByPoints(cardFilter.playableCardsNoTrumps);
                                     }
-                                } else {
-                                    if (inPlayConditions.roundIsExpensive()) {
-                                        if (inPlayConditions.hasUnter()) {
-                                            return actions.playLowestCardByRank(cardFilter.unter);
-                                        } else {
-                                            return actions.playLowestCardByPoints(cardFilter.playableCards);
-                                        }
-                                    } else {
-                                        return actions.playLowestCardByPoints(cardFilter.playableCards);
-                                    }
                                 }
                             }
                         }
@@ -195,7 +195,7 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                             }
                         }
                     } else {
-                        if (inPlayConditions.trumpRound()) {
+                        if (inPlayConditions.isTrumpRound()) {
                             if (inPlayConditions.isHinterhand()) {
                                 if (inPlayConditions.hasLowWinningTrump()) {
                                     return actions.playLowestCardByPoints(cardFilter.lowWinningTrumps);
@@ -222,7 +222,7 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                         }
                     }
                 } else {
-                    if (inPlayConditions.trumpRound()) {
+                    if (inPlayConditions.isTrumpRound()) {
                         if (inPlayConditions.roundMayBeWonByPartner()) {
                             return actions.playHighestCardByPoints(cardFilter.playableCards);
                         } else {
@@ -235,10 +235,10 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                             if (inPlayConditions.canDiscardCalledColor()) {
                                 return actions.playHighestCardByPoints(cardFilter.callColorCards);
                             } else {
-                                if (inPlayConditions.partnerMayBeAbleTrump()) {
+                                if (inPlayConditions.partnerMayBeAbleToTrump()) {
                                     return actions.playHighestCardByPoints(cardFilter.playableCards);
                                 } else {
-                                    if (inPlayConditions.onlyTrumpCards()) {
+                                    if (inPlayConditions.hasOnlyTrumpCards()) {
                                         return actions.playLowestCardByMixedRanking(cardFilter.playableCards);
                                     } else {
                                         return actions.playLowestCardByPoints(cardFilter.playableCards);

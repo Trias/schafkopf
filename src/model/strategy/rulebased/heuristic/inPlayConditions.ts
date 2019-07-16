@@ -45,7 +45,6 @@ export default function getInPlayConditions(cardFilter: CardFilter, cardInfos: a
 
     let partnerHasRound = knownPartnerHasRound || potentialPartnerHasRound;
     let roundIsProbablySafe = highestCardInRoundIsHighestCardInColor && trumpRound || isHinterhand || colorRoundProbablyWonByPartner;
-    let haveNonTrumpCards = cardFilter.playableCardsByPointsNoTrumps.length > 0;
     let hasLowTrumps = cardFilter.lowTrumps.length > 0;
     let hasTrumpWithoutOber = cardFilter.playableCardsNoOber.length > 0;
     let hasGoodWinningCards = cardFilter.goodWinningCardsNoOberNoPoints.length > 0;
@@ -118,9 +117,8 @@ if (highestCardInRoundIsHighestCardInColor && trumpRound) {
         partnerHasRound: () => withReporting(() => partnerHasRound, 'partnerHasRound'),
         roundIsProbablySafe: () => withReporting(() => roundIsProbablySafe, "roundIsProbablySafe"),
         mustFollowSuit: () => withReporting(() => mustFollowSuit, "mustFollowSuit"),
-        trumpRound: () => withReporting(() => trumpRound, "trumpRound"),
+        isTrumpRound: () => withReporting(() => trumpRound, "isTrumpRound"),
         highConfidenceInPotentialPartner: () => withReporting(() => highConfidenceInPotentialPartner, "highConfidenceInPotentialPartner"),
-        haveNonTrumpCards: () => withReporting(() => haveNonTrumpCards, "haveNonTrumpCards"),
         hasLowTrumps: () => withReporting(() => hasLowTrumps, "hasLowTrumps"),
         hasTrumpWithoutOber: () => withReporting(() => hasTrumpWithoutOber, "hasTrumpWithoutOber"),
         highestTrumpMayBeOvertrumped: () => withReporting(() => highestTrumpMayBeOvertrumped, "highestTrumpMayBeOvertrumped"),
@@ -143,7 +141,7 @@ if (highestCardInRoundIsHighestCardInColor && trumpRound) {
         roundMayBeWonByPartner: () => withReporting(() => roundMayBeWonByPartner, "roundMayBeWonByPartner"),
         hasLowValueBlankCard: () => withReporting(() => hasLowValueBlankCard, "hasLowValueBlankCard"),
         canDiscardCalledColor: () => withReporting(() => canDiscardCalledColor, "canDiscardCalledColor"),
-        partnerMayBeAbleTrump: () => withReporting(() => partnerMayBeAbleTrump, "partnerMayBeAbleTrump"),
-        onlyTrumpCards: () => withReporting(() => onlyTrumpCards, "onlyTrumpCards"),
+        partnerMayBeAbleToTrump: () => withReporting(() => partnerMayBeAbleTrump, "partnerMayBeAbleTrump"),
+        hasOnlyTrumpCards: () => withReporting(() => onlyTrumpCards, "hasOnlyTrumpCards"),
     }
 }

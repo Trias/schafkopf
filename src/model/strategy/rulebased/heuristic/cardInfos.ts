@@ -7,7 +7,6 @@ import GameAssumptions from "../../../knowledge/GameAssumptions";
 import {includes} from "lodash";
 import {getPlayableCards} from "../../../PlayableMoves";
 
-
 // TODO: use prototype? inheritance?
 // TODO: be more lazy?
 export default function getCardInfos(world: GameWorld, name: string, cardSet: Card[], assumptions: GameAssumptions, startCardSet: Card[]) {
@@ -68,9 +67,9 @@ export default function getCardInfos(world: GameWorld, name: string, cardSet: Ca
         let someoneIsDefinitelyFreeOfRoundColor = world.history.isAnyoneDefinitelyFreeOfColor(cardSet, roundColor);
         let isHinterhand = world.round.isHinterHand();
         let colorRoundProbablyWonByPartner = highestCardInRoundIsHighestCardInColor && !roundColorHasBeenPlayed && !someoneIsDefinitelyFreeOfRoundColor;
-        let trumpRound = roundColor == ColorWithTrump.TRUMP;
+        let isTrumpRound = roundColor == ColorWithTrump.TRUMP;
         let mustFollowSuit = roundColor == world.gameMode.getOrdering().getColor(playableCards[0]);
-        let isColorRoundTrumped = !trumpRound && world.gameMode.getOrdering().isTrump(roundAnalyzer.getHighestCard());
+        let isColorRoundTrumped = !isTrumpRound && world.gameMode.getOrdering().isTrump(roundAnalyzer.getHighestCard());
         let opponentsAreInHinterhand = potentialPartnerName && potentialPartnerName != world.round.getLastPlayerName();
         let isColor10InPlay = includes(world.history.getRemainingCardsByColor()[roundColor], roundColor + 'X' as Card);
         let highestTrumpMayBeOvertrumped = cardRanksWithRoundCards[winningCards[0]]! + Math.floor(8 / (world.rounds.length + 2)) < cardRanksWithRoundCards[roundAnalyzer.getHighestCard()]!;
@@ -89,7 +88,7 @@ export default function getCardInfos(world: GameWorld, name: string, cardSet: Ca
 
         let isPartnerFreeOfRoundColor = potentialPartnerName && world.history.isPlayerNameColorFree(potentialPartnerName, roundColor);
 
-        let onlyTrumpCards = myTrumps.length == playableCards.length;
+        let hasOnlyTrumpCards = myTrumps.length == playableCards.length;
         let highConfidenceInPotentialPartner = potentialPartnerConfidence.confidence >= 1;
 
         let partnerIsTrumpFree = potentialPartnerName && world.history.isPlayerNameColorFree(potentialPartnerName, ColorWithTrump.TRUMP);
@@ -112,11 +111,11 @@ export default function getCardInfos(world: GameWorld, name: string, cardSet: Ca
             canSearchCalledAce,
             partnerIsTrumpFree,
             hasLowValueBlankCard,
-            onlyTrumpCards,
+            hasOnlyTrumpCards,
             knownPartnerHasRound,
             potentialPartnerHasRound,
             highestCardInRoundIsHighestCardInColor,
-            trumpRound,
+            isTrumpRound,
             isHinterhand,
             colorRoundProbablyWonByPartner,
             mustFollowSuit,
