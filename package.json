@@ -7,7 +7,8 @@
     "test": "mocha --recursive test/**/*.ts",
     "dev": "ts-node src/index.ts",
     "start": "node build/index.js",
-    "evaluation": "node build/evaluate.js",
+    "evaluateRules": "node build/evaluateRules.js",
+    "evaluateStrategies": "node build/evaluateStrategies.js",
     "replay": "node build/replay.js",
     "build": "tsc",
     "lint": "eslint src/**/*.ts"

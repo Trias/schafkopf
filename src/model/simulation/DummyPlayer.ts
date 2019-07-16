@@ -6,7 +6,7 @@ import {FinishedRound, Round} from "../Round";
 import {PlayerInterface} from "../Player";
 import GamePhase from "../GamePhase";
 import {removeCard} from "../cards/CardSet";
-import {CardPlayStrategy} from "../strategy/rulebased/heuristic/CardPlayStrategy";
+import {CardPlayStrategy} from "../strategy/CardPlayStrategy";
 import GameAssumptions from "../knowledge/GameAssumptions";
 import {GameAssumptionsInCallGame} from "../knowledge/GameAssumptionsInCallGame";
 import {GameHistory} from "../knowledge/GameHistory";
@@ -93,7 +93,7 @@ export class DummyPlayer implements PlayerInterface {
         if (world.round.getCurrentPlayerName() != this.name) {
             throw Error('not to move');
         }
-        let card = this.strategy.determineCardToPlay(world, this.currentCardSet);
+        let card = this.strategy.chooseCardToPlay(world, this.currentCardSet);
 
         this.currentCardSet = removeCard(this.currentCardSet, card);
 

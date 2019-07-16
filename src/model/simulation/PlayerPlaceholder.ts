@@ -4,7 +4,7 @@ import {GameWorld} from "../GameWorld";
 import {FinishedRound, Round} from "../Round";
 import {PlayerInterface} from "../Player";
 import GamePhase from "../GamePhase";
-import {CardPlayStrategy} from "../strategy/rulebased/heuristic/CardPlayStrategy";
+import {CardPlayStrategy} from "../strategy/CardPlayStrategy";
 import GameAssumptions from "../knowledge/GameAssumptions";
 
 export class PlayerPlaceholder implements PlayerInterface {

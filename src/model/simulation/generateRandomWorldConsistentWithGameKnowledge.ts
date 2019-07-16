@@ -4,7 +4,7 @@ import {Card} from "../cards/Card";
 import {removeCard} from "../cards/CardSet";
 import {GameWorld} from "../GameWorld";
 import {DummyPlayer} from "./DummyPlayer";
-import {CardPlayStrategy} from "../strategy/rulebased/heuristic/CardPlayStrategy";
+import {CardPlayStrategy} from "../strategy/CardPlayStrategy";
 import GameAssumptions from "../knowledge/GameAssumptions";
 
 export function generateRandomWorldConsistentWithGameKnowledge(world: GameWorld, playerName: string, strategyConstructor: new (name: string, startCardSet: Card[], assumptions: GameAssumptions) => CardPlayStrategy): GameWorld {

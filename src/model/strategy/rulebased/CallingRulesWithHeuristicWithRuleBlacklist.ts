@@ -37,12 +37,12 @@ export class CallingRulesWithHeuristicWithRuleBlacklist implements StrategyInter
         };
 
         let heuristic = new AdvancedHeuristic(this.thisPlayer.getName(), this.thisPlayer.getStartCardSet(), this.thisPlayer.assumptions, report);
-        let card = heuristic.determineCardToPlay(world, cardSet);
+        let card = heuristic.chooseCardToPlay(world, cardSet);
 
         if (this.ruleEvaluation) {
             if (includes(this.ruleBlacklist, ruleApplied.toString())) {
                 let playableCards = getPlayableCards(cardSet, world.gameMode, world.round);
-                card = sample(playableCards);
+                card = sample(playableCards)!;
                 this.ruleEvaluation.addBlacklistedRule(this.thisPlayer.getName(), ruleApplied);
             } else {
                 this.ruleEvaluation.addRule(this.thisPlayer.getName(), ruleApplied);
@@ -60,9 +60,5 @@ export class CallingRulesWithHeuristicWithRuleBlacklist implements StrategyInter
 
     chooseToRaise(cardSet: readonly Card[]): boolean {
         return false;
-    }
-
-    injectCallingRulesEvaluation(callingRuleEvaluation: RuleEvaluation) {
-        this.callingRuleEvaluation = callingRuleEvaluation;
     }
 }

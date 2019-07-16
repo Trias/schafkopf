@@ -62,7 +62,7 @@ for (let i = 0; i < runs; i++) {
             [playerNames[3]]: new Player(playerNames[3], evaluation.getStrategyToEvaluate(j, 3), ruleEvaluation, callingRuleEvaluation),
         };
 
-        console.log(`========game ${i + 1} run ${j + 1} }===========`);
+        console.log(`========game ${i + 1} run ${j + 1}===========`);
         let preGame = new PreGame(playerMap);
         let gameMode = preGame.determineGameMode(allCardDeals[i], [GameModeEnum.CALL_GAME]);
         let history = new GameHistory(Object.keys(playerMap), gameMode);
@@ -123,7 +123,7 @@ function reportOnCallingRules(i: number) {
     let rules = Object.keys(ruleStatistics).sort();
     for (let rule of rules) {
         let evalu = ruleStatistics[rule];
-        console.log(`evaluation for calling rule "${rule}" has ${evalu.wins} wins and ${evalu.losses} losses which gives a win ratio of ${evalu.wins / (evalu.losses + evalu.wins)}}`);
+        console.log(`evaluation for calling rule "${rule}" has ${evalu.wins} wins and ${evalu.losses} losses which gives a win ratio of ${evalu.wins / (evalu.losses + evalu.wins)}`);
     }
 }
 

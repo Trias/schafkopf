@@ -54,7 +54,7 @@ export class Game {
                 }
                 let activePlayerName = this.world.round.getCurrentPlayerName();
                 this.playerMap[activePlayerName].playCard(this.world);
-                console.log(colors.italic(`player ${activePlayerName} played ${colors.bold(this.world.round.getLastPlayedCard())} from set ${sortByNaturalOrdering(this.playerMap[activePlayerName].getCurrentCardSet().concat(this.world.round.getLastPlayedCard()))})`));
+                console.log(colors.italic(`player ${activePlayerName} played ${colors.bold(this.world.round.getLastPlayedCard())} from set ${sortByNaturalOrdering(this.playerMap[activePlayerName].getCurrentCardSet().concat(this.world.round.getLastPlayedCard()))}`));
             }
             this.markCalledAce(this.world.round);
             this.world.rounds.push(this.world.round.finish());

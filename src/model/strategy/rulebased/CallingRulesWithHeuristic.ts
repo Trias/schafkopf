@@ -7,15 +7,12 @@ import {GameWorld} from "../../GameWorld";
 import {Player} from "../../Player";
 import {AdvancedHeuristic} from "./heuristic/AdvancedHeuristics";
 import {RuleEvaluation} from "../../reporting/RuleEvaluation";
-import {includes, sample} from "lodash";
-import {getPlayableCards} from "../../PlayableMoves";
 import colors = require('colors');
 
 export class CallingRulesWithHeuristic implements StrategyInterface {
     private readonly thisPlayer: Player;
     private ruleEvaluation: RuleEvaluation | null = null;
     private callingRuleEvaluation: RuleEvaluation | null = null;
-    private ruleBlacklist: string[] = [];
 
     constructor(thisPlayer: Player) {
         this.thisPlayer = thisPlayer;
@@ -23,10 +20,6 @@ export class CallingRulesWithHeuristic implements StrategyInterface {
 
     injectEvaluation(ruleEvaluation: RuleEvaluation) {
         this.ruleEvaluation = ruleEvaluation;
-    }
-
-    injectRuleBlackList(ruleBlacklist: string[]) {
-        this.ruleBlacklist = ruleBlacklist;
     }
 
     chooseCardToPlay(world: GameWorld, cardSet: Card[]): Card {
@@ -37,16 +30,10 @@ export class CallingRulesWithHeuristic implements StrategyInterface {
         };
 
         let heuristic = new AdvancedHeuristic(this.thisPlayer.getName(), this.thisPlayer.getStartCardSet(), this.thisPlayer.assumptions, report);
-        let card = heuristic.determineCardToPlay(world, cardSet);
+        let card = heuristic.chooseCardToPlay(world, cardSet);
 
         if (this.ruleEvaluation) {
-            if (includes(this.ruleBlacklist, ruleApplied.toString())) {
-                let playableCards = getPlayableCards(cardSet, world.gameMode, world.round);
-                card = sample(playableCards);
-                this.ruleEvaluation.addBlacklistedRule(this.thisPlayer.getName(), ruleApplied);
-            } else {
-                this.ruleEvaluation.addRule(this.thisPlayer.getName(), ruleApplied);
-            }
+            this.ruleEvaluation.addRule(this.thisPlayer.getName(), ruleApplied);
         }
 
         return card;

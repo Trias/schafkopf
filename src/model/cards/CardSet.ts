@@ -1,6 +1,6 @@
 import {Card} from "./Card";
 import {CallableColor, callableColors, colorsWithTrump, ColorWithTrump, PlainColor} from "./Color";
-import {difference, filter, includes, intersection, some, sortBy, without} from "lodash";
+import {clone, difference, filter, includes, intersection, reverse, some, sortBy, without} from "lodash";
 import {GameMode, GameModeEnum} from "../GameMode";
 import OberAndUnter from "./sets/OberAndUnter";
 import CardDeck from "./sets/CardDeck";
@@ -279,4 +279,13 @@ export function hasKings(cardSet: readonly Card[]) {
     }
 
     return false;
+}
+
+export function sortByPointsAscending(cardSet: Card[]) {
+    let pointsRanking = ["A", "X", "K", "O", "U", "9", "8", "7"];
+    return clone(cardSet).sort((a, b) => pointsRanking.indexOf(b[1]) - pointsRanking.indexOf(a[1]));
+}
+
+export function sortByPointsDescending(cardSet: Card[]) {
+    return reverse(sortByPointsAscending(cardSet));
 }

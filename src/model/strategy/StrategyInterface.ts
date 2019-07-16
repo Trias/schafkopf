@@ -2,8 +2,9 @@ import {GameMode, GameModeEnum} from "../GameMode";
 import {Card} from "../cards/Card";
 import {PlainColor} from "../cards/Color";
 import {GameWorld} from "../GameWorld";
+import {CardPlayStrategy} from "./CardPlayStrategy";
 
-export default interface StrategyInterface {
+export default interface StrategyInterface extends CardPlayStrategy {
 
     chooseCardToPlay(world: GameWorld, cardSet: readonly Card[]): Card
 

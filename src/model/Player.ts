@@ -10,7 +10,7 @@ import {FinishedRound, Round} from "./Round";
 import {canPlayCard} from "./PlayableMoves";
 import {GameAssumptionsInCallGame} from "./knowledge/GameAssumptionsInCallGame";
 import GameAssumptions from "./knowledge/GameAssumptions";
-import {CardPlayStrategy} from "./strategy/rulebased/heuristic/CardPlayStrategy";
+import {CardPlayStrategy} from "./strategy/CardPlayStrategy";
 import {RuleEvaluation} from "./reporting/RuleEvaluation";
 import {CallingRulesWithHeuristic} from "./strategy/rulebased/CallingRulesWithHeuristic";
 import {CallingRulesWithHeuristicWithRuleBlacklist} from "./strategy/rulebased/CallingRulesWithHeuristicWithRuleBlacklist";

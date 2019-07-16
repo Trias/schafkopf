@@ -8,7 +8,7 @@ import {generateRandomWorldConsistentWithGameKnowledge} from "../../../simulatio
 import {GameTree} from "./GameTree";
 import {clone, cloneDeep, difference, fromPairs, isEqual} from "lodash";
 import {getUctValue} from "./getUctValue";
-import {CardPlayStrategy} from "../../rulebased/heuristic/CardPlayStrategy";
+import {CardPlayStrategy} from "../../CardPlayStrategy";
 import {RandomCardPlay} from "../../random/RandomCardPlay";
 import GameAssumptions from "../../../knowledge/GameAssumptions";
 
@@ -119,7 +119,7 @@ export class Simulation {
             } else {
                 // expand thr tree with a random card...
                 let unexploredCards = difference(playableCards, expandedChildrenCards)!;
-                let card = this.heuristicForPlayer.determineCardToPlay(this.world, unexploredCards);
+                let card = this.heuristicForPlayer.chooseCardToPlay(this.world, unexploredCards);
                 return this.expand(gameTree, game, card);
             }
         }
