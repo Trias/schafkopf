@@ -1,7 +1,8 @@
 import {CardFilter} from "./CardFilter";
 import {ColorWithTrump} from "../../../cards/Color";
+import {CardInfosInPlay} from "./cardInfos";
 
-export default function getInPlayConditions(cardFilter: CardFilter, cardInfos: any, reasons: string[]) {
+export default function getInPlayConditions(cardFilter: CardFilter, cardInfos: CardInfosInPlay, reasons: string[]) {
     function withReporting(test: (() => boolean), reason: string) {
         let result = test();
         if (result) {
@@ -16,7 +17,7 @@ export default function getInPlayConditions(cardFilter: CardFilter, cardInfos: a
         knownPartnerHasRound,
         potentialPartnerHasRound,
         highestCardInRoundIsHighestCardInColor,
-        trumpRound,
+        isTrumpRound,
         isHinterhand,
         colorRoundProbablyWonByPartner,
         mustFollowSuit,
@@ -36,7 +37,7 @@ export default function getInPlayConditions(cardFilter: CardFilter, cardInfos: a
         partnerIsTrumpFree,
         hasLowValueBlankCard,
         isPartnerFreeOfRoundColor,
-        onlyTrumpCards,
+        hasOnlyTrumpCards,
         notInPlayingTeam,
         callColorCount,
         trumpCount,
@@ -44,7 +45,7 @@ export default function getInPlayConditions(cardFilter: CardFilter, cardInfos: a
     } = cardInfos;
 
     let partnerHasRound = knownPartnerHasRound || potentialPartnerHasRound;
-    let roundIsProbablySafe = highestCardInRoundIsHighestCardInColor && trumpRound || isHinterhand || colorRoundProbablyWonByPartner;
+    let roundIsProbablySafe = highestCardInRoundIsHighestCardInColor && isTrumpRound || isHinterhand || colorRoundProbablyWonByPartner;
     let hasLowTrumps = cardFilter.lowTrumps.length > 0;
     let hasTrumpWithoutOber = cardFilter.playableCardsNoOber.length > 0;
     let hasGoodWinningCards = cardFilter.goodWinningCardsNoOberNoPoints.length > 0;
@@ -57,7 +58,7 @@ export default function getInPlayConditions(cardFilter: CardFilter, cardInfos: a
     let hasLowWinningTrump = cardFilter.lowWinningTrumps.length > 0;
 
     let roundMayBeWonByPartner = roundCanBeOvertrumped && partnerIsBehindMe && !partnerIsTrumpFree;
-    let canTrumpColorRound = !trumpRound && !mustFollowSuit;
+    let canTrumpColorRound = !isTrumpRound && !mustFollowSuit;
     let roundIsProbablySafeIfTrumped = !roundColorHasBeenPlayed || myTeamIsHinterhand || isHinterhand;
 
     let partnerMayBeAbleTrump = partnerIsBehindMe
@@ -117,7 +118,7 @@ if (highestCardInRoundIsHighestCardInColor && trumpRound) {
         partnerHasRound: () => withReporting(() => partnerHasRound, 'partnerHasRound'),
         roundIsProbablySafe: () => withReporting(() => roundIsProbablySafe, "roundIsProbablySafe"),
         mustFollowSuit: () => withReporting(() => mustFollowSuit, "mustFollowSuit"),
-        isTrumpRound: () => withReporting(() => trumpRound, "isTrumpRound"),
+        isTrumpRound: () => withReporting(() => isTrumpRound, "isTrumpRound"),
         highConfidenceInPotentialPartner: () => withReporting(() => highConfidenceInPotentialPartner, "highConfidenceInPotentialPartner"),
         hasLowTrumps: () => withReporting(() => hasLowTrumps, "hasLowTrumps"),
         hasTrumpWithoutOber: () => withReporting(() => hasTrumpWithoutOber, "hasTrumpWithoutOber"),
@@ -142,6 +143,6 @@ if (highestCardInRoundIsHighestCardInColor && trumpRound) {
         hasLowValueBlankCard: () => withReporting(() => hasLowValueBlankCard, "hasLowValueBlankCard"),
         canDiscardCalledColor: () => withReporting(() => canDiscardCalledColor, "canDiscardCalledColor"),
         partnerMayBeAbleToTrump: () => withReporting(() => partnerMayBeAbleTrump, "partnerMayBeAbleTrump"),
-        hasOnlyTrumpCards: () => withReporting(() => onlyTrumpCards, "hasOnlyTrumpCards"),
+        hasOnlyTrumpCards: () => withReporting(() => hasOnlyTrumpCards, "hasOnlyTrumpCards"),
     }
 }

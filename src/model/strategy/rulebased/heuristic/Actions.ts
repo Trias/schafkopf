@@ -14,18 +14,27 @@ export class Actions {
     }
 
     playLowestCardByPoints(playableCards: Card[]) {
+        if (playableCards.length == 0) {
+            throw Error('no cardset provided');
+        }
         let card = sortByPointsAscending(playableCards)[0];
         this.report('playLowestCardByPoints', card);
         return card;
     }
 
     playLowestCardByRank(playableCards: Card[]) {
+        if (playableCards.length == 0) {
+            throw Error('no cardset provided');
+        }
         let card = sortByNaturalOrdering(playableCards)[playableCards.length - 1];
         this.report('playLowestCardByRank', card);
         return card;
     }
 
     playBlankCardOrLowestCardByPoints(playableCards: Card[]) {
+        if (playableCards.length == 0) {
+            throw Error('no cardset provided');
+        }
         let blankCard = (new CardFilter(this.world, playableCards)).lowValueBlankCard;
 
         if (blankCard) {
@@ -40,6 +49,9 @@ export class Actions {
     }
 
     playTrumpPreferPoints(playableCards: Card[]) {
+        if (playableCards.length == 0) {
+            throw Error('no cardset provided');
+        }
         let playableCardsByPointsAscending = sortByPointsAscending(playableCards);
         let playableCardsNoOber = playableCardsByPointsAscending.filter(card => card[1] != "O");
         let playableCardsNoHighTrumps = playableCardsByPointsAscending.filter(card => card[1] != "O" && card[1] != "U");
@@ -60,6 +72,9 @@ export class Actions {
     }
 
     playAceOrColorOrTrump(playableCards: Card[]) {
+        if (playableCards.length == 0) {
+            throw Error('no cardset provided');
+        }
         let aces = getAces(playableCards);
 
         remove(aces, ace => ace == this.world.gameMode.getCalledAce() || ace == "HA");
@@ -72,9 +87,9 @@ export class Actions {
 
         let colorCards = getNonTrumps(playableCards, this.world.gameMode);
         if (colorCards.length) {
-            let card = colorCards[0]; //sample(colorCards)!;
+            let card = sortByPointsAscending(colorCards)[0]; //sample(colorCards)!;
 
-            this.report('playAceOrColorOrTrump->playColorCard', card);
+            this.report('playAceOrColorOrTrump->playLowestColorCardByPoints', card);
 
             return card;
         } else {
@@ -88,6 +103,9 @@ export class Actions {
     }
 
     playBlankCardOrSchmier(playableCards: Card[]) {
+        if (playableCards.length == 0) {
+            throw Error('no cardset provided');
+        }
         let blankCard = (new CardFilter(this.world, playableCards)).highValueBlankCard;
         let playableCardsByPointsAscendingNoAcesOrTrump = playableCards
             .filter(card => card[1] != "A")
@@ -112,6 +130,9 @@ export class Actions {
     }
 
     playLowestCardByMixedRanking(playableCards: Card[]) {
+        if (playableCards.length == 0) {
+            throw Error('no cardset provided');
+        }
         let order = ['7', '8', '9', 'K', 'U', 'X', 'A', 'O'];
 
         let playableCardsSorted = playableCards.sort((a, b) => order.indexOf(a[1]) > order.indexOf(b[1]) ? 1 : -1);
@@ -121,14 +142,20 @@ export class Actions {
         return card;
     }
 
-    playHighestCardByRank(cardSet: Card[]) {
-        let card = sortByNaturalOrdering(cardSet)[0];
+    playHighestCardByRank(playableCards: Card[]) {
+        if (playableCards.length == 0) {
+            throw Error('no cardset provided');
+        }
+        let card = sortByNaturalOrdering(playableCards)[0];
         this.report('playHighestCardByRank', card);
         return card;
     }
 
-    playHighestCardByPoints(playablePoints: Card[]) {
-        let card = sortByPointsAscending(playablePoints)[playablePoints.length - 1];
+    playHighestCardByPoints(playableCards: Card[]) {
+        if (playableCards.length == 0) {
+            throw Error('no cardset provided');
+        }
+        let card = sortByPointsAscending(playableCards)[playableCards.length - 1];
         this.report('playHighestCardByPoints', card);
         return card;
     }

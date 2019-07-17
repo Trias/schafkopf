@@ -1,3 +1,4 @@
+require("./utils/seededRandomness");
 import {CallingRulesWithHeuristic} from "./model/strategy/rulebased/CallingRulesWithHeuristic";
 import {Card} from "./model/cards/Card";
 import {Game} from "./model/Game";
@@ -10,11 +11,7 @@ import {Round} from "./model/Round";
 import {GameHistory} from "./model/knowledge/GameHistory";
 import {GameModeEnum} from "./model/GameMode";
 import {clone} from "lodash";
-
-let seedRandom = require('seedrandom');
-// replacing global Math.random.....must be first call.
-Math.random = seedRandom.alea('seed', {state: true});
-
+import CallingRulesWithUctMonteCarloStrategy from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloStrategy";
 import colors = require('colors');
 
 let fs = require('fs');
@@ -26,8 +23,8 @@ let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 let playerMap = {
     [playerNames[0]]: new Player(playerNames[0], CallingRulesWithHeuristic),
     [playerNames[1]]: new Player(playerNames[1], CallingRulesWithHeuristic),
-    [playerNames[2]]: new Player(playerNames[2], CallingRulesWithHeuristic),
-    [playerNames[3]]: new Player(playerNames[3], CallingRulesWithHeuristic),
+    [playerNames[2]]: new Player(playerNames[2], CallingRulesWithUctMonteCarloStrategy),
+    [playerNames[3]]: new Player(playerNames[3], CallingRulesWithUctMonteCarloStrategy),
 };
 
 let allCardDeals = shuffleCardsTimes(runs);

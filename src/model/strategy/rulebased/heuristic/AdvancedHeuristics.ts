@@ -6,7 +6,7 @@ import GameAssumptions from "../../../knowledge/GameAssumptions";
 import {Actions} from "./Actions";
 import getConditions from "./conditions";
 import getInPlayConditions from "./inPlayConditions";
-import getCardInfos from "./cardInfos";
+import getCardInfos, {CardInfoBase, CardInfosInPlay} from "./cardInfos";
 import {CardFilter} from "./CardFilter";
 
 export class AdvancedHeuristic implements CardPlayStrategy {
@@ -33,7 +33,7 @@ export class AdvancedHeuristic implements CardPlayStrategy {
         let cardFilter = new CardFilter(world, cardSet);
         let actions = new Actions(world, report);
         let cardInfos = getCardInfos(world, this.name, cardSet, this.assumptions, this.startCardSet);
-        let conditions = getConditions(world, cardSet, cardInfos, reasons);
+        let conditions = getConditions(world, cardSet, <CardInfoBase>cardInfos, reasons);
 
         if (cardFilter.playableCards.length == 0) {
             throw Error('no playable card?');
@@ -60,10 +60,10 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                                 return actions.playLowestCardByRank(cardFilter.highTrumps);
                             }
                         } else {
-                            if (conditions.isCaller()) {
-                                return actions.playHighestCardByRank(cardFilter.trumps);
+                            if (conditions.hasMoreThan1TrumpsWithoutVolle()) {
+                                return actions.playLowestCardByRank(cardFilter.trumpsWithoutVolle);
                             } else {
-                                return actions.playLowestCardByRank(cardFilter.trumps);
+                                return actions.playAceOrColorOrTrump(cardFilter.playableCards);
                             }
                         }
                     }
@@ -78,7 +78,7 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                 }
             }
         } else {
-            let inPlayConditions = getInPlayConditions(cardFilter, cardInfos, reasons);
+            let inPlayConditions = getInPlayConditions(cardFilter, <CardInfosInPlay>cardInfos, reasons);
 
             if (inPlayConditions.partnerHasRound()) {
                 if (inPlayConditions.roundIsProbablySafe()) {
@@ -108,7 +108,7 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                         if (inPlayConditions.isTrumpRound()) {
                             if (inPlayConditions.highestTrumpMayBeOvertrumped()) {
                                 if (inPlayConditions.roundIsExpensive()) {
-                                    return actions.playHighestCardByRank(cardFilter.winningCards);
+                                    return actions.playHighestCardByRank(cardFilter.playableCards);
                                 } else {
                                     if (inPlayConditions.hasGoodWinningCards()) {
                                         return actions.playLowestCardByRank(cardFilter.goodWinningCardsNoOberNoPoints);

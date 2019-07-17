@@ -1,7 +1,8 @@
 import {GameWorld} from "../../../GameWorld";
 import {Card} from "../../../cards/Card";
+import {CardInfoBase} from "./cardInfos";
 
-export default function getConditions(world: GameWorld, cardSet: Card[], cardInfos: any, reasons: string[]) {
+export default function getConditions(world: GameWorld, cardSet: Card[], cardInfos: CardInfoBase, reasons: string[]) {
     function withReporting(test: (() => boolean), reason: string) {
         let result = test();
         if (result) {
@@ -22,7 +23,8 @@ export default function getConditions(world: GameWorld, cardSet: Card[], cardInf
         hasAGoodAmountOfHighTrumps,
         hasDominantTrumps,
         isCaller,
-        canSearchCalledAce
+        canSearchCalledAce,
+        hasMoreThan1TrumpsWithoutVolle
     } = cardInfos;
 
     return {
@@ -36,5 +38,6 @@ export default function getConditions(world: GameWorld, cardSet: Card[], cardInf
         hasDominantTrumps: () => withReporting(() => hasDominantTrumps, 'hasDominantTrumps'),
         isCaller: () => withReporting(() => isCaller, 'isCaller'),
         canSearchCalledAce: () => withReporting(() => canSearchCalledAce, 'canSearchCalledAce'),
+        hasMoreThan1TrumpsWithoutVolle: () => withReporting(() => hasMoreThan1TrumpsWithoutVolle, 'hasMoreThan1TrumpsWithoutVolle')
     }
 }

@@ -106,6 +106,10 @@ export class CardFilter {
         return this.playableCards.filter(card => !this.world.gameMode.getOrdering().isTrump(card));
     }
 
+    get trumpsWithoutVolle() {
+        return this.trumps.filter(card => card[1] != "A" && card[1] != "X");
+    }
+
     private getBlankCardWithComparison(playableCards: Card[], compare: (a: Card, b: Card) => boolean) {
         let shortestColors = getShortestColors(playableCards, this.world.gameMode);
         let cardsByColor = getCardsByColor(playableCards, this.world.gameMode);

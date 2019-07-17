@@ -1,7 +1,4 @@
-let seedRandom = require('seedrandom');
-// replacing global Math.random.....must be first call.
-Math.random = seedRandom.alea('seed', {state: true});
-
+require("./utils/seededRandomness");
 import {StrategyEvaluation} from "./model/reporting/StrategyEvaluation";
 import {Card} from "./model/cards/Card";
 import {Game} from "./model/Game";
@@ -20,7 +17,7 @@ import {CallingRulesWithHeuristicWithRuleBlacklist} from "./model/strategy/ruleb
 
 let fs = require('fs');
 
-let runs = 1000;
+let runs = 1;
 
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
@@ -107,10 +104,9 @@ function reportOnRules(i: number) {
             let winRatio = evalu.wins / (evalu.losses + evalu.wins);
             let randomPlayWinRatio = blacklistedRuleStat.wins / (blacklistedRuleStat.losses + blacklistedRuleStat.wins);
             let edge = winRatio / randomPlayWinRatio * 100 - 100;
-            console.log(`${evalu.wins} wins and ${evalu.losses} losses; win ratio of ${winRatio}` +
+            console.log(`${edge}%: ${evalu.wins} wins and ${evalu.losses} losses; win ratio of ${winRatio}` +
                 (blacklistedRuleStat ?
-                    ` compared to ${blacklistedRuleStat.wins} wins and ${blacklistedRuleStat.losses} losses; win ratio of ${randomPlayWinRatio} in random play ` +
-                    +` which gives an edge of ${edge}%` : '')
+                    ` compared to ${blacklistedRuleStat.wins} wins and ${blacklistedRuleStat.losses} losses; win ratio of ${randomPlayWinRatio} in random play ` : '')
                 + `for rule "${rule}"`);
             if (edge < 0) {
                 badRules.push([rule, edge]);

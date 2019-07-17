@@ -43,6 +43,7 @@ export class CallingRulesWithHeuristicWithRuleBlacklist implements StrategyInter
             if (includes(this.ruleBlacklist, ruleApplied.toString())) {
                 let playableCards = getPlayableCards(cardSet, world.gameMode, world.round);
                 card = sample(playableCards)!;
+                console.log('overwriting choice with random play');
                 this.ruleEvaluation.addBlacklistedRule(this.thisPlayer.getName(), ruleApplied);
             } else {
                 this.ruleEvaluation.addRule(this.thisPlayer.getName(), ruleApplied);
