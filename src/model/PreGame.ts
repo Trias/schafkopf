@@ -3,6 +3,8 @@ import {Card} from "./cards/Card";
 import {PlayerMap} from "./Player";
 import {GameMode, GameModeEnum} from "./GameMode";
 import {GameWorld} from "./GameWorld";
+import log from "../logging/log";
+import colors from "colors";
 
 export class PreGame {
     private readonly playerMap: PlayerMap;
@@ -13,7 +15,7 @@ export class PreGame {
         this.gamePhase = GamePhase.BEFORE_GAME;
     }
 
-    determineGameMode(cardsInSets: Card[][], allowedGameModes: GameModeEnum[] = Object.values(GameModeEnum)) {
+    async determineGameMode(cardsInSets: Card[][], allowedGameModes: GameModeEnum[] = Object.values(GameModeEnum)) {
         if (this.gamePhase != GamePhase.BEFORE_GAME) {
             throw Error('Invalid state transition');
         }
@@ -21,31 +23,33 @@ export class PreGame {
         this.setGamePhase(GamePhase.BEFORE_GAME);
         this.notifyPlayersOfGameStart();
 
-        console.log(`-----deal first batch of cards ------`);
+        log.info(`-----deal first batch of cards ------`);
         this.dealFirstBatchOfCards(cardsInSets);
         this.setGamePhase(GamePhase.FOUR_CARDS_DEALT);
 
-        let klopfer = this.askPlayerForKlopfer();
+        let klopfer = await this.askPlayerForKlopfer();
 
-        console.log(`-----deal second batch of cards ------`);
+        log.info(`-----deal second batch of cards ------`);
         this.dealSecondBatchOfCard(cardsInSets);
         this.setGamePhase(GamePhase.ALL_CARDS_DEALT);
 
-        let gameMode = this.askPlayersWhatTheyWantToPlay(allowedGameModes);
+        let gameMode = await this.askPlayersWhatTheyWantToPlay(allowedGameModes);
         gameMode.setKlopfer(klopfer);
 
         return gameMode;
     }
 
-    private askPlayersWhatTheyWantToPlay(allowedGameModes: GameModeEnum[]): GameMode {
+    private async askPlayersWhatTheyWantToPlay(allowedGameModes: GameModeEnum[]): Promise<GameMode> {
         let currentGameMode = new GameMode(GameModeEnum.RETRY);
 
-        Object.values(this.playerMap).forEach((p, i) => {
-            let newGameMode = p.whatDoYouWantToPlay(currentGameMode, i, allowedGameModes);
+        let i = 0;
+        for (let player of Object.values(this.playerMap)) {
+            let newGameMode = await player.whatDoYouWantToPlay(currentGameMode, i, allowedGameModes);
             if (newGameMode && (GameMode.compareGameModes(newGameMode, currentGameMode) > 0)) {
                 currentGameMode = newGameMode;
             }
-        });
+            i++;
+        }
 
         return currentGameMode;
     }
@@ -58,16 +62,17 @@ export class PreGame {
         Object.values(this.playerMap).forEach((p, i) => p.onReceiveFirstBatchOfCards(cardsInSets[i]));
     }
 
-    private askPlayerForKlopfer() {
+    private async askPlayerForKlopfer() {
         let klopfer = 0;
-        Object.values(this.playerMap).forEach((p) => {
-            let raise = p.doYouWantToKlopf();
+        for (let player of Object.values(this.playerMap)) {
+            let raise = await player.doYouWantToKlopf();
 
             if (raise) {
-                console.log(`${p} klopfes with cards: ${p.getCurrentCardSet()}!`);
+                log.gameInfo(`${colors.bold(player.toString())} klopfes`);
+                log.private(` with cards: ${player.getCurrentCardSet()}!`);
                 klopfer = klopfer + 1;
             }
-        });
+        }
         return klopfer;
     }
 

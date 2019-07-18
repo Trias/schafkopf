@@ -14,6 +14,7 @@ import {clone, fromPairs, zip} from "lodash";
 import {RuleEvaluation} from "./model/reporting/RuleEvaluation";
 import {CallingRulesWithHeuristic} from "./model/strategy/rulebased/CallingRulesWithHeuristic";
 import {CallingRulesWithHeuristicWithRuleBlacklist} from "./model/strategy/rulebased/CallingRulesWithHeuristicWithRuleBlacklist";
+import log from "./logging/log";
 
 let fs = require('fs');
 
@@ -40,58 +41,62 @@ let games: {
 let rules = require('../generated/rules.json') as string[];
 let blacklists = zip(rules) as string[][];
 
-//(async () => {
-let startPlayer = playerNames[0];
-for (let i = 0; i < runs; i++) {
-    // @ts-ignore
-    let prngState = Math.random.state();
-    games[i + 1] = {
-        playerNames,
-        startPlayer,
-        prngState: clone(prngState),
-        cardDeal: allCardDeals[i]
-    };
-    for (let blacklist of blacklists) {
-        for (let j = 0; j < strategyEvaluation.strategies.length ** 4; j++) {
-            let playerMap = {
-                [playerNames[0]]: new Player(playerNames[0], strategyEvaluation.getStrategyToEvaluate(j, 0), ruleEvaluation, callingRuleEvaluation, blacklist),
-                [playerNames[1]]: new Player(playerNames[1], strategyEvaluation.getStrategyToEvaluate(j, 1), ruleEvaluation, callingRuleEvaluation, blacklist),
-                [playerNames[2]]: new Player(playerNames[2], strategyEvaluation.getStrategyToEvaluate(j, 2), ruleEvaluation, callingRuleEvaluation, blacklist),
-                [playerNames[3]]: new Player(playerNames[3], strategyEvaluation.getStrategyToEvaluate(j, 3), ruleEvaluation, callingRuleEvaluation, blacklist),
-            };
+(async () => {
+    let startPlayer = playerNames[0];
+    for (let i = 0; i < runs; i++) {
+        // @ts-ignore
+        let prngState = Math.random.state();
+        games[i + 1] = {
+            playerNames,
+            startPlayer,
+            prngState: clone(prngState),
+            cardDeal: allCardDeals[i]
+        };
+        for (let blacklist of blacklists) {
+            for (let j = 0; j < strategyEvaluation.strategies.length ** 4; j++) {
+                let playerMap = {
+                    [playerNames[0]]: new Player(playerNames[0], strategyEvaluation.getStrategyToEvaluate(j, 0), ruleEvaluation, callingRuleEvaluation, blacklist),
+                    [playerNames[1]]: new Player(playerNames[1], strategyEvaluation.getStrategyToEvaluate(j, 1), ruleEvaluation, callingRuleEvaluation, blacklist),
+                    [playerNames[2]]: new Player(playerNames[2], strategyEvaluation.getStrategyToEvaluate(j, 2), ruleEvaluation, callingRuleEvaluation, blacklist),
+                    [playerNames[3]]: new Player(playerNames[3], strategyEvaluation.getStrategyToEvaluate(j, 3), ruleEvaluation, callingRuleEvaluation, blacklist),
+                };
 
-            console.log(`========game ${i + 1} run ${j + 1} blacklisted rule: ${JSON.stringify(blacklist)}===========`);
-            let preGame = new PreGame(playerMap);
-            let gameMode = preGame.determineGameMode(allCardDeals[i], [GameModeEnum.CALL_GAME]);
-            let history = new GameHistory(Object.keys(playerMap), gameMode);
-            let game = new Game(new GameWorld(gameMode, playerMap, [], new Round(startPlayer, Object.keys(playerMap)), history));
+                log.info(`========game ${i + 1} run ${j + 1} blacklisted rule: ${blacklist.toString()}===========`);
+                let preGame = new PreGame(playerMap);
+                let gameMode = await preGame.determineGameMode(allCardDeals[i], [GameModeEnum.CALL_GAME]);
+                let history = new GameHistory(Object.keys(playerMap), gameMode);
+                let game = new Game(new GameWorld(gameMode, playerMap, [], new Round(startPlayer, Object.keys(playerMap)), history));
 
-            game.play();
-            let gameResult = game.getGameResult();
+                await game.play();
+                let gameResult = game.getGameResult();
 
-            stats.addResult(gameResult);
-            //strategyEvaluation.addResult(gameResult, j);
-            ruleEvaluation.gradeRules(gameResult, blacklist);
-            callingRuleEvaluation.gradeRules(gameResult);
+                stats.addResult(gameResult);
+                //strategyEvaluation.addResult(gameResult, j);
+                ruleEvaluation.gradeRules(gameResult, blacklist);
+                callingRuleEvaluation.gradeRules(gameResult);
 
-            if (game.getGameResult().getGameMode().isNoRetry()) {
-                console.log(`Team (${gameResult.getPlayingTeamNames()}) ${gameResult.hasPlayingTeamWon() ? 'wins' : 'looses'} ` +
-                    `with ${gameResult.getPlayingTeamPoints()} points ` +
-                    `and ${gameResult.hasPlayingTeamWon() ? 'win' : 'loose'} ${Math.abs(gameResult.getGameMoneyValue())} cents each!`);
-            } else {
-                console.log(`retry with cards:${Object.values(playerMap).map(p => '\n' + p.getName() + ': ' + JSON.stringify(p.getStartCardSet()))}`);
-                //skip ahead in evaluation b/c we dont evaluate calling rules...
-                j = strategyEvaluation.strategies.length ** 4;
+                if (game.getGameResult().getGameMode().isNoRetry()) {
+                    log.report(`Team (${gameResult.getPlayingTeamNames()}) ${gameResult.hasPlayingTeamWon() ? 'wins' : 'looses'} ` +
+                        `with ${gameResult.getPlayingTeamPoints()} points ` +
+                        `and ${gameResult.hasPlayingTeamWon() ? 'win' : 'loose'} ${Math.abs(gameResult.getGameMoneyValue())} cents each!`);
+                } else {
+                    log.report(`retry with cards:${Object.values(playerMap).map(p => '\n' + p.getName() + ': ' + p.getStartCardSet().toString())}`);
+                    //skip ahead in evaluation b/c we dont evaluate calling rules...
+                    j = strategyEvaluation.strategies.length ** 4;
+                }
             }
         }
-    }
-    reportOnRules(i);
+        reportOnRules(i);
 
-    startPlayer = rotateStartPlayer(startPlayer);
-}
+        startPlayer = rotateStartPlayer(startPlayer);
+    }
+
+    saveGames();
+})();
+
 
 function reportOnRules(i: number) {
-    console.log(`rule evaluation after ${i + 1} games`);
+    log.info(`rule evaluation after ${i + 1} games`);
     let ruleStatistics = ruleEvaluation.getRuleStatistics();
     let blackListedRuleStatistics = ruleEvaluation.getBlackListedRuleStatistics();
     let rules = Object.keys(ruleStatistics).sort();
@@ -104,7 +109,7 @@ function reportOnRules(i: number) {
             let winRatio = evalu.wins / (evalu.losses + evalu.wins);
             let randomPlayWinRatio = blacklistedRuleStat.wins / (blacklistedRuleStat.losses + blacklistedRuleStat.wins);
             let edge = winRatio / randomPlayWinRatio * 100 - 100;
-            console.log(`${edge}%: ${evalu.wins} wins and ${evalu.losses} losses; win ratio of ${winRatio}` +
+            log.stats(`${edge}%: ${evalu.wins} wins and ${evalu.losses} losses; win ratio of ${winRatio}` +
                 (blacklistedRuleStat ?
                     ` compared to ${blacklistedRuleStat.wins} wins and ${blacklistedRuleStat.losses} losses; win ratio of ${randomPlayWinRatio} in random play ` : '')
                 + `for rule "${rule}"`);
@@ -117,7 +122,6 @@ function reportOnRules(i: number) {
         fs.mkdirSync('generated');
     }
     fs.writeFileSync('generated/badRules.json', JSON.stringify(fromPairs(badRules), null, 2));
-
 }
 
 function saveGames() {
@@ -126,10 +130,6 @@ function saveGames() {
     }
     fs.writeFileSync('generated/evaluation.games.json', JSON.stringify(games, null, 2));
 }
-
-saveGames();
-
-//})();
 
 function rotateStartPlayer(startPlayer: string) {
     let index = playerNames.indexOf(startPlayer);

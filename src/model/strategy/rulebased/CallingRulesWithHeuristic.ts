@@ -7,7 +7,7 @@ import {GameWorld} from "../../GameWorld";
 import {Player} from "../../Player";
 import {AdvancedHeuristic} from "./heuristic/AdvancedHeuristics";
 import {RuleEvaluation} from "../../reporting/RuleEvaluation";
-import colors = require('colors');
+import log from "../../../logging/log";
 
 export class CallingRulesWithHeuristic implements StrategyInterface {
     private readonly thisPlayer: Player;
@@ -25,7 +25,7 @@ export class CallingRulesWithHeuristic implements StrategyInterface {
     chooseCardToPlay(world: GameWorld, cardSet: Card[]): Card {
         let ruleApplied: string[] = [];
         let report = (reasons: string[], secondOrderReasons: string[], conclusion: string, card: Card) => {
-            console.log(colors.green(reasons.toString() + (secondOrderReasons.length ? '\n-->' : '') + secondOrderReasons.toString() + ' => ' + conclusion + ': ' + card));
+            log.private(reasons.toString() + (secondOrderReasons.length ? '\n-->' : '') + secondOrderReasons.toString() + ' => ' + conclusion + ': ' + card);
             ruleApplied = reasons;
         };
 

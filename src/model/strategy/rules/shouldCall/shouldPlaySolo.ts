@@ -5,7 +5,7 @@ import {allOfColor} from "../../../cards/CardSet";
 import {getLaufende, hasBlankAce, hasFehlFarbeFrei, hasMinTwoFehlFarbenFrei, hasTwoBlankAces} from "./CardSetAnalyzer";
 import {includes} from "lodash";
 import {Player} from "../../../Player";
-import RandomStrategy from "../../random";
+import RandomStrategy from "../../random/RandomStrategy";
 
 // rather conservative estimates from sauspiel.de
 export function shouldPlaySolo(cardSet: ReadonlyArray<Card>, report: (reasons: string[]) => void): [GameModeEnum, PlainColor] | null {

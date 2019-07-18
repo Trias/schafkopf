@@ -112,7 +112,7 @@ class Player implements PlayerInterface {
             throw Error('invariant violated');
         }
 
-        let card = this.strategy.chooseCardToPlay(world, this.getCurrentCardSet());
+        let card = <Card>this.strategy.chooseCardToPlay(world, this.getCurrentCardSet());
 
         if (!card || !canPlayCard(world.gameMode, this.currentCardSet, card, world.round)) {
             throw Error('cannot play card!');
@@ -154,7 +154,7 @@ class Player implements PlayerInterface {
         return world.round;
     }
 
-    whatDoYouWantToPlay(currentGameMode: GameMode, playerIndex: number, allowedGameModes: GameModeEnum[]) {
+    async whatDoYouWantToPlay(currentGameMode: GameMode, playerIndex: number, allowedGameModes: GameModeEnum[]) {
         if (this.gamePhase !== GamePhase.ALL_CARDS_DEALT) {
             throw Error('function not available in this state');
         }
@@ -229,11 +229,11 @@ interface PlayerInterface {
 
     doYouWantToKlopf(): boolean;
 
-    whatDoYouWantToPlay(currentGameMode: GameMode, playerIndex: number, allowedGameModes: GameModeEnum[]): GameMode;
+    whatDoYouWantToPlay(currentGameMode: GameMode, playerIndex: number, allowedGameModes: GameModeEnum[]): Promise<GameMode> | GameMode;
 
     onGameStart(world: GameWorld | null): void;
 
-    playCard(world: GameWorld): Round;
+    playCard(world: GameWorld): Promise<Round> | Round;
 
     onReceiveFirstBatchOfCards(cards: Card[]): void;
 

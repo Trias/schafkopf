@@ -93,7 +93,7 @@ export class DummyPlayer implements PlayerInterface {
         if (world.round.getCurrentPlayerName() != this.name) {
             throw Error('not to move');
         }
-        let card = this.strategy.chooseCardToPlay(world, this.currentCardSet);
+        let card = <Card>this.strategy.chooseCardToPlay(world, this.currentCardSet);
 
         this.currentCardSet = removeCard(this.currentCardSet, card);
 
@@ -103,7 +103,7 @@ export class DummyPlayer implements PlayerInterface {
         return world.round;
     }
 
-    whatDoYouWantToPlay(currentGameMode: GameMode, playerIndex: number, allowedGameModes: GameModeEnum[]): GameMode {
+    async whatDoYouWantToPlay(currentGameMode: GameMode, playerIndex: number, allowedGameModes: GameModeEnum[]): Promise<GameMode> {
         throw Error('not implemented');
     }
 

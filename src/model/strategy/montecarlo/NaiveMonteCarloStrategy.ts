@@ -15,8 +15,8 @@ import {Player, PlayerMap} from "../../Player";
 import {PlayerPlaceholder} from "../../simulation/PlayerPlaceholder";
 import {GameHistory} from "../../knowledge/GameHistory";
 import {RandomCardPlay} from "../random/RandomCardPlay";
+import log from "../../../logging/log";
 
-const consoleColors = require('colors');
 
 const CAN_PLAY_THRESHOLD = 0.75;
 
@@ -49,11 +49,11 @@ export default class NaiveMonteCarloStrategy implements StrategyInterface {
             throw Error('player not to move');
         }
 
-        console.time('mc simulation');
+        log.time('mc simulation');
         let valuations = this.runSimulation(world, cardSet);
-        console.timeEnd('mc simulation');
+        log.timeEnd('mc simulation');
 
-        console.log('valuations:' + consoleColors.green(JSON.stringify(valuations)));
+        log.private('valuations:' + JSON.stringify(valuations));
 
         return chooseBestCard(valuations)!;
     }
@@ -125,7 +125,7 @@ export default class NaiveMonteCarloStrategy implements StrategyInterface {
             gameMode = this.testGameMode(GameModeEnum.SOLO, longestColors, playerIndex, cardSet);
 
             if (gameMode.length) {
-                console.log("mc-game solo:" + gameMode);
+                log.private("mc-game solo:" + gameMode);
                 return gameMode;
             }
         }
@@ -133,7 +133,7 @@ export default class NaiveMonteCarloStrategy implements StrategyInterface {
         if (includes(allowedGameModes, GameModeEnum.WENZ)) {
             gameMode = this.testGameMode(GameModeEnum.WENZ, [undefined], playerIndex, cardSet);
             if (gameMode.length) {
-                console.log("mc-game wenz:" + gameMode);
+                log.private("mc-game wenz:" + gameMode);
                 return gameMode;
             }
         }
@@ -143,7 +143,7 @@ export default class NaiveMonteCarloStrategy implements StrategyInterface {
             gameMode = this.testGameMode(GameModeEnum.CALL_GAME, callableColors, playerIndex, cardSet);
 
             if (gameMode.length) {
-                console.log("mc-game call game:" + gameMode);
+                log.private("mc-game call game:" + gameMode);
                 return gameMode;
             }
         }
@@ -174,10 +174,10 @@ export default class NaiveMonteCarloStrategy implements StrategyInterface {
             let history = new GameHistory(Object.keys(playerMap), testGameMode);
             let world = new GameWorld(testGameMode, playerMap, [], round, history);
 
-            console.time('mc-simulation' + [testGameModeEnum, color]);
+            log.time('mc-simulation' + [testGameModeEnum, color]);
             let valuations = this.runSimulation(world, cardSet);
-            console.timeEnd('mc-simulation' + [testGameModeEnum, color]);
-            console.log(consoleColors.green(JSON.stringify(valuations)));
+            log.timeEnd('mc-simulation' + [testGameModeEnum, color]);
+            log.private(JSON.stringify(valuations));
 
             let bestValuedCard = chooseBestCard(valuations)!;
             let bestValue = valuations[bestValuedCard]!;

@@ -6,7 +6,8 @@ import GamePhase from "./GamePhase";
 import {sortByNaturalOrdering} from "./cards/CardSet";
 import {RoundAnalyzer} from "./knowledge/RoundAnalyzer";
 import {GameWorld} from "./GameWorld";
-import colors = require('colors');
+import log from "../logging/log";
+import colors from "colors";
 
 export class Game {
     private readonly playerMap: PlayerMap;
@@ -25,13 +26,13 @@ export class Game {
         this.gameMode = world.gameMode
     }
 
-    play() {
+    async play() {
         if (this.gameMode.isNoRetry()) {
             this.setGamePhase(GamePhase.IN_PLAY);
 
-            console.log(`game mode decided: ${this.gameMode.getMode()}, by ${this.gameMode.getCallingPlayerName()}, calling for ${this.gameMode.getColorOfTheGame()}`);
+            log.gameInfo(`game mode decided: ${colors.bold(this.gameMode.getMode())}, by ${colors.bold(this.gameMode.getCallingPlayerName())}, calling for ${colors.bold(this.gameMode.getColorOfTheGame() as string)}`);
 
-            this.playRounds();
+            await this.playRounds();
         }
 
         this.setGamePhase(GamePhase.AFTER_GAME);
@@ -45,30 +46,31 @@ export class Game {
         return new GameResult(this.world);
     }
 
-    private playRounds(): void {
+    private async playRounds(): Promise<void> {
         for (let i = 0; i < 8; i++) {
-            console.log(`------round ${i + 1} start-----`);
+            log.info(`------round ${i + 1} start-----`);
             for (let j = 0; j < 4; j++) {
                 if (this.world.round.getPosition() >= 4) {
                     throw Error('round finished');
                 }
                 let activePlayerName = this.world.round.getCurrentPlayerName();
-                this.playerMap[activePlayerName].playCard(this.world);
-                console.log(colors.italic(`player ${activePlayerName} played ${colors.bold(this.world.round.getLastPlayedCard())} from set ${sortByNaturalOrdering(this.playerMap[activePlayerName].getCurrentCardSet().concat(this.world.round.getLastPlayedCard()))}`));
+                await this.playerMap[activePlayerName].playCard(this.world);
+                log.gameInfo(`${colors.bold(activePlayerName)} played ${colors.bold(this.world.round.getLastPlayedCard())}`);
+                log.private(`from set ${sortByNaturalOrdering(this.playerMap[activePlayerName].getCurrentCardSet().concat(this.world.round.getLastPlayedCard()))}`);
             }
             this.markCalledAce(this.world.round);
             this.world.rounds.push(this.world.round.finish());
 
             let roundAnalyzer = new RoundAnalyzer(this.world.round, this.gameMode);
-            console.log(`round winner: ${roundAnalyzer.getWinningPlayerName()} at position ${roundAnalyzer.getWinningCardPosition() + 1}; round cards: ${this.world.round.getPlayedCards()}`);
+            log.gameInfo(`round winner: ${colors.bold(roundAnalyzer.getWinningPlayerName())} at position ${colors.bold((roundAnalyzer.getWinningCardPosition() + 1) + "")}; round cards: ${colors.bold(this.world.round.getPlayedCards().toString())}`);
             this.world.onRoundCompleted(this.world.round.finish(), i);
             if (this.world.history.isTeamPartnerKnown()) {
-                console.log(`Playing Team (${this.world.history.getPlayingTeamNames()}) has ${this.world.history.getTeamPoints(this.world.history.getPlayingTeamNames())} points; Opposing Team (${this.world.history.getNonPlayingTeam()}) has ${this.world.history.getTeamPoints(this.world.history.getNonPlayingTeam())} points`);
+                log.private(`Playing Team (${this.world.history.getPlayingTeamNames()}) has ${this.world.history.getTeamPoints(this.world.history.getPlayingTeamNames())} points; Opposing Team (${this.world.history.getNonPlayingTeam()}) has ${this.world.history.getTeamPoints(this.world.history.getNonPlayingTeam())} points`);
             }
-            console.log(`------round ${i + 1} finished-----`);
+            log.info(`------round ${i + 1} finished-----`);
             this.world.round = new Round(roundAnalyzer.getWinningPlayerName(), Object.keys(this.playerMap));
         }
-        console.log(`=====game finished=======`);
+        log.info(`=====game finished=======`);
     }
 
     private markCalledAce(round: Round) {

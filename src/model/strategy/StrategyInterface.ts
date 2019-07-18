@@ -6,7 +6,7 @@ import {CardPlayStrategy} from "./CardPlayStrategy";
 
 export default interface StrategyInterface extends CardPlayStrategy {
 
-    chooseCardToPlay(world: GameWorld, cardSet: readonly Card[]): Card
+    chooseCardToPlay(world: GameWorld, cardSet: readonly Card[]): Promise<Card> | Card
 
     chooseGameToCall(cardSet: readonly Card[], gameMode: GameMode, playerIndex: number, allowedGameModes: GameModeEnum[]): [GameModeEnum?, PlainColor?];
 

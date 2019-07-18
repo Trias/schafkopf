@@ -119,7 +119,7 @@ export class Simulation {
             } else {
                 // expand the tree with a random card...
                 let unexploredCards = difference(playableCards, expandedChildrenCards)!;
-                let card = this.heuristicForPlayer.chooseCardToPlay(this.world, unexploredCards);
+                let card = <Card>this.heuristicForPlayer.chooseCardToPlay(this.world, unexploredCards);
 
                 return this.expand(gameTree, game, card);
             }

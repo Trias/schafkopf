@@ -8,8 +8,8 @@ import {Player} from "../../Player";
 import {Simulation} from "./UctMonteCarlo/Simulation";
 import {determineGameMode} from "../rules/shouldCall/determineGameMode";
 import {RandomCardPlay} from "../random/RandomCardPlay";
+import log from "../../../logging/log";
 
-const consoleColors = require('colors');
 
 export default class CallingRulesWithUctMonteCarloStrategyAndCheating implements StrategyInterface {
     private readonly thisPlayer: Player;
@@ -23,7 +23,7 @@ export default class CallingRulesWithUctMonteCarloStrategyAndCheating implements
             throw Error('player not to move');
         }
 
-        console.time('uct simulation');
+        log.time('uct simulation');
         let myWorld = world.clone();
         Object.entries(myWorld.playerMap).forEach(([playerName, player]) => {
             myWorld.playerMap[playerName] = player.getDummyClone(myWorld, RandomCardPlay);
@@ -33,9 +33,9 @@ export default class CallingRulesWithUctMonteCarloStrategyAndCheating implements
         // disable logging for simulation
         let valuations = simulation.run(cardSet, 1, 100, () => myWorld);
 
-        console.timeEnd('uct simulation');
+        log.timeEnd('uct simulation');
 
-        console.log('valuations:' + consoleColors.green(JSON.stringify(valuations)));
+        log.private('valuations:' + JSON.stringify(valuations));
 
         return chooseBestCard(valuations)!;
     }

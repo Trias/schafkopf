@@ -8,8 +8,7 @@ import {Player} from "../../Player";
 import {Simulation} from "./UctMonteCarlo/Simulation";
 import {determineGameMode} from "../rules/shouldCall/determineGameMode";
 import {AdvancedHeuristic} from "../rulebased/heuristic/AdvancedHeuristics";
-
-const consoleColors = require('colors');
+import log from "../../../logging/log";
 
 export class CallingRulesWithUctMonteCarloAndHeuristic implements StrategyInterface {
     private readonly thisPlayer: Player;
@@ -23,12 +22,10 @@ export class CallingRulesWithUctMonteCarloAndHeuristic implements StrategyInterf
             throw Error('player not to move');
         }
 
-        console.time('uct simulation');
+        log.time('uct simulation');
 
         // disable logging for simulation
-        let log = console.log;
-        console.log = () => {
-        };
+        log.setConfig({disabled: true});
         //let check = JSON.stringify(world.round) + JSON.stringify(world.rounds) + JSON.stringify(this.thisPlayer.assumptions) + JSON.stringify(world.history);
         let simulation = new Simulation(world, this.thisPlayer, AdvancedHeuristic);
         let valuations = simulation.run(cardSet, 10, 100);
@@ -36,10 +33,10 @@ export class CallingRulesWithUctMonteCarloAndHeuristic implements StrategyInterf
         /* if(check != JSON.stringify(world.round) + JSON.stringify(world.rounds) + JSON.stringify(this.thisPlayer.assumptions) + JSON.stringify(world.history)){
              throw Error('world changed!')
          }*/
-        console.log = log;
-        console.timeEnd('uct simulation');
+        log.setConfig({disabled: false});
+        log.timeEnd('uct simulation');
 
-        console.log('valuations:' + consoleColors.green(JSON.stringify(valuations)));
+        log.private('valuations:' + JSON.stringify(valuations));
 
         return chooseBestCard(valuations)!;
     }

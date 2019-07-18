@@ -7,8 +7,7 @@ import {GameWorld} from "../../GameWorld";
 import {Player} from "../../Player";
 import {Simulation} from "./UctMonteCarlo/Simulation";
 import {determineGameMode} from "../rules/shouldCall/determineGameMode";
-
-const consoleColors = require('colors');
+import log from "../../../logging/log";
 
 export default class CallingRulesWithUctMonteCarloStrategy implements StrategyInterface {
     private readonly thisPlayer: Player;
@@ -22,12 +21,12 @@ export default class CallingRulesWithUctMonteCarloStrategy implements StrategyIn
             throw Error('player not to move');
         }
 
-        console.time('uct simulation');
+        log.time('uct simulation');
         let simulation = new Simulation(world, this.thisPlayer);
         let valuations = simulation.run(cardSet);
-        console.timeEnd('uct simulation');
+        log.timeEnd('uct simulation');
 
-        console.log('valuations:' + consoleColors.green(JSON.stringify(valuations)));
+        log.private('valuations:' + JSON.stringify(valuations));
 
         return chooseBestCard(valuations)!;
     }

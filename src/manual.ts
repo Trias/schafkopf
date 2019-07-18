@@ -1,4 +1,4 @@
-require("./utils/seededRandomness");
+//require("./utils/seededRandomness");
 import {CallingRulesWithHeuristic} from "./model/strategy/rulebased/CallingRulesWithHeuristic";
 import {Card} from "./model/cards/Card";
 import {Game} from "./model/Game";
@@ -10,26 +10,30 @@ import {PreGame} from "./model/PreGame";
 import {Round} from "./model/Round";
 import {GameHistory} from "./model/knowledge/GameHistory";
 import {GameModeEnum} from "./model/GameMode";
-import {clone} from "lodash";
-import CallingRulesWithUctMonteCarloStrategy from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloStrategy";
+import {ManualStrategy} from "./model/strategy/manual/ManualStrategy";
 import log from "./logging/log";
 
 let fs = require('fs');
 
-let runs = 200;
+let runs = 32;
 
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
 let playerMap = {
-    [playerNames[0]]: new Player(playerNames[0], CallingRulesWithHeuristic),
+    [playerNames[0]]: new Player(playerNames[0], ManualStrategy),
     [playerNames[1]]: new Player(playerNames[1], CallingRulesWithHeuristic),
-    [playerNames[2]]: new Player(playerNames[2], CallingRulesWithUctMonteCarloStrategy),
-    [playerNames[3]]: new Player(playerNames[3], CallingRulesWithUctMonteCarloStrategy),
+    [playerNames[2]]: new Player(playerNames[2], CallingRulesWithHeuristic),
+    [playerNames[3]]: new Player(playerNames[3], CallingRulesWithHeuristic),
 };
 
 let allCardDeals = shuffleCardsTimes(runs);
 
 let stats = new Statistics(playerNames);
+
+log.setConfig({
+    private: false,
+    time: false
+});
 
 let games: {
     [index in number]: {
@@ -41,42 +45,33 @@ let games: {
 } = {};
 
 (async () => {
-let startPlayer = playerNames[0];
-for (let i = 0; i < runs; i++) {
-    // @ts-ignore
-    let prngState = Math.random.state();
-    games[i + 1] = {
-        playerNames,
-        startPlayer,
-        prngState: clone(prngState),
-        cardDeal: allCardDeals[i]
-    };
+    let startPlayer = playerNames[0];
+    for (let i = 0; i < runs; i++) {
 
-    log.info(`========game ${i + 1}===========`);
-    let preGame = new PreGame(playerMap);
-    let gameMode = await preGame.determineGameMode(allCardDeals[i], [GameModeEnum.CALL_GAME]);
-    let history = new GameHistory(Object.keys(playerMap), gameMode);
-    let game = new Game(new GameWorld(gameMode, playerMap, [], new Round(startPlayer, Object.keys(playerMap)), history));
+        log.info(`========game ${i + 1}===========`);
+        let preGame = new PreGame(playerMap);
+        let gameMode = await preGame.determineGameMode(allCardDeals[i], [GameModeEnum.CALL_GAME]);
+        let history = new GameHistory(Object.keys(playerMap), gameMode);
+        let game = new Game(new GameWorld(gameMode, playerMap, [], new Round(startPlayer, Object.keys(playerMap)), history));
 
-    await game.play();
-    let gameResult = game.getGameResult();
+        await game.play();
+        let gameResult = game.getGameResult();
 
-    stats.addResult(gameResult);
+        stats.addResult(gameResult);
 
-    if (game.getGameResult().getGameMode().isNoRetry()) {
-        log.report(`Team (${gameResult.getPlayingTeamNames()}) ${gameResult.hasPlayingTeamWon() ? 'wins' : 'looses'} ` +
-            `with ${gameResult.getPlayingTeamPoints()} points ` +
-            `and ${gameResult.hasPlayingTeamWon() ? 'win' : 'loose'} ${Math.abs(gameResult.getGameMoneyValue())} cents each!`);
-    } else {
-        log.report(`retry with cards:${Object.values(playerMap).map(p => '\n' + p.getName() + ': ' + p.getStartCardSet().toString())}`)
+        if (game.getGameResult().getGameMode().isNoRetry()) {
+            log.report(`Team (${gameResult.getPlayingTeamNames()}) ${gameResult.hasPlayingTeamWon() ? 'wins' : 'looses'} ` +
+                `with ${gameResult.getPlayingTeamPoints()} points ` +
+                `and ${gameResult.hasPlayingTeamWon() ? 'win' : 'loose'} ${Math.abs(gameResult.getGameMoneyValue())} cents each!`);
+        } else {
+            log.report(`retry with cards:${Object.values(playerMap).map(p => '\n' + p.getName() + ': ' + p.getStartCardSet().toString())}`)
+        }
+        reportCents(i);
+
+        startPlayer = rotateStartPlayer(startPlayer);
     }
-    reportCents(i);
-
-    startPlayer = rotateStartPlayer(startPlayer);
-}
 
     saveGames();
-
 })();
 
 function saveGames() {

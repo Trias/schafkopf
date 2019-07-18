@@ -15,7 +15,7 @@ import {GameModeEnum} from "./model/GameMode";
 import {clone} from "lodash";
 import {RuleEvaluation} from "./model/reporting/RuleEvaluation";
 import {CallingRulesWithHeuristic} from "./model/strategy/rulebased/CallingRulesWithHeuristic";
-import colors = require('colors');
+import log from "./logging/log";
 
 let fs = require('fs');
 
@@ -42,79 +42,84 @@ let games: {
 
 let blackList = Object.keys(require('../generated/badRules.json'));
 
-//(async () => {
-let startPlayer = playerNames[0];
-for (let i = 0; i < runs; i++) {
-    // @ts-ignore
-    let prngState = Math.random.state();
-    games[i + 1] = {
-        playerNames,
-        startPlayer,
-        prngState: clone(prngState),
-        cardDeal: allCardDeals[i]
-    };
-
-    for (let j = 0; j < evaluation.strategies.length ** 4; j++) {
-        let playerMap = {
-            [playerNames[0]]: new Player(playerNames[0], evaluation.getStrategyToEvaluate(j, 0), ruleEvaluation, callingRuleEvaluation, blackList),
-            [playerNames[1]]: new Player(playerNames[1], evaluation.getStrategyToEvaluate(j, 1), ruleEvaluation, callingRuleEvaluation, blackList),
-            [playerNames[2]]: new Player(playerNames[2], evaluation.getStrategyToEvaluate(j, 2), ruleEvaluation, callingRuleEvaluation, blackList),
-            [playerNames[3]]: new Player(playerNames[3], evaluation.getStrategyToEvaluate(j, 3), ruleEvaluation, callingRuleEvaluation, blackList),
+(async () => {
+    let startPlayer = playerNames[0];
+    for (let i = 0; i < runs; i++) {
+        // @ts-ignore
+        let prngState = Math.random.state();
+        games[i + 1] = {
+            playerNames,
+            startPlayer,
+            prngState: clone(prngState),
+            cardDeal: allCardDeals[i]
         };
 
-        console.log(`========game ${i + 1} run ${j + 1}===========`);
-        let preGame = new PreGame(playerMap);
-        let gameMode = preGame.determineGameMode(allCardDeals[i], [GameModeEnum.CALL_GAME]);
-        let history = new GameHistory(Object.keys(playerMap), gameMode);
-        let game = new Game(new GameWorld(gameMode, playerMap, [], new Round(startPlayer, Object.keys(playerMap)), history));
+        for (let j = 0; j < evaluation.strategies.length ** 4; j++) {
+            let playerMap = {
+                [playerNames[0]]: new Player(playerNames[0], evaluation.getStrategyToEvaluate(j, 0), ruleEvaluation, callingRuleEvaluation, blackList),
+                [playerNames[1]]: new Player(playerNames[1], evaluation.getStrategyToEvaluate(j, 1), ruleEvaluation, callingRuleEvaluation, blackList),
+                [playerNames[2]]: new Player(playerNames[2], evaluation.getStrategyToEvaluate(j, 2), ruleEvaluation, callingRuleEvaluation, blackList),
+                [playerNames[3]]: new Player(playerNames[3], evaluation.getStrategyToEvaluate(j, 3), ruleEvaluation, callingRuleEvaluation, blackList),
+            };
 
-        game.play();
-        let gameResult = game.getGameResult();
+            log.info(`========game ${i + 1} run ${j + 1}===========`);
+            let preGame = new PreGame(playerMap);
+            let gameMode = await preGame.determineGameMode(allCardDeals[i], [GameModeEnum.CALL_GAME]);
+            let history = new GameHistory(Object.keys(playerMap), gameMode);
+            let game = new Game(new GameWorld(gameMode, playerMap, [], new Round(startPlayer, Object.keys(playerMap)), history));
 
-        stats.addResult(gameResult);
-        evaluation.addResult(gameResult, j);
-        ruleEvaluation.gradeRules(gameResult);
-        callingRuleEvaluation.gradeRules(gameResult);
+            await game.play();
+            let gameResult = game.getGameResult();
 
-        if (game.getGameResult().getGameMode().isNoRetry()) {
-            console.log(`Team (${gameResult.getPlayingTeamNames()}) ${gameResult.hasPlayingTeamWon() ? 'wins' : 'looses'} ` +
-                `with ${gameResult.getPlayingTeamPoints()} points ` +
-                `and ${gameResult.hasPlayingTeamWon() ? 'win' : 'loose'} ${Math.abs(gameResult.getGameMoneyValue())} cents each!`);
-        } else {
-            console.log(`retry with cards:${Object.values(playerMap).map(p => '\n' + p.getName() + ': ' + JSON.stringify(p.getStartCardSet()))}`);
-            j = evaluation.strategies.length ** 4;
+            stats.addResult(gameResult);
+            evaluation.addResult(gameResult, j);
+            ruleEvaluation.gradeRules(gameResult);
+            callingRuleEvaluation.gradeRules(gameResult);
+
+            if (game.getGameResult().getGameMode().isNoRetry()) {
+                log.report(`Team (${gameResult.getPlayingTeamNames()}) ${gameResult.hasPlayingTeamWon() ? 'wins' : 'looses'} ` +
+                    `with ${gameResult.getPlayingTeamPoints()} points ` +
+                    `and ${gameResult.hasPlayingTeamWon() ? 'win' : 'loose'} ${Math.abs(gameResult.getGameMoneyValue())} cents each!`);
+            } else {
+                log.report(`retry with cards:${Object.values(playerMap).map(p => '\n' + p.getName() + ': ' + JSON.stringify(p.getStartCardSet()))}`);
+                j = evaluation.strategies.length ** 4;
+            }
+            reportCents(playerMap, i);
         }
-        reportCents(playerMap, i);
-    }
-    reportOnCallingRules(i);
-    reportOnStrategies(i);
+        reportOnCallingRules(i);
+        reportOnStrategies(i);
 
-    startPlayer = rotateStartPlayer(startPlayer);
-}
+        startPlayer = rotateStartPlayer(startPlayer);
+    }
+
+    saveGames();
+    saveRules();
+
+})();
 
 function reportCents(playerMap: PlayerMap, i: number) {
-    console.log(`balance after ${i + 1} games`);
+    log.report(`balance after ${i + 1} games`);
     for (let i = 0; i < 4; i++) {
         let playerStats = stats.getStatsForPlayer(playerNames[i]);
-        console.log(colors.blue(`${playerNames[i]} [${playerMap[playerNames[i]].getStartCardSet()}] (${playerMap[playerNames[i]].getStrategyName()}): ${playerStats.cents} (${playerStats.tournamentPoints} points, ${playerStats.wins} wins, ${playerStats.losses} losses, ${playerStats.inPlayingTeam} playing, ${playerStats.points / playerStats.games} points on average`));
+        log.report(`${playerNames[i]} [${playerMap[playerNames[i]].getStartCardSet()}] (${playerMap[playerNames[i]].getStrategyName()}): ${playerStats.cents} (${playerStats.tournamentPoints} points, ${playerStats.wins} wins, ${playerStats.losses} losses, ${playerStats.inPlayingTeam} playing, ${playerStats.points / playerStats.games} points on average`);
     }
 }
 
 function reportOnCallingRules(i: number) {
-    console.log(`calling rule evaluation after ${i + 1} games`);
+    log.info(`calling rule evaluation after ${i + 1} games`);
     let ruleStatistics = callingRuleEvaluation.getRuleStatistics();
     let rules = Object.keys(ruleStatistics).sort();
     for (let rule of rules) {
         let evalu = ruleStatistics[rule];
-        console.log(`evaluation for calling rule "${rule}" has ${evalu.wins} wins and ${evalu.losses} losses which gives a win ratio of ${evalu.wins / (evalu.losses + evalu.wins)}`);
+        log.report(`evaluation for calling rule "${rule}" has ${evalu.wins} wins and ${evalu.losses} losses which gives a win ratio of ${evalu.wins / (evalu.losses + evalu.wins)}`);
     }
 }
 
 function reportOnStrategies(i: number) {
-    console.log(`strategy evaluation after ${i + 1} games`);
+    log.info(`strategy evaluation after ${i + 1} games`);
     for (let strategy of evaluation.strategies) {
         let evalu = evaluation.getEvaluationForStrategy(strategy);
-        console.log(`evaluation for strategy ${strategy.name} has ${evalu.wins} wins and ${evalu.losses} losses`);
+        log.stats(`evaluation for strategy ${strategy.name} has ${evalu.wins} wins and ${evalu.losses} losses`);
     }
 }
 
@@ -125,7 +130,6 @@ function saveGames() {
     fs.writeFileSync('generated/evaluation.games.json', JSON.stringify(games, null, 2));
 }
 
-saveGames();
 
 function saveRules() {
     let ruleStatistics = ruleEvaluation.getRuleStatistics();
@@ -135,10 +139,6 @@ function saveRules() {
     }
     fs.writeFileSync('generated/rules.json', JSON.stringify(rules.sort(), null, 2));
 }
-
-saveRules();
-
-//})();
 
 function rotateStartPlayer(startPlayer: string) {
     let index = playerNames.indexOf(startPlayer);

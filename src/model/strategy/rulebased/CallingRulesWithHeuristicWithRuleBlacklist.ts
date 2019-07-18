@@ -9,7 +9,7 @@ import {AdvancedHeuristic} from "./heuristic/AdvancedHeuristics";
 import {RuleEvaluation} from "../../reporting/RuleEvaluation";
 import {includes, sample} from "lodash";
 import {getPlayableCards} from "../../PlayableMoves";
-import colors = require('colors');
+import log from "../../../logging/log";
 
 export class CallingRulesWithHeuristicWithRuleBlacklist implements StrategyInterface {
     private readonly thisPlayer: Player;
@@ -32,7 +32,7 @@ export class CallingRulesWithHeuristicWithRuleBlacklist implements StrategyInter
     chooseCardToPlay(world: GameWorld, cardSet: Card[]): Card {
         let ruleApplied: string[] = [];
         let report = (reasons: string[], secondOrderReasons: string[], conclusion: string, card: Card) => {
-            console.log(colors.green(reasons.toString() + (secondOrderReasons.length ? '\n-->' : '') + secondOrderReasons.toString() + ' => ' + conclusion + ': ' + card));
+            log.private(reasons.toString() + (secondOrderReasons.length ? '\n-->' : '') + secondOrderReasons.toString() + ' => ' + conclusion + ': ' + card);
             ruleApplied = reasons;
         };
 
@@ -43,7 +43,7 @@ export class CallingRulesWithHeuristicWithRuleBlacklist implements StrategyInter
             if (includes(this.ruleBlacklist, ruleApplied.toString())) {
                 let playableCards = getPlayableCards(cardSet, world.gameMode, world.round);
                 card = sample(playableCards)!;
-                console.log('overwriting choice with random play');
+                log.private('overwriting choice with random play');
                 this.ruleEvaluation.addBlacklistedRule(this.thisPlayer.getName(), ruleApplied);
             } else {
                 this.ruleEvaluation.addRule(this.thisPlayer.getName(), ruleApplied);
