@@ -1,4 +1,5 @@
-import CallingRulesWithUctMonteCarloStrategy from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloStrategy";
+require("./utils/seededRandomness");
+
 import CallingRulesWithUctMonteCarloStrategyAndCheating
     from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloStrategyAndCheating";
 import {StrategyEvaluation} from "./model/reporting/StrategyEvaluation";
@@ -17,7 +18,6 @@ import {RuleEvaluation} from "./model/reporting/RuleEvaluation";
 import {CallingRulesWithHeuristic} from "./model/strategy/rulebased/CallingRulesWithHeuristic";
 import log from "./logging/log";
 
-require("./utils/seededRandomness");
 
 let fs = require('fs');
 
@@ -60,28 +60,28 @@ let ruleBlacklist = Object.keys(require('../generated/badRules.json'));
             let playerMap = {
                 [playerNames[0]]: new Player({
                     name: playerNames[0],
-                    strategy: CallingRulesWithHeuristic,
+                    strategy: evaluation.getStrategyToEvaluate(j, 0),
                     ruleEvaluation,
                     callingRuleEvaluation,
                     ruleBlacklist
                 }),
                 [playerNames[1]]: new Player({
                     name: playerNames[1],
-                    strategy: CallingRulesWithHeuristic,
+                    strategy: evaluation.getStrategyToEvaluate(j, 0),
                     ruleEvaluation,
                     callingRuleEvaluation,
                     ruleBlacklist
                 }),
                 [playerNames[2]]: new Player({
                     name: playerNames[2],
-                    strategy: CallingRulesWithUctMonteCarloStrategy,
+                    strategy: evaluation.getStrategyToEvaluate(j, 0),
                     ruleEvaluation,
                     callingRuleEvaluation,
                     ruleBlacklist
                 }),
                 [playerNames[3]]: new Player({
                     name: playerNames[3],
-                    strategy: CallingRulesWithUctMonteCarloStrategy,
+                    strategy: evaluation.getStrategyToEvaluate(j, 0),
                     ruleEvaluation,
                     callingRuleEvaluation,
                     ruleBlacklist

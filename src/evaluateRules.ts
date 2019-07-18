@@ -1,4 +1,5 @@
-import CallingRulesWithUctMonteCarloStrategy from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloStrategy";
+require("./utils/seededRandomness");
+
 import {StrategyEvaluation} from "./model/reporting/StrategyEvaluation";
 import {Card} from "./model/cards/Card";
 import {Game} from "./model/Game";
@@ -16,11 +17,9 @@ import {CallingRulesWithHeuristic} from "./model/strategy/rulebased/CallingRules
 import {CallingRulesWithHeuristicWithRuleBlacklist} from "./model/strategy/rulebased/CallingRulesWithHeuristicWithRuleBlacklist";
 import log from "./logging/log";
 
-require("./utils/seededRandomness");
-
 let fs = require('fs');
 
-let runs = 10;
+let runs = 100;
 
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
@@ -59,28 +58,28 @@ let blacklists = zip(rules) as string[][];
                 let playerMap = {
                     [playerNames[0]]: new Player({
                         name: playerNames[0],
-                        strategy: CallingRulesWithHeuristic,
+                        strategy: strategyEvaluation.getStrategyToEvaluate(j, 0),
                         ruleEvaluation,
                         callingRuleEvaluation,
                         ruleBlacklist
                     }),
                     [playerNames[1]]: new Player({
                         name: playerNames[1],
-                        strategy: CallingRulesWithHeuristic,
+                        strategy: strategyEvaluation.getStrategyToEvaluate(j, 0),
                         ruleEvaluation,
                         callingRuleEvaluation,
                         ruleBlacklist
                     }),
                     [playerNames[2]]: new Player({
                         name: playerNames[2],
-                        strategy: CallingRulesWithUctMonteCarloStrategy,
+                        strategy: strategyEvaluation.getStrategyToEvaluate(j, 0),
                         ruleEvaluation,
                         callingRuleEvaluation,
                         ruleBlacklist
                     }),
                     [playerNames[3]]: new Player({
                         name: playerNames[3],
-                        strategy: CallingRulesWithUctMonteCarloStrategy,
+                        strategy: strategyEvaluation.getStrategyToEvaluate(j, 0),
                         ruleEvaluation,
                         callingRuleEvaluation,
                         ruleBlacklist
