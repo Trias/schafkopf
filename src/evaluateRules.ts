@@ -1,4 +1,4 @@
-require("./utils/seededRandomness");
+import CallingRulesWithUctMonteCarloStrategy from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloStrategy";
 import {StrategyEvaluation} from "./model/reporting/StrategyEvaluation";
 import {Card} from "./model/cards/Card";
 import {Game} from "./model/Game";
@@ -15,6 +15,8 @@ import {RuleEvaluation} from "./model/reporting/RuleEvaluation";
 import {CallingRulesWithHeuristic} from "./model/strategy/rulebased/CallingRulesWithHeuristic";
 import {CallingRulesWithHeuristicWithRuleBlacklist} from "./model/strategy/rulebased/CallingRulesWithHeuristicWithRuleBlacklist";
 import log from "./logging/log";
+
+require("./utils/seededRandomness");
 
 let fs = require('fs');
 
@@ -52,16 +54,40 @@ let blacklists = zip(rules) as string[][];
             prngState: clone(prngState),
             cardDeal: allCardDeals[i]
         };
-        for (let blacklist of blacklists) {
+        for (let ruleBlacklist of blacklists) {
             for (let j = 0; j < strategyEvaluation.strategies.length ** 4; j++) {
                 let playerMap = {
-                    [playerNames[0]]: new Player(playerNames[0], strategyEvaluation.getStrategyToEvaluate(j, 0), ruleEvaluation, callingRuleEvaluation, blacklist),
-                    [playerNames[1]]: new Player(playerNames[1], strategyEvaluation.getStrategyToEvaluate(j, 1), ruleEvaluation, callingRuleEvaluation, blacklist),
-                    [playerNames[2]]: new Player(playerNames[2], strategyEvaluation.getStrategyToEvaluate(j, 2), ruleEvaluation, callingRuleEvaluation, blacklist),
-                    [playerNames[3]]: new Player(playerNames[3], strategyEvaluation.getStrategyToEvaluate(j, 3), ruleEvaluation, callingRuleEvaluation, blacklist),
+                    [playerNames[0]]: new Player({
+                        name: playerNames[0],
+                        strategy: CallingRulesWithHeuristic,
+                        ruleEvaluation,
+                        callingRuleEvaluation,
+                        ruleBlacklist
+                    }),
+                    [playerNames[1]]: new Player({
+                        name: playerNames[1],
+                        strategy: CallingRulesWithHeuristic,
+                        ruleEvaluation,
+                        callingRuleEvaluation,
+                        ruleBlacklist
+                    }),
+                    [playerNames[2]]: new Player({
+                        name: playerNames[2],
+                        strategy: CallingRulesWithUctMonteCarloStrategy,
+                        ruleEvaluation,
+                        callingRuleEvaluation,
+                        ruleBlacklist
+                    }),
+                    [playerNames[3]]: new Player({
+                        name: playerNames[3],
+                        strategy: CallingRulesWithUctMonteCarloStrategy,
+                        ruleEvaluation,
+                        callingRuleEvaluation,
+                        ruleBlacklist
+                    }),
                 };
 
-                log.info(`========game ${i + 1} run ${j + 1} blacklisted rule: ${blacklist.toString()}===========`);
+                log.info(`========game ${i + 1} run ${j + 1} blacklisted rule: ${ruleBlacklist.toString()}===========`);
                 let preGame = new PreGame(playerMap);
                 let gameMode = await preGame.determineGameMode(allCardDeals[i], [GameModeEnum.CALL_GAME]);
                 let history = new GameHistory(Object.keys(playerMap), gameMode);
@@ -72,7 +98,7 @@ let blacklists = zip(rules) as string[][];
 
                 stats.addResult(gameResult);
                 //strategyEvaluation.addResult(gameResult, j);
-                ruleEvaluation.gradeRules(gameResult, blacklist);
+                ruleEvaluation.gradeRules(gameResult, ruleBlacklist);
                 callingRuleEvaluation.gradeRules(gameResult);
 
                 if (game.getGameResult().getGameMode().isNoRetry()) {
@@ -80,7 +106,7 @@ let blacklists = zip(rules) as string[][];
                         `with ${gameResult.getPlayingTeamPoints()} points ` +
                         `and ${gameResult.hasPlayingTeamWon() ? 'win' : 'loose'} ${Math.abs(gameResult.getGameMoneyValue())} cents each!`);
                 } else {
-                    log.report(`retry with cards:${Object.values(playerMap).map(p => '\n' + p.getName() + ': ' + p.getStartCardSet().toString())}`);
+                    log.gameInfo(`retry with cards:${Object.values(playerMap).map(p => '\n' + p.getName() + ': ' + p.getStartCardSet().toString())}`);
                     //skip ahead in evaluation b/c we dont evaluate calling rules...
                     j = strategyEvaluation.strategies.length ** 4;
                 }

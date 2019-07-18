@@ -62,7 +62,7 @@ export class Game {
             this.world.rounds.push(this.world.round.finish());
 
             let roundAnalyzer = new RoundAnalyzer(this.world.round, this.gameMode);
-            log.gameInfo(`round winner: ${colors.bold(roundAnalyzer.getWinningPlayerName())} at position ${colors.bold((roundAnalyzer.getWinningCardPosition() + 1) + "")}; round cards: ${colors.bold(this.world.round.getPlayedCards().toString())}`);
+            log.gameInfo(`round winner: ${colors.bold(roundAnalyzer.getWinningPlayerName())}; round cards: ${colors.bold(this.world.round.getPlayedCards().toString())}`);
             this.world.onRoundCompleted(this.world.round.finish(), i);
             if (this.world.history.isTeamPartnerKnown()) {
                 log.private(`Playing Team (${this.world.history.getPlayingTeamNames()}) has ${this.world.history.getTeamPoints(this.world.history.getPlayingTeamNames())} points; Opposing Team (${this.world.history.getNonPlayingTeam()}) has ${this.world.history.getTeamPoints(this.world.history.getNonPlayingTeam())} points`);

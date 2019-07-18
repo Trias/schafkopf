@@ -1,4 +1,4 @@
-require("./utils/seededRandomness");
+import CallingRulesWithUctMonteCarloStrategy from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloStrategy";
 import CallingRulesWithUctMonteCarloStrategyAndCheating
     from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloStrategyAndCheating";
 import {StrategyEvaluation} from "./model/reporting/StrategyEvaluation";
@@ -16,6 +16,8 @@ import {clone} from "lodash";
 import {RuleEvaluation} from "./model/reporting/RuleEvaluation";
 import {CallingRulesWithHeuristic} from "./model/strategy/rulebased/CallingRulesWithHeuristic";
 import log from "./logging/log";
+
+require("./utils/seededRandomness");
 
 let fs = require('fs');
 
@@ -40,7 +42,7 @@ let games: {
     }
 } = {};
 
-let blackList = Object.keys(require('../generated/badRules.json'));
+let ruleBlacklist = Object.keys(require('../generated/badRules.json'));
 
 (async () => {
     let startPlayer = playerNames[0];
@@ -56,10 +58,34 @@ let blackList = Object.keys(require('../generated/badRules.json'));
 
         for (let j = 0; j < evaluation.strategies.length ** 4; j++) {
             let playerMap = {
-                [playerNames[0]]: new Player(playerNames[0], evaluation.getStrategyToEvaluate(j, 0), ruleEvaluation, callingRuleEvaluation, blackList),
-                [playerNames[1]]: new Player(playerNames[1], evaluation.getStrategyToEvaluate(j, 1), ruleEvaluation, callingRuleEvaluation, blackList),
-                [playerNames[2]]: new Player(playerNames[2], evaluation.getStrategyToEvaluate(j, 2), ruleEvaluation, callingRuleEvaluation, blackList),
-                [playerNames[3]]: new Player(playerNames[3], evaluation.getStrategyToEvaluate(j, 3), ruleEvaluation, callingRuleEvaluation, blackList),
+                [playerNames[0]]: new Player({
+                    name: playerNames[0],
+                    strategy: CallingRulesWithHeuristic,
+                    ruleEvaluation,
+                    callingRuleEvaluation,
+                    ruleBlacklist
+                }),
+                [playerNames[1]]: new Player({
+                    name: playerNames[1],
+                    strategy: CallingRulesWithHeuristic,
+                    ruleEvaluation,
+                    callingRuleEvaluation,
+                    ruleBlacklist
+                }),
+                [playerNames[2]]: new Player({
+                    name: playerNames[2],
+                    strategy: CallingRulesWithUctMonteCarloStrategy,
+                    ruleEvaluation,
+                    callingRuleEvaluation,
+                    ruleBlacklist
+                }),
+                [playerNames[3]]: new Player({
+                    name: playerNames[3],
+                    strategy: CallingRulesWithUctMonteCarloStrategy,
+                    ruleEvaluation,
+                    callingRuleEvaluation,
+                    ruleBlacklist
+                }),
             };
 
             log.info(`========game ${i + 1} run ${j + 1}===========`);
@@ -81,7 +107,7 @@ let blackList = Object.keys(require('../generated/badRules.json'));
                     `with ${gameResult.getPlayingTeamPoints()} points ` +
                     `and ${gameResult.hasPlayingTeamWon() ? 'win' : 'loose'} ${Math.abs(gameResult.getGameMoneyValue())} cents each!`);
             } else {
-                log.report(`retry with cards:${Object.values(playerMap).map(p => '\n' + p.getName() + ': ' + JSON.stringify(p.getStartCardSet()))}`);
+                log.gameInfo(`retry with cards:${Object.values(playerMap).map(p => '\n' + p.getName() + ': ' + JSON.stringify(p.getStartCardSet()))}`);
                 j = evaluation.strategies.length ** 4;
             }
             reportCents(playerMap, i);

@@ -8,7 +8,7 @@ export default interface StrategyInterface extends CardPlayStrategy {
 
     chooseCardToPlay(world: GameWorld, cardSet: readonly Card[]): Promise<Card> | Card
 
-    chooseGameToCall(cardSet: readonly Card[], gameMode: GameMode, playerIndex: number, allowedGameModes: GameModeEnum[]): [GameModeEnum?, PlainColor?];
+    chooseGameToCall(cardSet: readonly Card[], gameMode: GameMode, playerIndex: number, allowedGameModes: GameModeEnum[]): Promise<[GameModeEnum?, PlainColor?]> | [GameModeEnum?, PlainColor?];
 
     chooseToRaise(cardSet: readonly Card[]): boolean;
 }

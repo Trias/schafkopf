@@ -15,7 +15,20 @@ import {RuleEvaluation} from "./reporting/RuleEvaluation";
 import {CallingRulesWithHeuristic} from "./strategy/rulebased/CallingRulesWithHeuristic";
 import {CallingRulesWithHeuristicWithRuleBlacklist} from "./strategy/rulebased/CallingRulesWithHeuristicWithRuleBlacklist";
 
+const sleep = (m: number) => new Promise(r => setTimeout(r, m));
+
 export type PlayerMap = { [index in string]: PlayerInterface };
+
+export interface PlayerOptions {
+    name: string,
+    strategy: new (player: Player) => (StrategyInterface)
+    ruleEvaluation?: RuleEvaluation,
+    callingRuleEvaluation?: RuleEvaluation,
+    ruleBlacklist?: string[],
+    moveDelay?: number
+}
+
+// name: string, strategy: new (player: Player) => (StrategyInterface), ruleEvaluation: RuleEvaluation | null = null, callingRuleEvaluation: RuleEvaluation | null = null, ruleBlackList: string[] = []
 
 class Player implements PlayerInterface {
     private _assumptions?: GameAssumptions;
@@ -25,6 +38,7 @@ class Player implements PlayerInterface {
     private currentCardSet: Card[];
     gamePhase: GamePhase;
     private readonly strategyConstructor: { new(player: Player): StrategyInterface };
+    private readonly moveDelay: number;
 
     get assumptions(): GameAssumptions {
         if (!this._assumptions) {
@@ -33,25 +47,27 @@ class Player implements PlayerInterface {
         return this._assumptions;
     }
 
-    constructor(name: string, strategy: new (player: Player) => (StrategyInterface), ruleEvaluation: RuleEvaluation | null = null, callingRuleEvaluation: RuleEvaluation | null = null, ruleBlackList: string[] = []) {
+    constructor(options: PlayerOptions) {
         this.gamePhase = GamePhase.BEFORE_GAME;
-        this.name = name;
+        this.name = options.name;
 
-        this.strategy = new strategy(this);
-        this.strategyConstructor = strategy;
+        this.strategy = new options.strategy(this);
+        this.strategyConstructor = options.strategy;
 
-        if (this.strategy instanceof CallingRulesWithHeuristic && ruleEvaluation) {
-            this.strategy.injectEvaluation(ruleEvaluation);
+        if (this.strategy instanceof CallingRulesWithHeuristic && options.ruleEvaluation) {
+            this.strategy.injectEvaluation(options.ruleEvaluation);
         }
 
-        if (this.strategy instanceof CallingRulesWithHeuristicWithRuleBlacklist && ruleEvaluation && ruleBlackList) {
-            this.strategy.injectEvaluation(ruleEvaluation);
-            this.strategy.injectRuleBlackList(ruleBlackList);
+        if (this.strategy instanceof CallingRulesWithHeuristicWithRuleBlacklist && options.ruleEvaluation && options.ruleBlacklist) {
+            this.strategy.injectEvaluation(options.ruleEvaluation);
+            this.strategy.injectRuleBlackList(options.ruleBlacklist);
         }
 
-        if (this.strategy instanceof CallingRulesWithHeuristic && callingRuleEvaluation) {
-            this.strategy.injectCallingRulesEvaluation(callingRuleEvaluation);
+        if (this.strategy instanceof CallingRulesWithHeuristic && options.callingRuleEvaluation) {
+            this.strategy.injectCallingRulesEvaluation(options.callingRuleEvaluation);
         }
+
+        this.moveDelay = options.moveDelay || 0;
 
         this.startCardSet = [];
         this.currentCardSet = [];
@@ -99,7 +115,7 @@ class Player implements PlayerInterface {
         return this.startCardSet;
     }
 
-    playCard(world: GameWorld): Round {
+    async playCard(world: GameWorld): Promise<Round> {
         if (this.gamePhase !== GamePhase.IN_PLAY) {
             throw Error('function not available in this state');
         }
@@ -112,7 +128,9 @@ class Player implements PlayerInterface {
             throw Error('invariant violated');
         }
 
-        let card = <Card>this.strategy.chooseCardToPlay(world, this.getCurrentCardSet());
+        let timeStart = +new Date();
+        let card = <Card>await this.strategy.chooseCardToPlay(world, this.getCurrentCardSet());
+        await sleep(Math.max(this.moveDelay - (+new Date() - timeStart), 0));
 
         if (!card || !canPlayCard(world.gameMode, this.currentCardSet, card, world.round)) {
             throw Error('cannot play card!');
@@ -158,7 +176,7 @@ class Player implements PlayerInterface {
         if (this.gamePhase !== GamePhase.ALL_CARDS_DEALT) {
             throw Error('function not available in this state');
         }
-        let [gameMode, color] = this.strategy.chooseGameToCall(this.getStartCardSet(), currentGameMode, playerIndex, allowedGameModes);
+        let [gameMode, color] = await this.strategy.chooseGameToCall(this.getStartCardSet(), currentGameMode, playerIndex, allowedGameModes);
 
         if (gameMode && gameMode !== currentGameMode.getMode()) {
             return new GameMode(gameMode, this.getName(), color);

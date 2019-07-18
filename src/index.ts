@@ -21,10 +21,10 @@ let runs = 200;
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
 let playerMap = {
-    [playerNames[0]]: new Player(playerNames[0], CallingRulesWithHeuristic),
-    [playerNames[1]]: new Player(playerNames[1], CallingRulesWithHeuristic),
-    [playerNames[2]]: new Player(playerNames[2], CallingRulesWithUctMonteCarloStrategy),
-    [playerNames[3]]: new Player(playerNames[3], CallingRulesWithUctMonteCarloStrategy),
+    [playerNames[0]]: new Player({name: playerNames[0], strategy: CallingRulesWithHeuristic}),
+    [playerNames[1]]: new Player({name: playerNames[1], strategy: CallingRulesWithHeuristic}),
+    [playerNames[2]]: new Player({name: playerNames[2], strategy: CallingRulesWithUctMonteCarloStrategy}),
+    [playerNames[3]]: new Player({name: playerNames[3], strategy: CallingRulesWithUctMonteCarloStrategy}),
 };
 
 let allCardDeals = shuffleCardsTimes(runs);
@@ -68,7 +68,7 @@ for (let i = 0; i < runs; i++) {
             `with ${gameResult.getPlayingTeamPoints()} points ` +
             `and ${gameResult.hasPlayingTeamWon() ? 'win' : 'loose'} ${Math.abs(gameResult.getGameMoneyValue())} cents each!`);
     } else {
-        log.report(`retry with cards:${Object.values(playerMap).map(p => '\n' + p.getName() + ': ' + p.getStartCardSet().toString())}`)
+        log.gameInfo(`retry with cards:${Object.values(playerMap).map(p => '\n' + p.getName() + ': ' + p.getStartCardSet().toString())}`)
     }
     reportCents(i);
 
