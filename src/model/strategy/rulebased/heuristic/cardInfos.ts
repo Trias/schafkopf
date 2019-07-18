@@ -6,7 +6,7 @@ import {GameWorld} from "../../../GameWorld";
 import GameAssumptions from "../../../knowledge/GameAssumptions";
 import {includes} from "lodash";
 
-// TODO: use prototype? inheritance?
+// TODO: use prototype? inheritance? laziness?
 export interface CardInfosInPlay extends CardInfoBase {
     partnerIsTrumpFree: boolean;
     hasLowValueBlankCard: boolean;
@@ -52,7 +52,6 @@ export interface CardInfoBase {
     hasMoreThan1TrumpsWithoutVolle: boolean;
 }
 
-// TODO: be more lazy?
 export default function getCardInfos(world: GameWorld, name: string, cardSet: Card[], assumptions: GameAssumptions, startCardSet: Card[]) {
     let roundAnalyzer = world.round.getRoundAnalyzer(world.gameMode);
     // card ranks

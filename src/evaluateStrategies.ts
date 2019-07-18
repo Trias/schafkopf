@@ -111,7 +111,7 @@ function reportOnCallingRules(i: number) {
     let rules = Object.keys(ruleStatistics).sort();
     for (let rule of rules) {
         let evalu = ruleStatistics[rule];
-        log.report(`evaluation for calling rule "${rule}" has ${evalu.wins} wins and ${evalu.losses} losses which gives a win ratio of ${evalu.wins / (evalu.losses + evalu.wins)}`);
+        log.stats(`evaluation for calling rule "${rule}" has ${evalu.wins} wins and ${evalu.losses} losses which gives a win ratio of ${evalu.wins / (evalu.losses + evalu.wins)}`);
     }
 }
 
