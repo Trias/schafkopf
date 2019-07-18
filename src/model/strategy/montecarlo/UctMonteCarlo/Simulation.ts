@@ -34,7 +34,7 @@ export class Simulation {
         this.heuristicForPlayer = new this.heuristicConstructor(this.thisPlayer.getName(), this.thisPlayer.getStartCardSet(), cloneDeep(thisPlayer.assumptions));
     }
 
-    run(cardSet: Card[], simulations: number = 100, runsPerSimulation: number = 10) {
+    run(cardSet: Card[], simulations: number = 100, runsPerSimulation: number = 10, generateWorlds: (world: GameWorld, name: string, constructor: any) => GameWorld = generateRandomWorldConsistentWithGameKnowledge) {
         let playableCards = getPlayableCards(cardSet, this.world.gameMode, this.world.round);
 
         if (playableCards.length == 1) {
@@ -52,7 +52,7 @@ export class Simulation {
 
         // generate them eagerly to avoid biasing early results...
         for (let i = 0; i < simulations; i++) {
-            fakeWorlds[i] = generateRandomWorldConsistentWithGameKnowledge(this.world.clone(), this.thisPlayer.getName(), this.heuristicConstructor);
+            fakeWorlds[i] = generateWorlds(this.world.clone(), this.thisPlayer.getName(), this.heuristicConstructor);
         }
 
         for (let j = 0; j < runsPerSimulation * simulations; j++) {
@@ -69,7 +69,7 @@ export class Simulation {
     }
 
     private expand(gameTreeNode: GameTree, game: SimulatedGame, card: Card) {
-        game.simulatePlayerBefore(this.thisPlayer.getName());
+        //game.simulatePlayerBefore(this.thisPlayer.getName());
 
         let node = {
             card: card,
@@ -117,9 +117,10 @@ export class Simulation {
                 game.simulateOneRoundWithCard(this.thisPlayer.getName(), card);
                 return this.select(bestChild!, game, cardSet);
             } else {
-                // expand thr tree with a random card...
+                // expand the tree with a random card...
                 let unexploredCards = difference(playableCards, expandedChildrenCards)!;
                 let card = this.heuristicForPlayer.chooseCardToPlay(this.world, unexploredCards);
+
                 return this.expand(gameTree, game, card);
             }
         }

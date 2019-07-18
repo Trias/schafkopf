@@ -17,7 +17,7 @@ import {CallingRulesWithHeuristicWithRuleBlacklist} from "./model/strategy/ruleb
 
 let fs = require('fs');
 
-let runs = 1;
+let runs = 10;
 
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
@@ -25,7 +25,7 @@ let allCardDeals = shuffleCardsTimes(runs);
 
 let stats = new Statistics(playerNames);
 
-let evaluation = new StrategyEvaluation([CallingRulesWithHeuristicWithRuleBlacklist, CallingRulesWithHeuristic]);
+let strategyEvaluation = new StrategyEvaluation([CallingRulesWithHeuristicWithRuleBlacklist, CallingRulesWithHeuristic]);
 let callingRuleEvaluation = new RuleEvaluation();
 let ruleEvaluation = new RuleEvaluation();
 
@@ -52,12 +52,12 @@ for (let i = 0; i < runs; i++) {
         cardDeal: allCardDeals[i]
     };
     for (let blacklist of blacklists) {
-        for (let j = 0; j < evaluation.strategies.length ** 4; j++) {
+        for (let j = 0; j < strategyEvaluation.strategies.length ** 4; j++) {
             let playerMap = {
-                [playerNames[0]]: new Player(playerNames[0], evaluation.getStrategyToEvaluate(j, 0), ruleEvaluation, callingRuleEvaluation, blacklist),
-                [playerNames[1]]: new Player(playerNames[1], evaluation.getStrategyToEvaluate(j, 1), ruleEvaluation, callingRuleEvaluation, blacklist),
-                [playerNames[2]]: new Player(playerNames[2], evaluation.getStrategyToEvaluate(j, 2), ruleEvaluation, callingRuleEvaluation, blacklist),
-                [playerNames[3]]: new Player(playerNames[3], evaluation.getStrategyToEvaluate(j, 3), ruleEvaluation, callingRuleEvaluation, blacklist),
+                [playerNames[0]]: new Player(playerNames[0], strategyEvaluation.getStrategyToEvaluate(j, 0), ruleEvaluation, callingRuleEvaluation, blacklist),
+                [playerNames[1]]: new Player(playerNames[1], strategyEvaluation.getStrategyToEvaluate(j, 1), ruleEvaluation, callingRuleEvaluation, blacklist),
+                [playerNames[2]]: new Player(playerNames[2], strategyEvaluation.getStrategyToEvaluate(j, 2), ruleEvaluation, callingRuleEvaluation, blacklist),
+                [playerNames[3]]: new Player(playerNames[3], strategyEvaluation.getStrategyToEvaluate(j, 3), ruleEvaluation, callingRuleEvaluation, blacklist),
             };
 
             console.log(`========game ${i + 1} run ${j + 1} blacklisted rule: ${JSON.stringify(blacklist)}===========`);
@@ -70,7 +70,7 @@ for (let i = 0; i < runs; i++) {
             let gameResult = game.getGameResult();
 
             stats.addResult(gameResult);
-            evaluation.addResult(gameResult, j);
+            //strategyEvaluation.addResult(gameResult, j);
             ruleEvaluation.gradeRules(gameResult, blacklist);
             callingRuleEvaluation.gradeRules(gameResult);
 
@@ -81,7 +81,7 @@ for (let i = 0; i < runs; i++) {
             } else {
                 console.log(`retry with cards:${Object.values(playerMap).map(p => '\n' + p.getName() + ': ' + JSON.stringify(p.getStartCardSet()))}`);
                 //skip ahead in evaluation b/c we dont evaluate calling rules...
-                j = evaluation.strategies.length ** 4;
+                j = strategyEvaluation.strategies.length ** 4;
             }
         }
     }

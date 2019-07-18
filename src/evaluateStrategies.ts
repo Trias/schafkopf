@@ -1,5 +1,6 @@
 require("./utils/seededRandomness");
-import CallingRulesWithUctMonteCarloStrategy from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloStrategy";
+import CallingRulesWithUctMonteCarloStrategyAndCheating
+    from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloStrategyAndCheating";
 import {StrategyEvaluation} from "./model/reporting/StrategyEvaluation";
 import {Card} from "./model/cards/Card";
 import {Game} from "./model/Game";
@@ -26,7 +27,7 @@ let allCardDeals = shuffleCardsTimes(runs);
 
 let stats = new Statistics(playerNames);
 
-let evaluation = new StrategyEvaluation([CallingRulesWithUctMonteCarloStrategy, CallingRulesWithHeuristic]);
+let evaluation = new StrategyEvaluation([CallingRulesWithHeuristic, CallingRulesWithUctMonteCarloStrategyAndCheating]);
 let callingRuleEvaluation = new RuleEvaluation();
 let ruleEvaluation = new RuleEvaluation();
 
