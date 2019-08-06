@@ -5,9 +5,8 @@ import {removeCard} from "../cards/CardSet";
 import {GameWorld} from "../GameWorld";
 import {DummyPlayer} from "./DummyPlayer";
 import {CardPlayStrategy} from "../strategy/CardPlayStrategy";
-import GameAssumptions from "../knowledge/GameAssumptions";
 
-export function generateRandomWorldConsistentWithGameKnowledge(world: GameWorld, playerName: string, strategyConstructor: new (name: string, startCardSet: Card[], assumptions: GameAssumptions) => CardPlayStrategy): GameWorld {
+export function generateRandomWorldConsistentWithGameKnowledge(world: GameWorld, playerName: string, strategyConstructor: new (options: any) => CardPlayStrategy): GameWorld {
     let thisPlayer = world.playerMap[playerName];
 
     let remainingCardsWithoutHandCards = difference(world.history.getRemainingCards(), [...thisPlayer.getStartCardSet(), ...world.round.getPlayedCards()]);

@@ -14,18 +14,22 @@ import {CardPlayStrategy} from "./strategy/CardPlayStrategy";
 import {RuleEvaluation} from "./reporting/RuleEvaluation";
 import {CallingRulesWithHeuristic} from "./strategy/rulebased/CallingRulesWithHeuristic";
 import {CallingRulesWithHeuristicWithRuleBlacklist} from "./strategy/rulebased/CallingRulesWithHeuristicWithRuleBlacklist";
-
-const sleep = (m: number) => new Promise(r => setTimeout(r, m));
+import {ManualStrategy} from "./strategy/manual/ManualStrategy";
+import {AdvancedHeuristic} from "./strategy/rulebased/heuristic/AdvancedHeuristics";
+import {sleep} from "../utils/sleep";
+import {MoveEvaluation} from "./reporting/MoveEvaluation";
+import RandomStrategy from "./strategy/random/RandomStrategy";
 
 export type PlayerMap = { [index in string]: PlayerInterface };
 
 export interface PlayerOptions {
-    name: string,
-    strategy: new (player: Player) => (StrategyInterface)
+    name?: string,
+    strategy?: new (player: Player) => (StrategyInterface)
     ruleEvaluation?: RuleEvaluation,
     callingRuleEvaluation?: RuleEvaluation,
     ruleBlacklist?: string[],
     moveDelay?: number
+    moveEvaluation?: MoveEvaluation
 }
 
 // name: string, strategy: new (player: Player) => (StrategyInterface), ruleEvaluation: RuleEvaluation | null = null, callingRuleEvaluation: RuleEvaluation | null = null, ruleBlackList: string[] = []
@@ -39,6 +43,7 @@ class Player implements PlayerInterface {
     gamePhase: GamePhase;
     private readonly strategyConstructor: { new(player: Player): StrategyInterface };
     private readonly moveDelay: number;
+    private readonly moveEvaluation?: MoveEvaluation;
 
     get assumptions(): GameAssumptions {
         if (!this._assumptions) {
@@ -47,12 +52,12 @@ class Player implements PlayerInterface {
         return this._assumptions;
     }
 
-    constructor(options: PlayerOptions) {
+    constructor(options: PlayerOptions = {}) {
         this.gamePhase = GamePhase.BEFORE_GAME;
-        this.name = options.name;
+        this.name = options.name || "Testplayer";
 
-        this.strategy = new options.strategy(this);
-        this.strategyConstructor = options.strategy;
+        this.strategy = new (options.strategy || RandomStrategy)(this);
+        this.strategyConstructor = options.strategy || RandomStrategy;
 
         if (this.strategy instanceof CallingRulesWithHeuristic && options.ruleEvaluation) {
             this.strategy.injectEvaluation(options.ruleEvaluation);
@@ -67,6 +72,8 @@ class Player implements PlayerInterface {
             this.strategy.injectCallingRulesEvaluation(options.callingRuleEvaluation);
         }
 
+        this.moveEvaluation = options.moveEvaluation;
+
         this.moveDelay = options.moveDelay || 0;
 
         this.startCardSet = [];
@@ -78,7 +85,7 @@ class Player implements PlayerInterface {
     }
 
     getDummyClone(world: GameWorld, strategy: new (name: string, startCardSet: Card[], assumptions: GameAssumptions) => CardPlayStrategy) {
-        return new DummyPlayer(this.name, clone(world.playerNames), cloneDeep(world.gameMode), cloneDeep(world.history), cloneDeep(this.startCardSet), cloneDeep(this.currentCardSet), world.rounds, world.round, strategy);
+        return new DummyPlayer(this.name, clone(world.playerNames), cloneDeep(world.gameMode), cloneDeep(world.history), cloneDeep(this.startCardSet), cloneDeep(this.currentCardSet), cloneDeep(world.rounds), cloneDeep(world.round), strategy);
     }
 
     onGameStart(world: GameWorld | null) {
@@ -106,6 +113,17 @@ class Player implements PlayerInterface {
 
         this.currentCardSet = this.currentCardSet!.concat(cards);
         this.startCardSet = clone(sortByNaturalOrdering(this.currentCardSet));
+
+
+        if (this.strategy instanceof ManualStrategy && this.moveEvaluation) {
+            let heuristics = new AdvancedHeuristic({
+                name: this.name,
+                startCardSet: this.startCardSet,
+                assumptions: this.assumptions,
+            });
+            this.moveEvaluation.injectHeuristics(heuristics);
+            this.strategy.injectMoveEvaluation(this.moveEvaluation);
+        }
     }
 
     getStartCardSet(): Card[] {
@@ -261,7 +279,7 @@ interface PlayerInterface {
 
     forcePlayCard(world: GameWorld, card: Card): Round;
 
-    getDummyClone(world: GameWorld, strategy: new (name: string, startCardSet: Card[], assumptions: GameAssumptions) => CardPlayStrategy): PlayerInterface;
+    getDummyClone(world: GameWorld, strategy: new (options: any) => CardPlayStrategy): PlayerInterface;
 
     onCardPlayed(round: Round, roundIndex: number): void;
 

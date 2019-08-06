@@ -9,17 +9,24 @@ import getInPlayConditions from "./inPlayConditions";
 import getCardInfos, {CardInfoBase, CardInfosInPlay} from "./cardInfos";
 import {CardFilter} from "./CardFilter";
 
+type AdvancedHeuristicOptions = {
+    name: string,
+    startCardSet: Card[],
+    assumptions: GameAssumptions,
+    report?: ((reasons: string[], secondOrderReasons: string[], conclusion: string, card: Card) => void) | null
+}
+
 export class AdvancedHeuristic implements CardPlayStrategy {
     private readonly startCardSet: Card[];
     private readonly name: string;
     private readonly assumptions: GameAssumptions;
     private readonly report: (reasons: string[], secondOrderReasons: string[], conclusion: string, card: Card) => void;
 
-    constructor(name: string, startCardSet: Card[], assumptions: GameAssumptions, report: ((reasons: string[], secondOrderReasons: string[], conclusion: string, card: Card) => void) | null = null) {
-        this.name = name;
-        this.assumptions = assumptions;
-        this.startCardSet = cloneDeep(startCardSet);
-        this.report = report || (() => {
+    constructor(options: AdvancedHeuristicOptions) {
+        this.name = options.name;
+        this.assumptions = options.assumptions;
+        this.startCardSet = cloneDeep(options.startCardSet);
+        this.report = options.report || (() => {
         });
     }
 
@@ -153,7 +160,7 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                                             if (inPlayConditions.hasUnter()) {
                                                 return actions.playHighestCardByRank(cardFilter.unter);
                                             } else {
-                                                return actions.playLowestCardByRank(cardFilter.playableTrumpCards);
+                                                return actions.playLowestCardByRank(cardFilter.trumps);
                                             }
                                         } else {
                                             if (inPlayConditions.opponentsAreInHinterhand()) {
@@ -161,7 +168,7 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                                                     if (inPlayConditions.hasUnter()) {
                                                         return actions.playLowestCardByRank(cardFilter.unter);
                                                     } else {
-                                                        return actions.playHighestCardByRank(cardFilter.playableTrumpCards);
+                                                        return actions.playHighestCardByRank(cardFilter.trumps);
                                                     }
                                                 } else {
                                                     return actions.playBlankCardOrLowestCardByPoints(cardFilter.playableCardsNoTrumps);

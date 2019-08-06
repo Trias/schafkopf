@@ -37,6 +37,9 @@ class Round implements FinishedRound {
         if (includes(this.playedCards, card)) {
             throw Error('invariant violated');
         }
+        if (!card) {
+            throw Error('not a card?');
+        }
 
         this.playedCards.push(card);
     }

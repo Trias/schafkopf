@@ -65,21 +65,21 @@ let blacklists = zip(rules) as string[][];
                     }),
                     [playerNames[1]]: new Player({
                         name: playerNames[1],
-                        strategy: strategyEvaluation.getStrategyToEvaluate(j, 0),
+                        strategy: strategyEvaluation.getStrategyToEvaluate(j, 1),
                         ruleEvaluation,
                         callingRuleEvaluation,
                         ruleBlacklist
                     }),
                     [playerNames[2]]: new Player({
                         name: playerNames[2],
-                        strategy: strategyEvaluation.getStrategyToEvaluate(j, 0),
+                        strategy: strategyEvaluation.getStrategyToEvaluate(j, 2),
                         ruleEvaluation,
                         callingRuleEvaluation,
                         ruleBlacklist
                     }),
                     [playerNames[3]]: new Player({
                         name: playerNames[3],
-                        strategy: strategyEvaluation.getStrategyToEvaluate(j, 0),
+                        strategy: strategyEvaluation.getStrategyToEvaluate(j, 3),
                         ruleEvaluation,
                         callingRuleEvaluation,
                         ruleBlacklist
@@ -87,7 +87,7 @@ let blacklists = zip(rules) as string[][];
                 };
 
                 log.info(`========game ${i + 1} run ${j + 1} blacklisted rule: ${ruleBlacklist.toString()}===========`);
-                let preGame = new PreGame(playerMap);
+                let preGame = new PreGame(playerMap, startPlayer);
                 let gameMode = await preGame.determineGameMode(allCardDeals[i], [GameModeEnum.CALL_GAME]);
                 let history = new GameHistory(Object.keys(playerMap), gameMode);
                 let game = new Game(new GameWorld(gameMode, playerMap, [], new Round(startPlayer, Object.keys(playerMap)), history));

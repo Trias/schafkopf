@@ -28,16 +28,16 @@ let allCardDeals = shuffleCardsTimes(runs);
 let stats = new Statistics(playerNames);
 
 log.setConfig({
-    private: false,
+    private: true,
     time: false
 });
 
 (async () => {
-    let startPlayer = playerNames[1];
+    let startPlayer = playerNames[0];
     for (let i = 0; i < runs; i++) {
 
         log.info(`========game ${i + 1}===========`);
-        let preGame = new PreGame(playerMap);
+        let preGame = new PreGame(playerMap, startPlayer);
         let gameMode = await preGame.determineGameMode(allCardDeals[i], [GameModeEnum.CALL_GAME]);
         let history = new GameHistory(Object.keys(playerMap), gameMode);
         let game = new Game(new GameWorld(gameMode, playerMap, [], new Round(startPlayer, Object.keys(playerMap)), history));

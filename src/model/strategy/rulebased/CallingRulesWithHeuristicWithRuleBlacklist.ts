@@ -36,7 +36,12 @@ export class CallingRulesWithHeuristicWithRuleBlacklist implements StrategyInter
             ruleApplied = reasons;
         };
 
-        let heuristic = new AdvancedHeuristic(this.thisPlayer.getName(), this.thisPlayer.getStartCardSet(), this.thisPlayer.assumptions, report);
+        let heuristic = new AdvancedHeuristic({
+            name: this.thisPlayer.getName(),
+            startCardSet: this.thisPlayer.getStartCardSet(),
+            assumptions: this.thisPlayer.assumptions,
+            report: report
+        });
         let card = heuristic.chooseCardToPlay(world, cardSet);
 
         if (this.ruleEvaluation) {

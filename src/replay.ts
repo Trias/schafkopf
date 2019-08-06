@@ -30,7 +30,7 @@ let playerMap = {
 log.setConfig({private: true});
 
 let stats = new Statistics(playerNames);
-let preGame = new PreGame(playerMap);
+let preGame = new PreGame(playerMap, startPlayer);
 
 (async () => {
     let gameMode = await preGame.determineGameMode(cardDeal, [GameModeEnum.CALL_GAME]);

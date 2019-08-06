@@ -5,12 +5,11 @@ import {allOfColor} from "../../../cards/CardSet";
 import {getLaufende, hasBlankAce, hasFehlFarbeFrei, hasMinTwoFehlFarbenFrei, hasTwoBlankAces} from "./CardSetAnalyzer";
 import {includes} from "lodash";
 import {Player} from "../../../Player";
-import RandomStrategy from "../../random/RandomStrategy";
 
 // rather conservative estimates from sauspiel.de
 export function shouldPlaySolo(cardSet: ReadonlyArray<Card>, report: (reasons: string[]) => void): [GameModeEnum, PlainColor] | null {
     for (let color of plainColors) {
-        let testPlayer = new Player('test', RandomStrategy);
+        let testPlayer = new Player();
         let testGameMode: GameMode = new GameMode(GameModeEnum.SOLO, testPlayer.getName(), color);
         let trumpHandCards = allOfColor(cardSet, ColorWithTrump.TRUMP, testGameMode);
         let laufende = getLaufende(trumpHandCards, testGameMode);

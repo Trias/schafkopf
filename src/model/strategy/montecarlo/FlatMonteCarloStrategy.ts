@@ -20,7 +20,7 @@ import log from "../../../logging/log";
 
 const CAN_PLAY_THRESHOLD = 0.75;
 
-export default class NaiveMonteCarloStrategy implements StrategyInterface {
+export default class FlatMonteCarloStrategy implements StrategyInterface {
     private readonly thisPlayer: Player;
 
     constructor(thisPlayer: Player) {
@@ -185,7 +185,7 @@ export default class NaiveMonteCarloStrategy implements StrategyInterface {
             map.set(testGameMode, bestValue);
         }
 
-        let possibleGame = NaiveMonteCarloStrategy.getPossibleGame(map);
+        let possibleGame = FlatMonteCarloStrategy.getPossibleGame(map);
 
         if (possibleGame) {
             return [possibleGame.getMode(), possibleGame.getColorOfTheGame()];

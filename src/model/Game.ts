@@ -7,12 +7,13 @@ import {sortByNaturalOrdering} from "./cards/CardSet";
 import {RoundAnalyzer} from "./knowledge/RoundAnalyzer";
 import {GameWorld} from "./GameWorld";
 import log from "../logging/log";
-import colors from "colors";
+import colors from "chalk";
 
 export class Game {
     private readonly playerMap: PlayerMap;
     private readonly gameMode: GameMode;
     private readonly world: GameWorld;
+    private readonly povPlayerName: string;
 
     constructor(world: GameWorld) {
         let names = Object.keys(world.playerMap);
@@ -23,7 +24,14 @@ export class Game {
 
         this.playerMap = world.playerMap;
         this.world = world;
-        this.gameMode = world.gameMode
+        this.gameMode = world.gameMode;
+
+        this.povPlayerName = Object.keys(world.playerMap)[0];
+        for (let playerName of Object.keys(world.playerMap)) {
+            if (this.playerMap[playerName].getStrategyName() == "ManualStrategy") {
+                this.povPlayerName = playerName;
+            }
+        }
     }
 
     async play() {
@@ -55,14 +63,29 @@ export class Game {
                 }
                 let activePlayerName = this.world.round.getCurrentPlayerName();
                 await this.playerMap[activePlayerName].playCard(this.world);
-                log.gameInfo(`${colors.bold(activePlayerName)} played ${colors.bold(this.world.round.getLastPlayedCard())}`);
+
+                let name;
+                if (this.world.history.isTeamPartnerKnown()) {
+                    if (this.world.history.getTeamPartnerNameForPlayerName(this.povPlayerName) == activePlayerName
+                        || activePlayerName == this.povPlayerName) {
+                        name = colors.magenta(activePlayerName);
+                    } else {
+                        name = colors.blue(activePlayerName);
+                    }
+                } else {
+                    name = activePlayerName;
+                }
+
+                if (this.playerMap[activePlayerName].getStrategyName() != "ManualStrategy") {
+                    log.gameInfo(`${name} played ${colors.inverse(this.world.round.getLastPlayedCard())}`);
+                }
                 log.private(`from set ${sortByNaturalOrdering(this.playerMap[activePlayerName].getCurrentCardSet().concat(this.world.round.getLastPlayedCard()))}`);
             }
             this.markCalledAce(this.world.round);
             this.world.rounds.push(this.world.round.finish());
 
             let roundAnalyzer = new RoundAnalyzer(this.world.round, this.gameMode);
-            log.gameInfo(`round winner: ${colors.bold(roundAnalyzer.getWinningPlayerName())}; round cards: ${colors.bold(this.world.round.getPlayedCards().toString())}`);
+            log.gameInfo(`round winner: ${colors.bold(roundAnalyzer.getWinningPlayerName())}; round cards: ${this.world.round.getPlayedCards().map(card => colors.inverse(card)).toString()}`);
             this.world.onRoundCompleted(this.world.round.finish(), i);
             if (this.world.history.isTeamPartnerKnown()) {
                 log.private(`Playing Team (${this.world.history.getPlayingTeamNames()}) has ${this.world.history.getTeamPoints(this.world.history.getPlayingTeamNames())} points; Opposing Team (${this.world.history.getNonPlayingTeam()}) has ${this.world.history.getTeamPoints(this.world.history.getNonPlayingTeam())} points`);

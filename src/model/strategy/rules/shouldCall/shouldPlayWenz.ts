@@ -13,11 +13,10 @@ import {
     hasSneakyTensKingColor,
     hasTwoSneakyTensKingColor
 } from "./CardSetAnalyzer";
-import RandomStrategy from "../../random/RandomStrategy";
 import {Player} from "../../../Player";
 
 export function shouldPlayWenz(cardSet: ReadonlyArray<Card>, report: (reasons: string[]) => void): [GameModeEnum] | null {
-    let testPlayer = new Player('test', RandomStrategy);
+    let testPlayer = new Player();
     let testGameMode: GameMode = new GameMode(GameModeEnum.WENZ, testPlayer.getName());
     let trumpHandCards = allOfColor(cardSet, ColorWithTrump.TRUMP, testGameMode);
 

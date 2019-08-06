@@ -3,14 +3,15 @@ import {ColorWithTrump} from "../../../cards/Color";
 import {CardInfosInPlay} from "./cardInfos";
 
 export default function getInPlayConditions(cardFilter: CardFilter, cardInfos: CardInfosInPlay, reasons: string[]) {
-    function withReporting(test: (() => boolean), reason: string) {
-        let result = test();
-        if (result) {
-            reasons.push(reason)
-        } else {
-            reasons.push(`not(${reason})`);
-        }
-        return result;
+    function withReporting(test: boolean, reason: string) {
+        return () => {
+            if (test) {
+                reasons.push(reason)
+            } else {
+                reasons.push(`not(${reason})`);
+            }
+            return test;
+        };
     }
 
     let {
@@ -115,34 +116,34 @@ if (highestCardInRoundIsHighestCardInColor && trumpRound) {
 
     return {
         // TODO: second order conditions.
-        partnerHasRound: () => withReporting(() => partnerHasRound, 'partnerHasRound'),
-        roundIsProbablySafe: () => withReporting(() => roundIsProbablySafe, "roundIsProbablySafe"),
-        mustFollowSuit: () => withReporting(() => mustFollowSuit, "mustFollowSuit"),
-        isTrumpRound: () => withReporting(() => isTrumpRound, "isTrumpRound"),
-        highConfidenceInPotentialPartner: () => withReporting(() => highConfidenceInPotentialPartner, "highConfidenceInPotentialPartner"),
-        hasLowTrumps: () => withReporting(() => hasLowTrumps, "hasLowTrumps"),
-        hasTrumpWithoutOber: () => withReporting(() => hasTrumpWithoutOber, "hasTrumpWithoutOber"),
-        highestTrumpMayBeOvertrumped: () => withReporting(() => highestTrumpMayBeOvertrumped, "highestTrumpMayBeOvertrumped"),
-        roundIsExpensive: () => withReporting(() => roundIsExpensive, "roundIsExpensive"),
-        hasGoodWinningCards: () => withReporting(() => hasGoodWinningCards, "hasGoodWinningCards"),
-        hasWinningCards: () => withReporting(() => hasWinningCards, "hasWinningCards"),
-        aceIsProbablySafeToPlay: () => withReporting(() => aceIsProbablySafeToPlay, "aceIsProbablySafeToPlay"),
-        isColorRoundTrumped: () => withReporting(() => isColorRoundTrumped, "isColorRoundTrumped"),
-        hasTrumps: () => withReporting(() => hasTrumps, "hasTrumps"),
-        hasUnter: () => withReporting(() => hasUnter, "hasUnter"),
-        isColor10InPlay: () => withReporting(() => isColor10InPlay, "isColor10InPlay"),
-        opponentsAreInHinterhand: () => withReporting(() => opponentsAreInHinterhand, "opponentsAreInHinterhand"),
-        canTrumpColorRound: () => withReporting(() => canTrumpColorRound, "canTrumpColorRound"),
-        roundIsProbablySafeIfTrumped: () => withReporting(() => roundIsProbablySafeIfTrumped, "roundIsProbablySafeIfTrumped"),
-        hasWinningTrumpsWithoutVolle: () => withReporting(() => hasWinningTrumpsWithoutVolle, "hasWinningTrumpsWithoutVolle"),
-        hasWinningCardsNoOberNoVolle: () => withReporting(() => hasWinningCardsNoOberNoVolle, "hasWinningCardsNoOberNoVolle"),
-        isHinterhand: () => withReporting(() => isHinterhand, "isHinterhand"),
-        hasLowWinningTrump: () => withReporting(() => hasLowWinningTrump, "hasLowWinningTrump"),
-        winningCardIsHighestInColor: () => withReporting(() => winningCardIsHighestInColor, "winningCardIsHighestInColor"),
-        roundMayBeWonByPartner: () => withReporting(() => roundMayBeWonByPartner, "roundMayBeWonByPartner"),
-        hasLowValueBlankCard: () => withReporting(() => hasLowValueBlankCard, "hasLowValueBlankCard"),
-        canDiscardCalledColor: () => withReporting(() => canDiscardCalledColor, "canDiscardCalledColor"),
-        partnerMayBeAbleToTrump: () => withReporting(() => partnerMayBeAbleTrump, "partnerMayBeAbleTrump"),
-        hasOnlyTrumpCards: () => withReporting(() => hasOnlyTrumpCards, "hasOnlyTrumpCards"),
+        partnerHasRound: withReporting(partnerHasRound, 'partnerHasRound'),
+        roundIsProbablySafe: withReporting(roundIsProbablySafe, "roundIsProbablySafe"),
+        mustFollowSuit: withReporting(mustFollowSuit, "mustFollowSuit"),
+        isTrumpRound: withReporting(isTrumpRound, "isTrumpRound"),
+        highConfidenceInPotentialPartner: withReporting(highConfidenceInPotentialPartner, "highConfidenceInPotentialPartner"),
+        hasLowTrumps: withReporting(hasLowTrumps, "hasLowTrumps"),
+        hasTrumpWithoutOber: withReporting(hasTrumpWithoutOber, "hasTrumpWithoutOber"),
+        highestTrumpMayBeOvertrumped: withReporting(highestTrumpMayBeOvertrumped, "highestTrumpMayBeOvertrumped"),
+        roundIsExpensive: withReporting(roundIsExpensive, "roundIsExpensive"),
+        hasGoodWinningCards: withReporting(hasGoodWinningCards, "hasGoodWinningCards"),
+        hasWinningCards: withReporting(hasWinningCards, "hasWinningCards"),
+        aceIsProbablySafeToPlay: withReporting(aceIsProbablySafeToPlay, "aceIsProbablySafeToPlay"),
+        isColorRoundTrumped: withReporting(isColorRoundTrumped, "isColorRoundTrumped"),
+        hasTrumps: withReporting(hasTrumps, "hasTrumps"),
+        hasUnter: withReporting(hasUnter, "hasUnter"),
+        isColor10InPlay: withReporting(isColor10InPlay, "isColor10InPlay"),
+        opponentsAreInHinterhand: withReporting(opponentsAreInHinterhand, "opponentsAreInHinterhand"),
+        canTrumpColorRound: withReporting(canTrumpColorRound, "canTrumpColorRound"),
+        roundIsProbablySafeIfTrumped: withReporting(roundIsProbablySafeIfTrumped, "roundIsProbablySafeIfTrumped"),
+        hasWinningTrumpsWithoutVolle: withReporting(hasWinningTrumpsWithoutVolle, "hasWinningTrumpsWithoutVolle"),
+        hasWinningCardsNoOberNoVolle: withReporting(hasWinningCardsNoOberNoVolle, "hasWinningCardsNoOberNoVolle"),
+        isHinterhand: withReporting(isHinterhand, "isHinterhand"),
+        hasLowWinningTrump: withReporting(hasLowWinningTrump, "hasLowWinningTrump"),
+        winningCardIsHighestInColor: withReporting(winningCardIsHighestInColor, "winningCardIsHighestInColor"),
+        roundMayBeWonByPartner: withReporting(roundMayBeWonByPartner, "roundMayBeWonByPartner"),
+        hasLowValueBlankCard: withReporting(hasLowValueBlankCard, "hasLowValueBlankCard"),
+        canDiscardCalledColor: withReporting(canDiscardCalledColor, "canDiscardCalledColor"),
+        partnerMayBeAbleToTrump: withReporting(partnerMayBeAbleTrump, "partnerMayBeAbleTrump"),
+        hasOnlyTrumpCards: withReporting(hasOnlyTrumpCards, "hasOnlyTrumpCards"),
     }
 }

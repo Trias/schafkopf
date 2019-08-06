@@ -84,11 +84,6 @@ export class CardFilter {
     }
 
     @memoize
-    get playableTrumpCards() {
-        return this.playableCards.filter(card => this.world.gameMode.getOrdering().isTrump(card));
-    }
-
-    @memoize
     get goodWinningCardsNoOberNoPoints() {
         let highestCardColor = this.world.gameMode.getOrdering().getColor(this.roundAnalyzer.getHighestCard());
         let cardRanksWithRoundCards = this.world.history.getCurrentRankWithEqualRanksOfCardInColor([...this.cardSet, ...this.world.round.getPlayedCards()], highestCardColor, this.world.round.getPlayedCards());

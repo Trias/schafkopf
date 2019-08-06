@@ -19,7 +19,7 @@ export class Simulation {
     private readonly heuristicConstructor: new (name: string, startCardSet: Card[], assumptions: GameAssumptions) => CardPlayStrategy;
     private heuristicForPlayer: CardPlayStrategy;
 
-    constructor(world: GameWorld, thisPlayer: Player, heuristicConstructor: (new (name: string, startCardSet: Card[], assumptions: GameAssumptions) => CardPlayStrategy) | null = null) {
+    constructor(world: GameWorld, thisPlayer: Player, heuristicConstructor: (new (options: any) => CardPlayStrategy) | null = null) {
         this.thisPlayer = thisPlayer;
         this.world = world.clone();
         this.gameTree = {

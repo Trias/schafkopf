@@ -1,7 +1,5 @@
 require("./utils/seededRandomness");
 
-import CallingRulesWithUctMonteCarloStrategyAndCheating
-    from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloStrategyAndCheating";
 import {StrategyEvaluation} from "./model/reporting/StrategyEvaluation";
 import {Card} from "./model/cards/Card";
 import {Game} from "./model/Game";
@@ -15,13 +13,14 @@ import {GameHistory} from "./model/knowledge/GameHistory";
 import {GameModeEnum} from "./model/GameMode";
 import {clone} from "lodash";
 import {RuleEvaluation} from "./model/reporting/RuleEvaluation";
-import {CallingRulesWithHeuristic} from "./model/strategy/rulebased/CallingRulesWithHeuristic";
 import log from "./logging/log";
+import CallingRulesWithRandomPlay from "./model/strategy/rulebased/CallingRulesWithRandomPlay";
+import CallingRulesWithGreedyPlay from "./model/strategy/rulebased/CallingRulesWithGreedyPlay";
 
 
 let fs = require('fs');
 
-let runs = 100;
+let runs = 50;
 
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
@@ -29,7 +28,7 @@ let allCardDeals = shuffleCardsTimes(runs);
 
 let stats = new Statistics(playerNames);
 
-let evaluation = new StrategyEvaluation([CallingRulesWithHeuristic, CallingRulesWithUctMonteCarloStrategyAndCheating]);
+let evaluation = new StrategyEvaluation([CallingRulesWithRandomPlay, CallingRulesWithGreedyPlay]);
 let callingRuleEvaluation = new RuleEvaluation();
 let ruleEvaluation = new RuleEvaluation();
 
@@ -42,7 +41,7 @@ let games: {
     }
 } = {};
 
-let ruleBlacklist = Object.keys(require('../generated/badRules.json'));
+//let ruleBlacklist = Object.keys(require('../generated/badRules.json'));
 
 (async () => {
     let startPlayer = playerNames[0];
@@ -62,34 +61,30 @@ let ruleBlacklist = Object.keys(require('../generated/badRules.json'));
                     name: playerNames[0],
                     strategy: evaluation.getStrategyToEvaluate(j, 0),
                     ruleEvaluation,
-                    callingRuleEvaluation,
-                    ruleBlacklist
+                    callingRuleEvaluation
                 }),
                 [playerNames[1]]: new Player({
                     name: playerNames[1],
-                    strategy: evaluation.getStrategyToEvaluate(j, 0),
+                    strategy: evaluation.getStrategyToEvaluate(j, 1),
                     ruleEvaluation,
-                    callingRuleEvaluation,
-                    ruleBlacklist
+                    callingRuleEvaluation
                 }),
                 [playerNames[2]]: new Player({
                     name: playerNames[2],
-                    strategy: evaluation.getStrategyToEvaluate(j, 0),
+                    strategy: evaluation.getStrategyToEvaluate(j, 2),
                     ruleEvaluation,
-                    callingRuleEvaluation,
-                    ruleBlacklist
+                    callingRuleEvaluation
                 }),
                 [playerNames[3]]: new Player({
                     name: playerNames[3],
-                    strategy: evaluation.getStrategyToEvaluate(j, 0),
+                    strategy: evaluation.getStrategyToEvaluate(j, 3),
                     ruleEvaluation,
-                    callingRuleEvaluation,
-                    ruleBlacklist
+                    callingRuleEvaluation
                 }),
             };
 
             log.info(`========game ${i + 1} run ${j + 1}===========`);
-            let preGame = new PreGame(playerMap);
+            let preGame = new PreGame(playerMap, startPlayer);
             let gameMode = await preGame.determineGameMode(allCardDeals[i], [GameModeEnum.CALL_GAME]);
             let history = new GameHistory(Object.keys(playerMap), gameMode);
             let game = new Game(new GameWorld(gameMode, playerMap, [], new Round(startPlayer, Object.keys(playerMap)), history));

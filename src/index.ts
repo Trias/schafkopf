@@ -1,4 +1,5 @@
 require("./utils/seededRandomness");
+
 import {CallingRulesWithHeuristic} from "./model/strategy/rulebased/CallingRulesWithHeuristic";
 import {Card} from "./model/cards/Card";
 import {Game} from "./model/Game";
@@ -11,8 +12,9 @@ import {Round} from "./model/Round";
 import {GameHistory} from "./model/knowledge/GameHistory";
 import {GameModeEnum} from "./model/GameMode";
 import {clone} from "lodash";
-import CallingRulesWithUctMonteCarloStrategy from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloStrategy";
 import log from "./logging/log";
+import {Leprechauns} from "./model/strategy/rulebased/Leprechauns";
+
 
 let fs = require('fs');
 
@@ -21,10 +23,10 @@ let runs = 200;
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
 let playerMap = {
-    [playerNames[0]]: new Player({name: playerNames[0], strategy: CallingRulesWithHeuristic}),
+    [playerNames[0]]: new Player({name: playerNames[0], strategy: Leprechauns}),
     [playerNames[1]]: new Player({name: playerNames[1], strategy: CallingRulesWithHeuristic}),
-    [playerNames[2]]: new Player({name: playerNames[2], strategy: CallingRulesWithUctMonteCarloStrategy}),
-    [playerNames[3]]: new Player({name: playerNames[3], strategy: CallingRulesWithUctMonteCarloStrategy}),
+    [playerNames[2]]: new Player({name: playerNames[2], strategy: CallingRulesWithHeuristic}),
+    [playerNames[3]]: new Player({name: playerNames[3], strategy: CallingRulesWithHeuristic}),
 };
 
 let allCardDeals = shuffleCardsTimes(runs);
@@ -53,7 +55,7 @@ for (let i = 0; i < runs; i++) {
     };
 
     log.info(`========game ${i + 1}===========`);
-    let preGame = new PreGame(playerMap);
+    let preGame = new PreGame(playerMap, startPlayer);
     let gameMode = await preGame.determineGameMode(allCardDeals[i], [GameModeEnum.CALL_GAME]);
     let history = new GameHistory(Object.keys(playerMap), gameMode);
     let game = new Game(new GameWorld(gameMode, playerMap, [], new Round(startPlayer, Object.keys(playerMap)), history));

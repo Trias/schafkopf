@@ -4,14 +4,16 @@ import {PlayerMap} from "./Player";
 import {GameMode, GameModeEnum} from "./GameMode";
 import {GameWorld} from "./GameWorld";
 import log from "../logging/log";
-import colors from "colors";
+import colors from "chalk";
 
 export class PreGame {
     private readonly playerMap: PlayerMap;
     private gamePhase: GamePhase;
+    private readonly startPlayerName: string;
 
-    constructor(playerMap: PlayerMap) {
+    constructor(playerMap: PlayerMap, startPlayerName: string) {
         this.playerMap = playerMap;
+        this.startPlayerName = startPlayerName;
         this.gamePhase = GamePhase.BEFORE_GAME;
     }
 
@@ -42,13 +44,26 @@ export class PreGame {
     private async askPlayersWhatTheyWantToPlay(allowedGameModes: GameModeEnum[]): Promise<GameMode> {
         let currentGameMode = new GameMode(GameModeEnum.RETRY);
 
-        let i = 0;
-        for (let player of Object.values(this.playerMap)) {
+        let playerNames = Object.keys(this.playerMap);
+        let startPlayerIndex = playerNames.indexOf(this.startPlayerName);
+        if (startPlayerIndex < 0) {
+            throw Error('startplayer not in set?');
+        }
+
+        for (let i = 0; i < playerNames.length; i++) {
+            let player = this.playerMap[playerNames[(i + startPlayerIndex) % 4]];
             let newGameMode = await player.whatDoYouWantToPlay(currentGameMode, i, allowedGameModes);
+            if (currentGameMode == newGameMode) {
+                log.gameInfo(`${player.getName()} passes`);
+            } else if (newGameMode.isCallGame()) {
+                log.gameInfo(`${player.getName()} wants to play ${newGameMode.getMode()} with color ${newGameMode.getCalledColor()}`);
+            } else {
+                throw Error('not implemented');
+            }
+
             if (newGameMode && (GameMode.compareGameModes(newGameMode, currentGameMode) > 0)) {
                 currentGameMode = newGameMode;
             }
-            i++;
         }
 
         return currentGameMode;

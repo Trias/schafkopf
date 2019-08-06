@@ -1,5 +1,6 @@
-import colors = require("colors");
+import colors from "chalk";
 import {extend} from "lodash";
+import stripColors from 'strip-ansi';
 
 const fs = require('fs');
 
@@ -36,7 +37,7 @@ function timeEnd(string: string) {
     console.timeEnd(string);
 }
 
-export = {
+export default {
     private: (string: string) => config.private && write(colors.green(string)),
     stats: (string: string) => config.stats && write(colors.blue(string)),
     info: (string: string) => config.info && write(colors.grey(string)),
@@ -54,7 +55,7 @@ export = {
 function write(string: string) {
     if (!config.disabled) {
         if (config.toFile) {
-            fs.appendFileSync(config.toFile, colors.stripColors(string))
+            fs.appendFileSync(config.toFile, stripColors(string))
         } else {
             console.log(string);
         }
