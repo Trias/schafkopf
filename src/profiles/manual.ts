@@ -1,8 +1,7 @@
-import {CallingRulesWithHeuristic} from "./model/strategy/rulebased/CallingRulesWithHeuristic";
-import {Player} from "./model/Player";
-import {ManualStrategy} from "./model/strategy/manual/ManualStrategy";
-import log from "./logging/log";
-import {Table} from "./model/Table";
+import {CallingRulesWithHeuristic} from "../model/strategy/rulebased/CallingRulesWithHeuristic";
+import {Player} from "../model/Player";
+import {ManualStrategy} from "../model/strategy/manual/ManualStrategy";
+import log from "../logging/log";
 
 let runs = 32;
 
@@ -20,12 +19,8 @@ log.setConfig({
     time: false
 });
 
-let table = new Table({
+export default {
     runs,
     makePlayerMap: () => playerMap,
     playerNames
-});
-
-(async () => {
-    await table.run()
-})();
+};

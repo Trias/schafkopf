@@ -1,9 +1,8 @@
-import seededRadomness from "./utils/seededRandomness"
-import {Table} from "./model/Table";
-import log from "./logging/log";
-import {CallingRulesWithHeuristic} from "./model/strategy/rulebased/CallingRulesWithHeuristic";
-import {CallingRulesWithHeuristicWithRuleBlacklist} from "./model/strategy/rulebased/CallingRulesWithHeuristicWithRuleBlacklist";
-import {Evaluation} from "./model/reporting/Evaluation";
+import seededRadomness from "../utils/seededRandomness"
+import log from "../logging/log";
+import {CallingRulesWithHeuristic} from "../model/strategy/rulebased/CallingRulesWithHeuristic";
+import {CallingRulesWithHeuristicWithRuleBlacklist} from "../model/strategy/rulebased/CallingRulesWithHeuristicWithRuleBlacklist";
+import {Evaluation} from "../model/reporting/Evaluation";
 import {zip} from "lodash";
 
 seededRadomness('seed');
@@ -27,15 +26,11 @@ let evaluation = new Evaluation(playerNames, {
     blacklists
 });
 
-let table = new Table({
+export default {
     runs,
     playerNames,
     makePlayerMap: evaluation.makePlayerMap,
     evaluation: evaluation,
     saveGamesTo: 'evaluateRules.games.json',
     saveRules: true
-});
-
-(async () => {
-    await table.run()
-})();
+};

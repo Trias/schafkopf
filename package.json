@@ -5,11 +5,11 @@
   "main": "index.js",
   "scripts": {
     "dev": "ts-node src/index.ts",
-    "start": "node build/index.js",
-    "evaluateRules": "node build/evaluateRules.js",
-    "evaluateStrategies": "node build/evaluateStrategies.js",
-    "replay": "node build/replay.js",
-    "manual": "node build/manual.js",
+    "start": "node build/index.js --profile=default",
+    "evaluateRules": "node build/index.js --profile=evauluateRules",
+    "evaluateStrategies": "node build/index.js --profile=evauluateStrategies",
+    "replay": "node build/index.js --profile=replay",
+    "manual": "node build/index.js --profile=manual",
     "build": "tsc"
   },
   "keywords": [],
@@ -20,7 +20,8 @@
     "lodash": "^4.17.13",
     "prompts": "^2.1.0",
     "seedrandom": "^3.0.1",
-    "strip-ansi": "^5.2.0"
+    "strip-ansi": "^5.2.0",
+    "commander": "^3.0.0"
   },
   "devDependencies": {
     "@types/prompts": "^2.0.1",

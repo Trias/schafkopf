@@ -1,9 +1,8 @@
-import seededRadomness from "./utils/seededRandomness"
-import {Table} from "./model/Table";
-import {Player} from "./model/Player";
-import {CallingRulesWithUctMonteCarloAndHeuristic} from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloAndHeuristic";
-import {CallingRulesWithHeuristic} from "./model/strategy/rulebased/CallingRulesWithHeuristic";
-import log from "./logging/log";
+import seededRadomness from "../utils/seededRandomness"
+import {Player} from "../model/Player";
+import {CallingRulesWithUctMonteCarloAndHeuristic} from "../model/strategy/montecarlo/CallingRulesWithUctMonteCarloAndHeuristic";
+import {CallingRulesWithHeuristic} from "../model/strategy/rulebased/CallingRulesWithHeuristic";
+import log from "../logging/log";
 
 seededRadomness('seed');
 let gameId = 1;
@@ -22,14 +21,10 @@ let playerMap = {
 
 log.setConfig({private: true});
 
-let table = new Table({
+export default {
     runs: 1,
     makePlayerMap: () => playerMap,
     cardDeal,
     startPlayer,
     playerNames,
-});
-
-(async () => {
-    await table.run()
-})();
+};
