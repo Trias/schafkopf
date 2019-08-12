@@ -1,10 +1,12 @@
 import StrategyInterface from "../StrategyInterface";
-import {includes, sample, shuffle} from "lodash"
+import {includes} from "lodash"
 import {callableColors, PlainColor, plainColors} from "../../cards/Color";
 import {GameMode, GameModeEnum} from "../../GameMode";
 import {Card} from "../../cards/Card";
 import {canCallColor, getPlayableCards} from "../../PlayableMoves";
 import {GameWorld} from "../../GameWorld";
+import {shuffle} from "../../../utils/shuffle";
+import {sample} from "../../../utils/sample";
 
 export default class RandomStrategy implements StrategyInterface {
     chooseCardToPlay(world: GameWorld, cardSet: readonly Card[]): Card {

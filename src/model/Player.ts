@@ -84,7 +84,7 @@ class Player implements PlayerInterface {
         return this.strategyConstructor.name;
     }
 
-    getDummyClone(world: GameWorld, strategy: new (name: string, startCardSet: Card[], assumptions: GameAssumptions) => CardPlayStrategy) {
+    getDummyClone(world: GameWorld, strategy: new (options: any) => CardPlayStrategy) {
         return new DummyPlayer(this.name, clone(world.playerNames), cloneDeep(world.gameMode), cloneDeep(world.history), cloneDeep(this.startCardSet), cloneDeep(this.currentCardSet), cloneDeep(world.rounds), cloneDeep(world.round), strategy);
     }
 
@@ -148,7 +148,41 @@ class Player implements PlayerInterface {
 
         let timeStart = +new Date();
         let card = <Card>await this.strategy.chooseCardToPlay(world, this.getCurrentCardSet());
-        await sleep(Math.max(this.moveDelay - (+new Date() - timeStart), 0));
+
+        let delay = Math.max(this.moveDelay - (+new Date() - timeStart), 0);
+        if (delay) {
+            await sleep(delay);
+        }
+
+        if (!card || !canPlayCard(world.gameMode, this.currentCardSet, card, world.round)) {
+            throw Error('cannot play card!');
+        }
+
+        this.currentCardSet = removeCard(this.currentCardSet, card);
+        if (this.currentCardSet.length + world.rounds.length + 1 != 8) {
+            throw Error('invariant violated');
+        }
+
+        world.round.addCard(card);
+        world.onCardPlayed(world.round);
+
+        return world.round;
+    }
+
+    playCardSync(world: GameWorld): Round {
+        if (this.gamePhase !== GamePhase.IN_PLAY) {
+            throw Error('function not available in this state');
+        }
+
+        if (world.round.getCurrentPlayerName() != this.name) {
+            throw Error('not to move');
+        }
+
+        if (this.currentCardSet!.length + world.rounds.length != 8) {
+            throw Error('invariant violated');
+        }
+
+        let card = <Card>this.strategy.chooseCardToPlay(world, this.getCurrentCardSet());
 
         if (!card || !canPlayCard(world.gameMode, this.currentCardSet, card, world.round)) {
             throw Error('cannot play card!');

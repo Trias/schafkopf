@@ -6,7 +6,7 @@ import {getPlayableCards} from "../../PlayableMoves";
 import {determineGameMode} from "../rules/shouldCall/determineGameMode";
 import {GameWorld} from "../../GameWorld";
 import {sortByNaturalOrdering} from "../../cards/CardSet";
-import {shuffle} from "lodash";
+import {shuffle} from "../../../utils/shuffle";
 
 export default class CallingRulesWithGreedyPlay implements StrategyInterface {
 

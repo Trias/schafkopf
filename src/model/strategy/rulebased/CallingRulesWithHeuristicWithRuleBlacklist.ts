@@ -7,9 +7,10 @@ import {GameWorld} from "../../GameWorld";
 import {Player} from "../../Player";
 import {AdvancedHeuristic} from "./heuristic/AdvancedHeuristics";
 import {RuleEvaluation} from "../../reporting/RuleEvaluation";
-import {includes, sample} from "lodash";
+import {includes} from "lodash";
 import {getPlayableCards} from "../../PlayableMoves";
 import log from "../../../logging/log";
+import {sample} from "../../../utils/sample";
 
 export class CallingRulesWithHeuristicWithRuleBlacklist implements StrategyInterface {
     private readonly thisPlayer: Player;

@@ -9,7 +9,7 @@ import getInPlayConditions from "./inPlayConditions";
 import getCardInfos, {CardInfoBase, CardInfosInPlay} from "./cardInfos";
 import {CardFilter} from "./CardFilter";
 
-type AdvancedHeuristicOptions = {
+export type AdvancedHeuristicOptions = {
     name: string,
     startCardSet: Card[],
     assumptions: GameAssumptions,

@@ -1,11 +1,12 @@
 import StrategyInterface from "../StrategyInterface";
-import {filter, shuffle} from "lodash"
+import {filter} from "lodash"
 import {PlainColor} from "../../cards/Color";
 import {GameMode, GameModeEnum} from "../../GameMode";
 import {Card} from "../../cards/Card";
 import {canPlayCard} from "../../PlayableMoves";
 import {determineGameMode} from "../rules/shouldCall/determineGameMode";
 import {GameWorld} from "../../GameWorld";
+import {shuffle} from "../../../utils/shuffle";
 
 export default class CallingRulesWitRandomPlay implements StrategyInterface {
 

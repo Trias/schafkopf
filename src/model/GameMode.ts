@@ -147,6 +147,10 @@ class GameMode {
         return this.getMode() !== GameModeEnum.RETRY;
     }
 
+    isRetry() {
+        return this.getMode() == GameModeEnum.RETRY;
+    }
+
     getTrumpTen() {
         if (this.isWenz()) {
             throw Error('no trump ten, wenz game');

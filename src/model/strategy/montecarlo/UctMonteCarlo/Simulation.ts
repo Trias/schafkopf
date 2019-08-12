@@ -10,16 +10,16 @@ import {clone, cloneDeep, difference, fromPairs, isEqual} from "lodash";
 import {getUctValue} from "./getUctValue";
 import {CardPlayStrategy} from "../../CardPlayStrategy";
 import {RandomCardPlay} from "../../random/RandomCardPlay";
-import GameAssumptions from "../../../knowledge/GameAssumptions";
+import {AdvancedHeuristicOptions} from "../../rulebased/heuristic/AdvancedHeuristics";
 
 export class Simulation {
     private readonly thisPlayer: Player;
     private readonly world: GameWorld;
     private readonly gameTree: GameTree;
-    private readonly heuristicConstructor: new (name: string, startCardSet: Card[], assumptions: GameAssumptions) => CardPlayStrategy;
+    private readonly heuristicConstructor: (new (options: AdvancedHeuristicOptions) => CardPlayStrategy);
     private heuristicForPlayer: CardPlayStrategy;
 
-    constructor(world: GameWorld, thisPlayer: Player, heuristicConstructor: (new (options: any) => CardPlayStrategy) | null = null) {
+    constructor(world: GameWorld, thisPlayer: Player, heuristicConstructor: (new (options: AdvancedHeuristicOptions) => CardPlayStrategy) | null = null) {
         this.thisPlayer = thisPlayer;
         this.world = world.clone();
         this.gameTree = {
@@ -31,10 +31,14 @@ export class Simulation {
             parent: null,
         };
         this.heuristicConstructor = heuristicConstructor || RandomCardPlay;
-        this.heuristicForPlayer = new this.heuristicConstructor(this.thisPlayer.getName(), this.thisPlayer.getStartCardSet(), cloneDeep(thisPlayer.assumptions));
+        this.heuristicForPlayer = new this.heuristicConstructor({
+            name: this.thisPlayer.getName(),
+            startCardSet: this.thisPlayer.getStartCardSet(),
+            assumptions: cloneDeep(thisPlayer.assumptions)
+        });
     }
 
-    run(cardSet: Card[], simulations: number = 100, runsPerSimulation: number = 10, generateWorlds: (world: GameWorld, name: string, constructor: any) => GameWorld = generateRandomWorldConsistentWithGameKnowledge) {
+    run(cardSet: Card[], simulations: number = 10, runsPerSimulation: number = 100, generateWorlds: (world: GameWorld, name: string, constructor: any) => GameWorld = generateRandomWorldConsistentWithGameKnowledge) {
         let playableCards = getPlayableCards(cardSet, this.world.gameMode, this.world.round);
 
         if (playableCards.length == 1) {

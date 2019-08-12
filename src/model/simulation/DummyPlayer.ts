@@ -20,7 +20,7 @@ export class DummyPlayer implements PlayerInterface {
     readonly assumptions: GameAssumptions;
     readonly gamePhase: GamePhase;
 
-    constructor(playerName: string, playerNames: string[], gameMode: GameMode, history: GameHistory, startCardSet: Card[], currentCardSet: Card[], rounds: FinishedRound[], round: Round, strategy: new (name: string, startCardSet: Card[], assumptions: GameAssumptions) => CardPlayStrategy) {
+    constructor(playerName: string, playerNames: string[], gameMode: GameMode, history: GameHistory, startCardSet: Card[], currentCardSet: Card[], rounds: FinishedRound[], round: Round, strategy: new (options: any) => CardPlayStrategy) {
         this.name = playerName;
         this.startCardSet = startCardSet;
         this.currentCardSet = currentCardSet;
@@ -30,8 +30,11 @@ export class DummyPlayer implements PlayerInterface {
         this.gamePhase = GamePhase.IN_PLAY;
 
         this.assumptions = new GameAssumptionsInCallGame(history, playerName, playerNames, gameMode, startCardSet, rounds, round);
-        this.strategy = new strategy(playerName, startCardSet, this.assumptions);
-
+        this.strategy = new strategy({
+            name: playerName,
+            startCardSet: startCardSet,
+            assumptions: this.assumptions
+        });
     }
 
     getStrategyName() {

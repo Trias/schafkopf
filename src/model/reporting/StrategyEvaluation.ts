@@ -7,6 +7,9 @@ export class StrategyEvaluation {
     private readonly stats: { [index in string]: { wins: number; losses: 0 } };
 
     constructor(strategies: any[]) {
+        if (strategies.length < 2) {
+            throw Error('need at least 2 strategies to compare');
+        }
         this.strategies = strategies;
         this.stats = {};
         for (let strategy of strategies) {

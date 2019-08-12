@@ -1,19 +1,12 @@
-require('./utils/seededRandomness');
-
-import GameResult from "./model/reporting/GameResult";
+import seededRadomness from "./utils/seededRandomness"
+import {Table} from "./model/Table";
 import {Player} from "./model/Player";
-import Statistics from "./model/reporting/Statistics";
-import {PreGame} from "./model/PreGame";
-import {GameModeEnum} from "./model/GameMode";
-import {GameHistory} from "./model/knowledge/GameHistory";
-import {Game} from "./model/Game";
-import {GameWorld} from "./model/GameWorld";
-import {Round} from "./model/Round";
 import {CallingRulesWithUctMonteCarloAndHeuristic} from "./model/strategy/montecarlo/CallingRulesWithUctMonteCarloAndHeuristic";
 import {CallingRulesWithHeuristic} from "./model/strategy/rulebased/CallingRulesWithHeuristic";
 import log from "./logging/log";
 
-let gameId = 200;
+seededRadomness('seed');
+let gameId = 1;
 let games = require('../generated/games.json');
 let cardDeal = games[gameId].cardDeal;
 let startPlayer = games[gameId].startPlayer;
@@ -29,36 +22,14 @@ let playerMap = {
 
 log.setConfig({private: true});
 
-let stats = new Statistics(playerNames);
-let preGame = new PreGame(playerMap, startPlayer);
+let table = new Table({
+    runs: 1,
+    makePlayerMap: () => playerMap,
+    cardDeal,
+    startPlayer,
+    playerNames,
+});
 
 (async () => {
-    let gameMode = await preGame.determineGameMode(cardDeal, [GameModeEnum.CALL_GAME]);
-    let history = new GameHistory(Object.keys(playerMap), gameMode);
-    let game = new Game(new GameWorld(gameMode, playerMap, [], new Round(startPlayer, Object.keys(playerMap)), history));
-    await game.play();
-    let gameResult = game.getGameResult();
-
-    stats.addResult(gameResult);
-
-    reportGameResult(gameResult);
-    reportCents();
+    await table.run()
 })();
-
-function reportCents() {
-    log.info(`balance`);
-    for (let i = 0; i < 4; i++) {
-        let playerStats = stats.getStatsForPlayer(playerNames[i]);
-        log.report(`${playerNames[i]} [${playerMap[playerNames[i]].getStartCardSet()}] (${playerMap[playerNames[i]].getStrategyName()}): ${playerStats.cents} (${playerStats.tournamentPoints} points, ${playerStats.wins} wins, ${playerStats.inPlayingTeam} playing)`);
-    }
-}
-
-function reportGameResult(gameResult: GameResult) {
-    if (gameResult.getGameMode().isNoRetry()) {
-        log.report(`Team (${gameResult.getPlayingTeamNames()}) ${gameResult.hasPlayingTeamWon() ? 'wins' : 'looses'} ` +
-            `with ${gameResult.getPlayingTeamPoints()} points ` +
-            `and ${gameResult.hasPlayingTeamWon() ? 'win' : 'loose'} ${Math.abs(gameResult.getGameMoneyValue())} cents each!`);
-    } else {
-        log.gameInfo(`retry with cards:${Object.values(playerMap).map(p => '\n' + p.getName() + ': ' + p.getStartCardSet().toString())}`)
-    }
-}

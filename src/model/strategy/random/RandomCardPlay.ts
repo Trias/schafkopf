@@ -2,7 +2,7 @@ import {CardPlayStrategy} from "../CardPlayStrategy";
 import {GameWorld} from "../../GameWorld";
 import {Card} from "../../cards/Card";
 import {getPlayableCards} from "../../PlayableMoves";
-import {sample} from "lodash";
+import {sample} from "../../../utils/sample";
 
 export class RandomCardPlay implements CardPlayStrategy {
     chooseCardToPlay(world: GameWorld, cardSet: Card[]): Card {

@@ -1,5 +1,5 @@
 import {GameMode} from "../GameMode";
-import {PlayerMap} from "../Player";
+import {Player, PlayerMap} from "../Player";
 import {FinishedRound, Round} from "../Round";
 import {Card} from "../cards/Card";
 import GameResult from "../reporting/GameResult";
@@ -80,7 +80,13 @@ export class SimulatedGame {
             throw Error('more than 8 rounds');
         }
         for (let j = this.world.round.getPosition(); j < 4; j++) {
-            this.playerMap[this.world.round.getCurrentPlayerName()].playCard(this.world);
+            let player = this.playerMap[this.world.round.getCurrentPlayerName()];
+            if (player instanceof Player) {
+                // avoid having to deal with async gametrees...
+                player.playCardSync(this.world);
+            } else {
+                player.playCard(this.world);
+            }
         }
 
         this.markCalledAce(this.world.round);

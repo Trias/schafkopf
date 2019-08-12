@@ -1,6 +1,7 @@
 import CardDeck from "./sets/CardDeck";
-import {chunk, clone, shuffle} from "lodash";
+import {chunk, clone} from "lodash";
 import {Card} from "./Card";
+import {shuffle} from "../../utils/shuffle";
 
 export function shuffleCards() {
     let cardsShuffled = shuffle(clone(CardDeck) as Card[]);

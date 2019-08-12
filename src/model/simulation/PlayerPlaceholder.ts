@@ -5,7 +5,6 @@ import {FinishedRound, Round} from "../Round";
 import {PlayerInterface} from "../Player";
 import GamePhase from "../GamePhase";
 import {CardPlayStrategy} from "../strategy/CardPlayStrategy";
-import GameAssumptions from "../knowledge/GameAssumptions";
 
 export class PlayerPlaceholder implements PlayerInterface {
 
@@ -82,7 +81,7 @@ export class PlayerPlaceholder implements PlayerInterface {
     onRoundCompleted(round: FinishedRound, roundIndex: number): void {
     }
 
-    getDummyClone(world: GameWorld, strategy: { new(name: string, startCardSet: Card[], assumptions: GameAssumptions): CardPlayStrategy }): PlayerInterface {
+    getDummyClone(world: GameWorld, strategy: { new(options: any): CardPlayStrategy }): PlayerInterface {
         throw new Error("Method not implemented.");
     }
 }

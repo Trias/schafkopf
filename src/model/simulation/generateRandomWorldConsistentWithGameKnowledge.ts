@@ -1,10 +1,12 @@
 import {PlayerMap} from "../Player";
-import {difference, remove, sample, shuffle, without} from "lodash";
+import {difference, remove, without} from "lodash";
 import {Card} from "../cards/Card";
 import {removeCard} from "../cards/CardSet";
 import {GameWorld} from "../GameWorld";
 import {DummyPlayer} from "./DummyPlayer";
 import {CardPlayStrategy} from "../strategy/CardPlayStrategy";
+import {shuffle} from "../../utils/shuffle";
+import {sample} from "../../utils/sample";
 
 export function generateRandomWorldConsistentWithGameKnowledge(world: GameWorld, playerName: string, strategyConstructor: new (options: any) => CardPlayStrategy): GameWorld {
     let thisPlayer = world.playerMap[playerName];
