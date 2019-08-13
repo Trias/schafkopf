@@ -1,19 +1,14 @@
 prio 1
 ======
-refactor rule building (mixins)
-refactor montecarlo (mixins)
-table class
-remove eslint
-let evaluation use full statstics
-rule / conclusion cleanup
-
-prio 2
-======
-manual mode
+cli-user interface
+manual evaluation
 
 prio 3
 ======
 learn decision trees
+refactor strategy building (more composeable: mixins?)
+refactor montecarlo (more composable: mixins?)
+let evaluation use full statstics
 
 bad games:
 135, 1, 49,50, 167
