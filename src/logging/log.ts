@@ -14,6 +14,7 @@ interface Config {
     disabled: boolean;
     time: boolean;
     toFile: null | string;
+    csvFile: null | string;
 }
 
 let config: Config = {
@@ -25,7 +26,8 @@ let config: Config = {
     gameInfo: true,
     time: false,
     disabled: false,
-    toFile: null
+    toFile: null,
+    csvFile: null
 };
 
 function time(string: string) {
@@ -50,6 +52,7 @@ export default {
     gameInfo: (string: string) => config.gameInfo && write(colors.italic(string)),
     time: (string: string) => config.time && time(string),
     timeEnd: (string: string) => config.time && timeEnd(string),
+    csv: (strings: string[]) => config.csvFile && writeCsv(strings)
 }
 
 function write(string: string) {
@@ -59,5 +62,11 @@ function write(string: string) {
         } else {
             console.log(string);
         }
+    }
+}
+
+function writeCsv(strings: string[]) {
+    if (!config.disabled && config.csvFile) {
+        fs.appendFileSync(config.csvFile, strings.join(';') + '\n');
     }
 }

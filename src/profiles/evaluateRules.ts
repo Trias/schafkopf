@@ -4,6 +4,7 @@ import {CallingRulesWithHeuristic} from "../model/strategy/rulebased/CallingRule
 import {CallingRulesWithHeuristicWithRuleBlacklist} from "../model/strategy/rulebased/CallingRulesWithHeuristicWithRuleBlacklist";
 import {Evaluation} from "../model/reporting/Evaluation";
 import {zip} from "lodash";
+import {TableOptions} from "../model/Table";
 
 seededRadomness('seed');
 
@@ -32,5 +33,6 @@ export default {
     makePlayerMap: evaluation.makePlayerMap,
     evaluation: evaluation,
     saveGamesTo: 'evaluateRules.games.json',
-    saveRules: true
-};
+    saveRules: true,
+    runMode: "evaluateRules"
+} as TableOptions;

@@ -3,6 +3,7 @@ import {Player} from "../model/Player";
 import {CallingRulesWithUctMonteCarloAndHeuristic} from "../model/strategy/montecarlo/CallingRulesWithUctMonteCarloAndHeuristic";
 import {CallingRulesWithHeuristic} from "../model/strategy/rulebased/CallingRulesWithHeuristic";
 import log from "../logging/log";
+import {TableOptions} from "../model/Table";
 
 seededRadomness('seed');
 let gameId = 1;
@@ -27,4 +28,5 @@ export default {
     cardDeal,
     startPlayer,
     playerNames,
-};
+    runMode: "replay"
+} as TableOptions;

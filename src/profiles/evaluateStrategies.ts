@@ -3,6 +3,7 @@ import log from "../logging/log";
 import {CallingRulesWithHeuristic} from "../model/strategy/rulebased/CallingRulesWithHeuristic";
 import Nemesis from "../model/strategy/montecarlo/Nemesis";
 import {Evaluation} from "../model/reporting/Evaluation";
+import {TableOptions} from "../model/Table";
 
 seededRadomness('seed');
 
@@ -23,5 +24,6 @@ export default {
     makePlayerMap: evaluation.makePlayerMap,
     evaluation: evaluation,
     saveGamesTo: 'evaluateStrategies.games.json',
-    saveRules: true
-};
+    saveRules: true,
+    runMode: "evaluateStrategies"
+} as TableOptions;

@@ -7,7 +7,7 @@
     "dev": "ts-node src/index.ts",
     "start": "node build/index.js --profile=default",
     "evaluateRules": "node build/index.js --profile=evauluateRules",
-    "evaluateStrategies": "node build/index.js --profile=evauluateStrategies",
+    "evaluateStrategies": "node build/index.js --profile=evaluateStrategies",
     "replay": "node build/index.js --profile=replay",
     "manual": "node build/index.js --profile=manual",
     "build": "tsc"

@@ -2,6 +2,7 @@ import {CallingRulesWithHeuristic} from "../model/strategy/rulebased/CallingRule
 import {Player} from "../model/Player";
 import {ManualStrategy} from "../model/strategy/manual/ManualStrategy";
 import log from "../logging/log";
+import {TableOptions} from "../model/Table";
 
 let runs = 32;
 
@@ -22,5 +23,6 @@ log.setConfig({
 export default {
     runs,
     makePlayerMap: () => playerMap,
-    playerNames
-};
+    playerNames,
+    runMode: "default"
+} as TableOptions;
