@@ -19,7 +19,7 @@ setLogConfigWithDefaults({
     info: false,
 });
 
-let rules = require('../generated/rules.json') as string[];
+let rules = require('../../generated/rules.json') as string[];
 let blacklists = zip(rules) as string[][];
 
 let evaluation = new Evaluation(playerNames, {
