@@ -3,7 +3,7 @@ import {extend} from "lodash";
 import stripColors from 'strip-ansi';
 import {appendLog} from "./save";
 
-interface Config {
+export interface LogConfig {
     private: boolean;
     stats: boolean;
     info: boolean;
@@ -15,7 +15,7 @@ interface Config {
     toFile: null | string;
 }
 
-let config: Config = {
+let config: LogConfig = {
     private: false,
     stats: true,
     info: true,
@@ -42,7 +42,7 @@ export default {
     info: (string: string) => config.info && write(colors.grey(string)),
     error: (string: string) => config.error && write(colors.red(string)),
     report: (string: string) => config.report && write(colors.cyan(string)),
-    setConfig: (newConfig: Partial<Config>) => {
+    setConfig: (newConfig: Partial<LogConfig>) => {
         config = extend(config, newConfig);
         return config;
     },

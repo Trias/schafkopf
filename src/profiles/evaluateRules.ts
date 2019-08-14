@@ -1,17 +1,17 @@
-import seededRadomness from "../utils/seededRandomness"
-import log from "../logging/log";
 import {CallingRulesWithHeuristic} from "../model/strategy/rulebased/CallingRulesWithHeuristic";
 import {CallingRulesWithHeuristicWithRuleBlacklist} from "../model/strategy/rulebased/CallingRulesWithHeuristicWithRuleBlacklist";
 import {Evaluation} from "../model/reporting/Evaluation";
 import {zip} from "lodash";
 import {TableOptions} from "../model/Table";
+import {makeSeededPrng, setLogConfigWithDefaults} from "./cliOptions";
+import program from "commander";
 
-seededRadomness('seed');
-
-let runs = 5;
+let runs = program.runs || 1000;
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
-log.setConfig({
+makeSeededPrng();
+
+setLogConfigWithDefaults({
     time: false,
     gameInfo: false,
     stats: true,
@@ -32,7 +32,6 @@ export default {
     playerNames,
     makePlayerMap: evaluation.makePlayerMap,
     evaluation: evaluation,
-    saveGamesTo: 'evaluateRules.games.json',
-    saveRules: true,
+    saveGamesTo: program.saveFile,
     runMode: "evaluateRules"
 } as TableOptions;

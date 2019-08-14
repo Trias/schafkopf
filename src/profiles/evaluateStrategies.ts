@@ -1,21 +1,19 @@
 import seededRadomness from "../utils/seededRandomness"
-import log from "../logging/log";
 import {CallingRulesWithHeuristic} from "../model/strategy/rulebased/CallingRulesWithHeuristic";
 import Nemesis from "../model/strategy/montecarlo/Nemesis";
 import {Evaluation} from "../model/reporting/Evaluation";
 import {TableOptions} from "../model/Table";
+import {makeStrategiesForEvaluation, setLogConfigWithDefaults} from "./cliOptions";
+import program from "commander";
 
 seededRadomness('seed');
 
-let runs = 50;
+let runs = program.runs || 50;
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
-log.setConfig({
-    time: true
-});
-
+setLogConfigWithDefaults({time: true});
 let evaluation = new Evaluation(playerNames, {
-    strategy: [Nemesis, CallingRulesWithHeuristic],
+    strategy: makeStrategiesForEvaluation() || [Nemesis, CallingRulesWithHeuristic],
 });
 
 export default {
@@ -23,7 +21,7 @@ export default {
     playerNames,
     makePlayerMap: evaluation.makePlayerMap,
     evaluation: evaluation,
-    saveGamesTo: 'evaluateStrategies.games.json',
-    saveRules: true,
+    saveGamesTo: program.saveFile,
+    saveRules: program.saveRules,
     runMode: "evaluateStrategies"
 } as TableOptions;

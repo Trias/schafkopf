@@ -1,26 +1,25 @@
-import seededRadomness from "../utils/seededRandomness"
-import {Player} from "../model/Player";
-import {CallingRulesWithUctMonteCarloAndHeuristic} from "../model/strategy/montecarlo/CallingRulesWithUctMonteCarloAndHeuristic";
-import {CallingRulesWithHeuristic} from "../model/strategy/rulebased/CallingRulesWithHeuristic";
-import log from "../logging/log";
+import seedRandom from "seedRandom";
 import {TableOptions} from "../model/Table";
+import program from "commander";
+import {makeDefaultPlayerMap, setLogConfigWithDefaults} from "./cliOptions";
 
-seededRadomness('seed');
-let gameId = 1;
-let games = require('../generated/games.json');
+let gameId = program.gameId || 1;
+let games = require(`../../generated/${program.saveFile || "games.json"}`);
+
+if (!games[gameId]) {
+    console.error(`game ${gameId} not found!`);
+    process.exit();
+}
+
 let cardDeal = games[gameId].cardDeal;
 let startPlayer = games[gameId].startPlayer;
 
+Math.random = seedRandom.alea("", {state: games[gameId].prngState});
+
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
-let playerMap = {
-    [playerNames[0]]: new Player({name: playerNames[0], strategy: CallingRulesWithHeuristic}),
-    [playerNames[1]]: new Player({name: playerNames[1], strategy: CallingRulesWithHeuristic}),
-    [playerNames[2]]: new Player({name: playerNames[2], strategy: CallingRulesWithHeuristic}),
-    [playerNames[3]]: new Player({name: playerNames[3], strategy: CallingRulesWithUctMonteCarloAndHeuristic}),
-};
-
-log.setConfig({private: true});
+let playerMap = makeDefaultPlayerMap(playerNames);
+setLogConfigWithDefaults({private: true});
 
 export default {
     runs: 1,

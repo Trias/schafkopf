@@ -1,20 +1,14 @@
 import {Table} from "./model/Table";
 import program from "commander";
+import {chooseProfile, defineCliOptions, validateCliOptions} from "./profiles/cliOptions";
 
-program.version('1.0.0');
-program.option('-p, --profile <profile>', 'which profile to use').parse(process.argv);
+defineCliOptions();
 
-let tableProfile;
-try {
-    tableProfile = require('./profiles/' + program.profile).default;
-} catch (e) {
-    if (!program.profile) {
-        tableProfile = require('profiles/default').default;
-    } else {
-        console.error(`no profile called "${program.profile}" found!`);
-        process.exit();
-    }
-}
+program.parse(process.argv);
+
+validateCliOptions();
+
+let tableProfile = chooseProfile();
 
 let table = new Table(tableProfile);
 

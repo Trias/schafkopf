@@ -22,7 +22,7 @@ export type TableOptions = {
     makePlayerMap: (j?: number) => PlayerMap;
     playerNames: string[];
     evaluation?: Evaluation;
-    saveGamesTo?: string;
+    saveGamesTo?: string | null;
     saveRules?: boolean;
     runMode: "default" | "evaluateRules" | "evaluateStrategies" | "replay";
 }
