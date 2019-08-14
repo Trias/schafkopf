@@ -14,7 +14,7 @@ import log from "../../../logging/log";
 
 const CAN_PLAY_THRESHOLD = 0.75;
 
-export default class UctMonteCarloStrategy implements StrategyInterface {
+export default class UctWithGreedyHeuristicsStrategy implements StrategyInterface {
     private readonly thisPlayer: Player;
 
     constructor(thisPlayer: Player) {
@@ -118,7 +118,7 @@ export default class UctMonteCarloStrategy implements StrategyInterface {
             map.set(testGameMode, bestValue);
         }
 
-        let possibleGame = UctMonteCarloStrategy.getPossibleGame(map);
+        let possibleGame = UctWithGreedyHeuristicsStrategy.getPossibleGame(map);
 
         if (possibleGame) {
             return [possibleGame.getMode(), possibleGame.getColorOfTheGame()];

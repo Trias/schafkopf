@@ -7,7 +7,7 @@ import {includes} from "lodash";
 import {Player} from "../../../Player";
 
 // rather conservative estimates from sauspiel.de
-export function shouldPlaySolo(cardSet: ReadonlyArray<Card>, report: (reasons: string[]) => void): [GameModeEnum, PlainColor] | null {
+export function shouldPlaySolo(cardSet: ReadonlyArray<Card>, report: (reasons: string[], gameMode: GameModeEnum, color: PlainColor) => void): [GameModeEnum, PlainColor] | null {
     for (let color of plainColors) {
         let testPlayer = new Player();
         let testGameMode: GameMode = new GameMode(GameModeEnum.SOLO, testPlayer.getName(), color);

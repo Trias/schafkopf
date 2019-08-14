@@ -7,7 +7,7 @@ import {GameMode, GameModeEnum} from "../../../GameMode";
 import {PlainColor} from "../../../cards/Color";
 import {includes} from "lodash";
 
-export function determineGameMode(previousGameMode: GameMode, cardSet: Card[], allowedGameModes: GameModeEnum[], report: ((reasons: string[]) => void) = () => {
+export function determineGameMode(previousGameMode: GameMode, cardSet: Card[], allowedGameModes: GameModeEnum[], report: ((reasons: string[], gameMode: GameModeEnum, color: PlainColor) => void) = () => {
 }): [GameModeEnum?, PlainColor?] {
     if (previousGameMode.isSolo()) {
         return [];

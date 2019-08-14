@@ -1,7 +1,7 @@
 import {Card} from "../../../cards/Card";
 import {GameMode, GameModeEnum} from "../../../GameMode";
 import {allOfColor} from "../../../cards/CardSet";
-import {ColorWithTrump} from "../../../cards/Color";
+import {ColorWithTrump, PlainColor} from "../../../cards/Color";
 import {
     getAceTenColorCount,
     getColorAceCount,
@@ -15,7 +15,7 @@ import {
 } from "./CardSetAnalyzer";
 import {Player} from "../../../Player";
 
-export function shouldPlayWenz(cardSet: ReadonlyArray<Card>, report: (reasons: string[]) => void): [GameModeEnum] | null {
+export function shouldPlayWenz(cardSet: ReadonlyArray<Card>, report: (reasons: string[], gameMode: GameModeEnum, color: PlainColor) => void): [GameModeEnum] | null {
     let testPlayer = new Player();
     let testGameMode: GameMode = new GameMode(GameModeEnum.WENZ, testPlayer.getName());
     let trumpHandCards = allOfColor(cardSet, ColorWithTrump.TRUMP, testGameMode);

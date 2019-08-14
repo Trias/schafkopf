@@ -1,8 +1,7 @@
 import colors from "chalk";
 import {extend} from "lodash";
 import stripColors from 'strip-ansi';
-
-const fs = require('fs');
+import {appendLog} from "./save";
 
 interface Config {
     private: boolean;
@@ -14,7 +13,6 @@ interface Config {
     disabled: boolean;
     time: boolean;
     toFile: null | string;
-    csvFile: null | string;
 }
 
 let config: Config = {
@@ -26,8 +24,7 @@ let config: Config = {
     gameInfo: true,
     time: false,
     disabled: false,
-    toFile: null,
-    csvFile: null
+    toFile: null
 };
 
 function time(string: string) {
@@ -52,21 +49,14 @@ export default {
     gameInfo: (string: string) => config.gameInfo && write(colors.italic(string)),
     time: (string: string) => config.time && time(string),
     timeEnd: (string: string) => config.time && timeEnd(string),
-    csv: (strings: string[]) => config.csvFile && writeCsv(strings)
 }
 
 function write(string: string) {
     if (!config.disabled) {
         if (config.toFile) {
-            fs.appendFileSync(config.toFile, stripColors(string))
-        } else {
-            console.log(string);
+            appendLog(config.toFile, stripColors(string));
         }
-    }
-}
 
-function writeCsv(strings: string[]) {
-    if (!config.disabled && config.csvFile) {
-        fs.appendFileSync(config.csvFile, strings.join(';') + '\n');
+        console.log(string);
     }
 }

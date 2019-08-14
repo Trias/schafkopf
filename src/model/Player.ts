@@ -113,17 +113,6 @@ class Player implements PlayerInterface {
 
         this.currentCardSet = this.currentCardSet!.concat(cards);
         this.startCardSet = clone(sortByNaturalOrdering(this.currentCardSet));
-
-
-        if (this.strategy instanceof ManualStrategy && this.moveEvaluation) {
-            let heuristics = new AdvancedHeuristic({
-                name: this.name,
-                startCardSet: this.startCardSet,
-                assumptions: this.assumptions,
-            });
-            this.moveEvaluation.injectHeuristics(heuristics);
-            this.strategy.injectMoveEvaluation(this.moveEvaluation);
-        }
     }
 
     getStartCardSet(): Card[] {
@@ -273,6 +262,16 @@ class Player implements PlayerInterface {
                 throw Error('no world...');
             }
             this._assumptions = new GameAssumptionsInCallGame(world.history, this.getName(), world.playerNames, world.gameMode, this.getStartCardSet());
+            if (this.strategy instanceof ManualStrategy && this.moveEvaluation) {
+                let heuristics = new AdvancedHeuristic({
+                    name: this.name,
+                    startCardSet: this.startCardSet,
+                    assumptions: this._assumptions,
+                    report: this.moveEvaluation.captureResult.bind(this.moveEvaluation),
+                });
+                this.moveEvaluation.injectHeuristics(heuristics);
+                this.strategy.injectMoveEvaluation(this.moveEvaluation);
+            }
         }
     }
 

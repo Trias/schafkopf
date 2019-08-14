@@ -76,9 +76,7 @@ export class Game {
                     name = activePlayerName;
                 }
 
-                if (this.playerMap[activePlayerName].getStrategyName() != "ManualStrategy") {
-                    log.gameInfo(`${name} played ${colors.inverse(this.world.round.getLastPlayedCard())}`);
-                }
+                log.gameInfo(`${name} played ${colors.inverse(this.world.round.getLastPlayedCard())}`);
                 log.private(`from set ${sortByNaturalOrdering(this.playerMap[activePlayerName].getCurrentCardSet().concat(this.world.round.getLastPlayedCard()))}`);
             }
             this.markCalledAce(this.world.round);

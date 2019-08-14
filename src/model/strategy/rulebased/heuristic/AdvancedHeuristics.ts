@@ -13,14 +13,14 @@ export type AdvancedHeuristicOptions = {
     name: string,
     startCardSet: Card[],
     assumptions: GameAssumptions,
-    report?: ((reasons: string[], secondOrderReasons: string[], conclusion: string, card: Card) => void) | null
+    report?: ((reasons: string[], secondOrderReasons: string[], conclusion: string, card: Card, cardSet: Card[]) => void) | null
 }
 
 export class AdvancedHeuristic implements CardPlayStrategy {
     private readonly startCardSet: Card[];
     private readonly name: string;
     private readonly assumptions: GameAssumptions;
-    private readonly report: (reasons: string[], secondOrderReasons: string[], conclusion: string, card: Card) => void;
+    private readonly report: (reasons: string[], secondOrderReasons: string[], conclusion: string, card: Card, cardSet: Card[]) => void;
 
     constructor(options: AdvancedHeuristicOptions) {
         this.name = options.name;
@@ -33,8 +33,8 @@ export class AdvancedHeuristic implements CardPlayStrategy {
     chooseCardToPlay(world: GameWorld, cardSet: Card[]) {
         let reasons: string[] = [];
         let secondOrderReasons: string[] = [];
-        let report = (conclusion: string, card: Card) => {
-            this.report(reasons, secondOrderReasons, conclusion, card);
+        let report = (conclusion: string, card: Card, cardSet: Card[]) => {
+            this.report(reasons, secondOrderReasons, conclusion, card, cardSet);
         };
 
         let cardFilter = new CardFilter(world, cardSet);
