@@ -3,7 +3,7 @@ import {TableOptions} from "../model/Table";
 import program from "commander";
 import {makeDefaultPlayerMap, setLogConfigWithDefaults} from "./cliOptions";
 
-let gameId = program.gameId || 1;
+let gameId = program.replay || 1;
 let games = require(`../../generated/${program.saveFile || "games.json"}`);
 
 if (!games[gameId]) {

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "ts-node src/index.ts",
     "start": "node build/index.js --profile=default",
-    "evaluateRules": "node build/index.js --profile=evauluateRules",
+    "evaluateRules": "node build/index.js --profile=evaluateRules",
     "evaluateStrategies": "node build/index.js --profile=evaluateStrategies",
     "replay": "node build/index.js --profile=replay",
     "manual": "node build/index.js --profile=manual",

@@ -1,4 +1,4 @@
-import log, {LogConfig} from "../logging/log";
+import log, {LogConfig, LogLevel} from "../logging/log";
 import strategyMap from "../model/strategy/StrategyMap";
 import {extend, includes} from "lodash";
 import {Player} from "../model/Player";
@@ -7,48 +7,27 @@ import {CallingRulesWithHeuristic} from "../model/strategy/rulebased/CallingRule
 import program from "commander";
 import seededRandomness from "../utils/seededRandomness";
 
-export function makeLogConfig(cli: any) {
-    let logConfig: Partial<LogConfig> = {};
-    if (cli.logPrivate) {
-        logConfig.private = true;
-    } else if (cli.logPrivate === false) {
-        logConfig.private = false;
+export function makeLogConfig() {
+    let logConfig: Partial<{ [index in LogLevel]: boolean }> = {};
+
+    if (!program.log) {
+        return {};
     }
 
-    if (cli.logInfo) {
-        logConfig.info = true;
-    } else if (cli.logInfo === false) {
-        logConfig.info = false;
-    }
+    // some lies were needed...
+    for (let logLevel of program.log as LogLevel[]) {
+        let logLevelModifier = logLevel.substring(0, 1);
+        let loglevelCleaned: LogLevel = logLevel.substring(1) as LogLevel;
 
-    if (cli.logError) {
-        logConfig.error = true;
-    } else if (cli.logError === false) {
-        logConfig.error = false;
-    }
-
-    if (cli.logGameInfo) {
-        logConfig.gameInfo = true;
-    } else if (cli.logGameInfo === false) {
-        logConfig.gameInfo = false;
-    }
-
-    if (cli.logReport) {
-        logConfig.report = true;
-    } else if (cli.logReport === false) {
-        logConfig.report = false;
-    }
-
-    if (cli.logStats) {
-        logConfig.stats = true;
-    } else if (cli.logStats === false) {
-        logConfig.stats = false;
-    }
-
-    if (cli.logTime) {
-        logConfig.time = true;
-    } else if (cli.logTime === false) {
-        logConfig.time = false;
+        if (includes(log.logLevels, loglevelCleaned)) {
+            if (logLevelModifier == "-") {
+                logConfig[loglevelCleaned] = false;
+            } else if (logLevelModifier == "+") {
+                logConfig[loglevelCleaned] = true;
+            }
+        } else if (includes(log.logLevels, logLevel)) {
+            logConfig[logLevel] = true;
+        }
     }
 
     return logConfig;
@@ -116,7 +95,7 @@ export function makeDefaultPlayerMap(playerNames: string[]) {
 }
 
 export function setLogConfigWithDefaults(defaults: Partial<LogConfig> = {}) {
-    log.setConfig(extend(defaults, makeLogConfig(program)));
+    log.setConfig(extend(defaults, makeLogConfig()));
 }
 
 export function makeSeededPrng() {
@@ -150,31 +129,19 @@ export function chooseProfile() {
 
 export function defineCliOptions() {
     program.version('1.0.0');
-    program.option('--profile <profile>', 'which profile to use');
+    program.option('--profile <profile>', 'which profile to use. Available: default, evaluateRules, evaluateStrategies, manual, replay');
+
     program.option('--strategy1 <strategy1>', 'which strategy to use for Player 1 or a strategy for evaluation');
     program.option('--strategy2 <strategy2>', 'which strategy to use for Player 2 or a strategy for evaluation');
     program.option('--strategy3 <strategy3>', 'which strategy to use for Player 3 or a strategy for evaluation');
     program.option('--strategy4 <strategy4>', 'which strategy to use for Player 4 or a strategy for evaluation');
 
-    program.option('--manual <manualPlayerNumber>', 'number of player to be controlled manually. replaces strategy', n => (n > 4 || n < 1) ? false : n);
+    program.option('--manual <manualPlayerNumber>', 'number of player to be controlled manually. if set overwrites strategy', n => (n > 4 || n < 1) ? false : n);
 
-    program.option('--seed <seed>', 'seed');
+    program.option('--seed <seed>', 'seed used for random numbers. Default: "seed"');
     program.option('--no-seed', 'no seeding, savegame disabled');
 
-    program.option('--log-private', 'log private information of players (green)');
-    program.option('--no-log-private', 'do not log private information of players (green)');
-    program.option('--log-info', 'log general information (grey)');
-    program.option('--no-log-info', 'do not log general information (grey)');
-    program.option('--log-error', 'log errors (red)');
-    program.option('--no-log-error', 'do not log errors (red)');
-    program.option('--log-gameInfo', 'log game information (italics)');
-    program.option('--no-log-gameInfo', 'do not log game information (italics)');
-    program.option('--log-report', 'log reports (cyan)');
-    program.option('--no-log-report', 'do not log reports (cyan)');
-    program.option('--log-stats', 'log statistics (blue)');
-    program.option('--no-log-stats', 'do not log statistics (blue)');
-    program.option('--log-time', 'log time (default color)');
-    program.option('--no-log-time', 'do not log time (default color)');
+    program.option('--log <logLevels>', 'comma separated list of log levels. To disable prepend with -. Available: private, info, error, gameInfo, report, stats, time', log => log.split(',').map((s: string) => s.trim()));
 
     program.option('--runs <runs>', 'number of runs');
     program.option('--replay <gameId>', 'gameId for replay');

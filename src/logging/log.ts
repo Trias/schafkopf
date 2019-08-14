@@ -36,6 +36,10 @@ function timeEnd(string: string) {
     console.timeEnd(string);
 }
 
+export type LogLevel = "private" | "stats" | "info" | "error" | "report" | "gameInfo" | "time";
+
+let logLevels: LogLevel[] = ["private", "stats", "info", "error", "report", "gameInfo", "time"];
+
 export default {
     private: (string: string) => config.private && write(colors.green(string)),
     stats: (string: string) => config.stats && write(colors.blue(string)),
@@ -49,6 +53,7 @@ export default {
     gameInfo: (string: string) => config.gameInfo && write(colors.italic(string)),
     time: (string: string) => config.time && time(string),
     timeEnd: (string: string) => config.time && timeEnd(string),
+    logLevels
 }
 
 function write(string: string) {
