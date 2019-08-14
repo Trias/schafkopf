@@ -4,7 +4,13 @@ import {ManualStrategy} from "../model/strategy/manual/ManualStrategy";
 import {TableOptions} from "../model/Table";
 import {MoveEvaluation} from "../model/reporting/MoveEvaluation";
 import program from "commander";
-import {setLogConfigWithDefaults} from "./cliOptions";
+import {makeSeededPrng, setLogConfigWithDefaults} from "./cliOptions";
+
+if (program.seed == undefined) {
+    program.seed = false;
+    console.log('using unseeded random number generator in manual play');
+}
+makeSeededPrng();
 
 let runs = program.runs || 32;
 
