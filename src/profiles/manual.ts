@@ -10,6 +10,11 @@ let runs = program.runs || 32;
 
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
+if (!program.manual) {
+    program.manual = 1;
+    console.log('no manual user selected, defaulting to user 1');
+}
+
 function makePlayer(i: number) {
     if (program.manual == i + 1) {
         return new Player({

@@ -134,10 +134,10 @@ export function makeSeededPrng() {
 export function chooseProfile() {
     let profile;
     try {
-        profile = require('./profiles/' + program.profile).default;
+        profile = require('./' + program.profile).default;
     } catch (e) {
         if (!program.profile) {
-            profile = require('./profiles/default').default;
+            profile = require('./default').default;
         } else {
             console.error(`no profile called "${program.profile}" found!`);
             console.error(e);
