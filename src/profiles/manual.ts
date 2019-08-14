@@ -34,10 +34,11 @@ let playerMap = {
     [playerNames[3]]: makePlayer(3)
 };
 
+let date = new Date();
 setLogConfigWithDefaults({
     private: false,
     time: false,
-    toFile: `manual-${new Date().toISOString()}.log`
+    toFile: `manual-${date.toISOString().replace(/:/g, '-')}.log`
 });
 
 export default {

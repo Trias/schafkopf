@@ -31,6 +31,9 @@ const translations: any = {
     "hasLowTrumps": "Ich habe Herz-Trümpfe",
     "isColor10InPlay": "Die 10 in der angespielten Farbe wurde noch nicht gespielt",
     "opponentsAreInHinterhand": "Das gegnerische Team sitzt in Hinterhand",
+    "hasLowValueBlankCard": "Ich habe eine blanke Karte mit wenig Punkten",
+    "partnerMayBeAbleTrump": "Mein Partner kann vermutlich abtrumpfen",
+
 
     "not(hasSinglePlayableCard)": "Ich kann mehr als eine Karte spielen",
     "not(isStartPosition)": "Ich bin nicht der Ausspieler",
@@ -64,6 +67,8 @@ const translations: any = {
     "not(hasLowTrumps)": "Ich habe keine Herz-Trümpfe",
     "not(isColor10InPlay)": "Die 10 in der angespielten Farbe wurde schon gespielt",
     "not(opponentsAreInHinterhand)": "Das gegnerische Team sitzt nicht in Hinterhand",
+    "not(hasLowValueBlankCard)": "Ich habe leine blanke Karte mit wenig Punkten",
+    "not(partnerMayBeAbleTrump)": "Mein Partner kann vermutlich nicht abtrumpfen",
 
     "playLowestCardByPoints": "Spiele die niedrigste Karte nach Punkten",
     "playLowestCardByRank": "Spiele die niedrigste Karte nach Rang",
