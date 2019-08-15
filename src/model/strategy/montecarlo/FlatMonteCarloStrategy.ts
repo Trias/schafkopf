@@ -160,7 +160,7 @@ export default class FlatMonteCarloStrategy implements StrategyInterface {
 
         for (let i = 0; i < 4; i++) {
             if (i == playerIndex) {
-                playerMap[playerName] = new PlayerPlaceholder(this.thisPlayer.getName());
+                playerMap[playerName] = this.thisPlayer;
             } else {
                 playerMap["FakePlayer " + i] = new PlayerPlaceholder("FakePlayer " + i);
             }

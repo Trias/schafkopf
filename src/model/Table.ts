@@ -167,6 +167,8 @@ export class Table {
             this.startPlayer = rotateStartPlayer(this.options.playerNames, this.startPlayer);
         }
 
+        log.report('finished runs. Number of retries:' + this.stats.getStatsForPlayer(this.options.playerNames[0]).retries);
+
         if (this.options.saveGamesTo) {
             saveGames(this.games, this.options.saveGamesTo);
         }

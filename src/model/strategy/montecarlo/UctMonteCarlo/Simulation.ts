@@ -67,6 +67,7 @@ export class Simulation {
         }
 
         for (let j = 0; j < runsPerSimulation * simulations; j++) {
+            // for every run, use a different world...
             let fakeWorldClone = fakeWorlds[j % simulations].clone();
             let game = new SimulatedGame(fakeWorldClone);
 
