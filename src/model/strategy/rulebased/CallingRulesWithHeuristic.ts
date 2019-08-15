@@ -8,6 +8,7 @@ import {Player} from "../../Player";
 import {AdvancedHeuristic} from "./heuristic/AdvancedHeuristics";
 import {RuleEvaluation} from "../../reporting/RuleEvaluation";
 import log from "../../../logging/log";
+import {humanTranslation} from "../../../logging/humanTranslation";
 
 export class CallingRulesWithHeuristic implements StrategyInterface {
     private readonly thisPlayer: Player;
@@ -24,8 +25,8 @@ export class CallingRulesWithHeuristic implements StrategyInterface {
 
     chooseCardToPlay(world: GameWorld, cardSet: Card[]): Card {
         let ruleApplied: string[] = [];
-        let report = (reasons: string[], secondOrderReasons: string[], conclusion: string, card: Card) => {
-            log.private(reasons.toString() + (secondOrderReasons.length ? '\n-->' : '') + secondOrderReasons.toString() + ' => ' + conclusion + ': ' + card);
+        let report = (reasons: string[], secondOrderReasons: string[], conclusion: string, card: Card, cardSet: Card[]) => {
+            log.private(reasons.map(humanTranslation).map((s, i) => `${(i + 1)}. ` + s).join('\n') + (secondOrderReasons.length ? '\n-->' : '') + secondOrderReasons.toString() + '\n-> ' + humanTranslation(conclusion) + ': ' + card + ' aus den Karten: ' + cardSet);
             ruleApplied = reasons;
         };
 

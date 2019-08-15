@@ -8,6 +8,7 @@ import {RoundAnalyzer} from "./knowledge/RoundAnalyzer";
 import {GameWorld} from "./GameWorld";
 import log from "../logging/log";
 import colors from "chalk";
+import chalk from "chalk";
 
 export class Game {
     private readonly playerMap: PlayerMap;
@@ -76,9 +77,14 @@ export class Game {
                     name = activePlayerName;
                 }
 
-                log.gameInfo(`${name} played ${colors.inverse(this.world.round.getLastPlayedCard())}`);
-                log.private(`from set ${sortByNaturalOrdering(this.playerMap[activePlayerName].getCurrentCardSet().concat(this.world.round.getLastPlayedCard()))}`);
+                // ugly hack to prevent new line....
+                let privateAdd = '';
+                if (log.setConfig({}).private) {
+                    privateAdd = chalk.green(` from set ${sortByNaturalOrdering(this.playerMap[activePlayerName].getCurrentCardSet().concat(this.world.round.getLastPlayedCard()))}`);
+                }
+                log.gameInfo(`${name} played ${colors.inverse(this.world.round.getLastPlayedCard())}${privateAdd}`);
             }
+
             this.markCalledAce(this.world.round);
             this.world.rounds.push(this.world.round.finish());
 
