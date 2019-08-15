@@ -1,7 +1,7 @@
 import {PlayerMap} from "../model/Player";
 import Statistics from "../model/reporting/Statistics";
 import log from "./log";
-import {RuleEvaluation} from "../model/reporting/RuleEvaluation";
+import {RuleEvaluation, RuleStat} from "../model/reporting/RuleEvaluation";
 import {StrategyEvaluation} from "../model/reporting/StrategyEvaluation";
 import {Game} from "../model/Game";
 import GameResult from "../model/reporting/GameResult";
@@ -34,30 +34,19 @@ export function reportOnStrategies(evaluation: StrategyEvaluation, i: number) {
 }
 
 
-export function reportOnRules(ruleEvaluation: RuleEvaluation, i: number) {
+export function reportOnRules(ruleStats: { [index in string]: RuleStat }, i: number) {
     log.info(`rule evaluation after ${i + 1} games`);
-    let ruleStatistics = ruleEvaluation.getRuleStatistics();
-    let blackListedRuleStatistics = ruleEvaluation.getBlackListedRuleStatistics();
-    let rules = Object.keys(ruleStatistics).sort();
+    let rules = Object.keys(ruleStats).sort();
 
-    let badRules: [string, number][] = [];
     for (let rule of rules) {
-        let evalu = ruleStatistics[rule];
-        let blacklistedRuleStat = blackListedRuleStatistics[rule];
-        if (blacklistedRuleStat && evalu) {
-            let winRatio = evalu.wins / (evalu.losses + evalu.wins);
-            let randomPlayWinRatio = blacklistedRuleStat.wins / (blacklistedRuleStat.losses + blacklistedRuleStat.wins);
-            let edge = winRatio / randomPlayWinRatio * 100 - 100;
-            log.stats(`${edge}%: ${evalu.wins} wins and ${evalu.losses} losses; win ratio of ${winRatio}` +
-                (blacklistedRuleStat ?
-                    ` compared to ${blacklistedRuleStat.wins} wins and ${blacklistedRuleStat.losses} losses; win ratio of ${randomPlayWinRatio} in random play ` : '')
+        let ruleStat = ruleStats[rule];
+        if (ruleStats[rule]) {
+            log.stats(`${ruleStat.edge}%: ${ruleStat.withRuleWins} wins and ${ruleStat.withRuleLosses} losses; win ratio of ${ruleStat.withRuleWinRatio}` +
+                (!Number.isNaN(ruleStat.withoutRuleWinRatio) ?
+                    ` compared to ${ruleStat.withoutRuleWins} wins and ${ruleStat.withRuleLosses} losses; win ratio of ${ruleStat.withoutRuleWinRatio} in random play ` : '')
                 + `for rule "${rule}"`);
-            if (edge < 0) {
-                badRules.push([rule, edge]);
-            }
         }
     }
-    return badRules;
 }
 
 export function reportGameResult(stats: Statistics, game: Game, gameResult: GameResult, playerMap: PlayerMap, i: number) {

@@ -5,7 +5,7 @@ import {TableOptions} from "../model/Table";
 import {makeSeededPrng, makeStrategiesForEvaluation, setLogConfigWithDefaults} from "./cliOptions";
 import program from "commander";
 
-makeSeededPrng();
+let seed = makeSeededPrng();
 
 let runs = program.runs || 50;
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
@@ -23,5 +23,6 @@ export default {
     evaluation: evaluation,
     saveGamesTo: program.saveFile,
     saveRules: program.saveRules,
-    runMode: "evaluateStrategies"
+    runMode: "evaluateStrategies",
+    csvFile: `evaluateStrategies-${seed}-${new Date().toISOString().replace(/:/g, '-')}.csv`,
 } as TableOptions;

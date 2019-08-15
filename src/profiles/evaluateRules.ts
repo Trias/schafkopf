@@ -9,7 +9,7 @@ import program from "commander";
 let runs = program.runs || 1000;
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
-makeSeededPrng();
+let seed = makeSeededPrng();
 
 setLogConfigWithDefaults({
     time: false,
@@ -24,7 +24,8 @@ let blacklists = zip(rules) as string[][];
 
 let evaluation = new Evaluation(playerNames, {
     strategy: [CallingRulesWithHeuristicWithRuleBlacklist, CallingRulesWithHeuristic],
-    blacklists
+    blacklists,
+    allRules: rules
 });
 
 export default {
@@ -33,5 +34,6 @@ export default {
     makePlayerMap: evaluation.makePlayerMap,
     evaluation: evaluation,
     saveGamesTo: program.saveFile,
-    runMode: "evaluateRules"
+    runMode: "evaluateRules",
+    csvFile: `evaluateRules-${seed}-${new Date().toISOString().replace(/:/g, '-')}.csv`,
 } as TableOptions;

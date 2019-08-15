@@ -1,3 +1,5 @@
+import {baseRandom} from "./baseRandom";
+
 /**
  * A specialized version of `_.sample` for arrays.
  *
@@ -11,6 +13,3 @@ export function sample<T>(array: T[]): T | undefined {
 }
 
 
-function baseRandom(lower: number, upper: number) {
-    return lower + Math.floor(Math.random() * (upper - lower + 1));
-}

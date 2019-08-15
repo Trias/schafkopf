@@ -13,7 +13,8 @@ import {clone} from "lodash";
 import {Evaluation} from "./reporting/Evaluation";
 import GameResult from "./reporting/GameResult";
 import {reportGameResult, reportOnCallingRules, reportOnRules, reportOnStrategies} from "../logging/report";
-import {saveBadRules, saveGames, saveRules} from "../logging/save";
+import {appendCsv, saveGames, saveRules} from "../logging/save";
+import {RuleEvaluation} from "./reporting/RuleEvaluation";
 
 export type TableOptions = {
     runs: number;
@@ -25,6 +26,7 @@ export type TableOptions = {
     saveGamesTo?: string | null;
     saveRules?: boolean;
     runMode: "default" | "evaluateRules" | "evaluateStrategies" | "replay";
+    csvFile?: string | null;
 }
 
 export type SaveGame = {
@@ -59,6 +61,13 @@ export class Table {
     }
 
     async run() {
+        if (this.options.csvFile) {
+            if (this.options.runMode == "evaluateRules") {
+                appendCsv(this.options.csvFile, ["gameId", "edge", "withRuleWins", "withRuleLosses", "withRuleWinRatio", "withoutRuleWins", "withoutRuleLosses", "withoutRuleWinRatio", "rule"]);
+            } else if (this.options.runMode == "evaluateStrategies") {
+                appendCsv(this.options.csvFile, ["gameId", "strategy", "wins", "losses"]);
+            }
+        }
         for (let i = 0; i < this.options.runs; i++) {
             if (this.options.saveGamesTo) {
                 // @ts-ignore
@@ -73,7 +82,10 @@ export class Table {
             let playerMap: PlayerMap;
             let game: Game;
             let gameResult: GameResult;
-            if (this.options.runMode == "evaluateRules" && this.options.evaluation && this.options.evaluation.blacklists) {
+            if (this.options.runMode == "evaluateRules") {
+                if (!this.options.evaluation || !this.options.evaluation.blacklists) {
+                    throw Error('missing evaluation!');
+                }
                 for (let blacklist of this.options.evaluation.blacklists) {
                     for (let j = 0; j < this.options.evaluation.strategyEvaluation.strategies.length ** 4; j++) {
                         log.info(`========game ${i + 1} run ${j + 1} blacklisted rule: ${blacklist.toString()}===========`);
@@ -92,9 +104,21 @@ export class Table {
                         }
                     }
                 }
-                let badRules = reportOnRules(this.options.evaluation.ruleEvaluation, i);
-                saveBadRules(badRules);
-            } else if (this.options.runMode == "evaluateStrategies" && this.options.evaluation) {
+                let ruleStats = this.options.evaluation.ruleEvaluation.getCombinedRuleStatistics();
+
+                reportOnRules(ruleStats, i);
+
+                ruleStats = RuleEvaluation.getCompleteCombinedRuleStatistics(this.options.evaluation.allRules!, ruleStats);
+                if (this.options.csvFile) {
+                    for (let rule of Object.keys(ruleStats)) {
+                        let ruleStat = ruleStats[rule];
+                        appendCsv(this.options.csvFile, [i + 1, ruleStat.edge, ruleStat.withRuleWins, ruleStat.withRuleLosses, ruleStat.withRuleWinRatio, ruleStat.withoutRuleWins, ruleStat.withoutRuleLosses, ruleStat.withoutRuleWinRatio, rule]);
+                    }
+                }
+            } else if (this.options.runMode == "evaluateStrategies") {
+                if (!this.options.evaluation) {
+                    throw Error('missing evaluation!');
+                }
                 for (let j = 0; j < this.options.evaluation.strategyEvaluation.strategies.length ** 4; j++) {
                     log.info(`========game ${i + 1} run ${j + 1}===========`);
                     playerMap = this.options.evaluation.makePlayerMap(j);
@@ -117,6 +141,12 @@ export class Table {
 
                 reportOnCallingRules(this.options.evaluation.callingRuleEvaluation, i);
                 reportOnStrategies(this.options.evaluation.strategyEvaluation, i);
+
+                if (this.options.csvFile) {
+                    for (let strategy of this.options.evaluation.strategyEvaluation.strategies) {
+                        appendCsv(this.options.csvFile, [i + 1, strategy.name, strategy.wins, strategy.losses]);
+                    }
+                }
             } else {
                 if (this.options.evaluation) {
                     throw Error('evaluation on default profile?')

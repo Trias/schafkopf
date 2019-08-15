@@ -5,6 +5,7 @@ import {StrategyEvaluation} from "./StrategyEvaluation";
 export type EvaluationOptions = {
     strategy: any[],
     blacklists?: string[][],
+    allRules?: string[],
 }
 
 export class Evaluation {
@@ -13,6 +14,7 @@ export class Evaluation {
     readonly strategyEvaluation: StrategyEvaluation;
     readonly blacklists?: string[][];
     private readonly playerNames: string[];
+    readonly allRules: string[] | undefined;
 
     constructor(playerNames: string[], options: EvaluationOptions) {
         this.playerNames = playerNames;
@@ -20,6 +22,7 @@ export class Evaluation {
         this.callingRuleEvaluation = new RuleEvaluation();
         this.strategyEvaluation = new StrategyEvaluation(options.strategy);
         this.blacklists = options.blacklists;
+        this.allRules = options.allRules
     }
 
     makePlayerMap(j: number, blacklist?: string[]) {

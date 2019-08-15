@@ -160,7 +160,7 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                                             if (inPlayConditions.hasUnter()) {
                                                 return actions.playHighestCardByRank(cardFilter.unter);
                                             } else {
-                                                return actions.playLowestCardByRank(cardFilter.trumps);
+                                                return actions.playHighestCardByRank(cardFilter.trumps);
                                             }
                                         } else {
                                             if (inPlayConditions.opponentsAreInHinterhand()) {
@@ -198,7 +198,8 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                                     return actions.playLowestCardByRank(cardFilter.winningCardsWithoutVolle);
                                 }
                             } else {
-                                return actions.playLowestCardByRank(cardFilter.winningCards);
+                                // TODO: weak spot here
+                                return actions.playLowestCardByMixedRanking(cardFilter.playableCards);
                             }
                         }
                     } else {
@@ -213,7 +214,8 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                                 if (inPlayConditions.hasWinningTrumpsWithoutVolle()) {
                                     return actions.playLowestCardByRank(cardFilter.winningCardsWithoutVolle);
                                 } else {
-                                    return actions.playLowestCardByPoints(cardFilter.winningCards)
+                                    // TODO: weak spot here
+                                    return actions.playLowestCardByPoints(cardFilter.playableCards)
                                 }
                             }
                         } else {

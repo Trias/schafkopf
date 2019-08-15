@@ -1,7 +1,6 @@
 import * as fs from "fs";
 import {RuleEvaluation} from "../model/reporting/RuleEvaluation";
 import {SaveGame} from "../model/Table";
-import {fromPairs} from "lodash";
 
 if (!fs.existsSync('generated')) {
     fs.mkdirSync('generated');
@@ -24,14 +23,10 @@ export function saveRules(ruleEvaluation: RuleEvaluation) {
     fs.writeFileSync('generated/rules.json', JSON.stringify(rules.sort(), null, 2));
 }
 
-export function saveBadRules(badRules: [string, number][]) {
-    fs.writeFileSync('generated/badRules.json', JSON.stringify(fromPairs(badRules), null, 2));
-}
-
 export function appendLog(fileName: string, appendString: string) {
     fs.appendFileSync('generated/logs/' + fileName, appendString + '\n');
 }
 
-export function appendCsv(fileName: string, strings: string[]) {
+export function appendCsv(fileName: string, strings: (number | string)[]) {
     fs.appendFileSync('generated/csv/' + fileName, strings.join(';') + '\n');
 }

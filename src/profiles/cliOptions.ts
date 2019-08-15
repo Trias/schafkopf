@@ -6,6 +6,7 @@ import {ManualStrategy} from "../model/strategy/manual/ManualStrategy";
 import {CallingRulesWithHeuristic} from "../model/strategy/rulebased/CallingRulesWithHeuristic";
 import program from "commander";
 import seededRandomness from "../utils/seededRandomness";
+import {baseRandom} from "../utils/baseRandom";
 
 export function makeLogConfig() {
     let logConfig: Partial<{ [index in LogLevel]: boolean }> = {};
@@ -99,15 +100,15 @@ export function setLogConfigWithDefaults(defaults: Partial<LogConfig> = {}) {
 }
 
 export function makeSeededPrng() {
+    let seed;
     if (program.seed) {
-        seededRandomness(program.seed);
-    } else if (program.seed == undefined) {
-        // legcy fallback...
-        seededRandomness('seed');
+        seed = program.seed
     } else {
-        console.log('no seeding, savegames disabled');
-        program.saveFile = null;
+        seed = baseRandom(0, 2 ** 64).toString(16);
+        console.log('to replay, use seed: ' + seed);
     }
+    seededRandomness(seed);
+    return seed;
 }
 
 export function chooseProfile() {
@@ -138,8 +139,7 @@ export function defineCliOptions() {
 
     program.option('--manual <manualPlayerNumber>', 'number of player to be controlled manually. if set overwrites strategy', n => (n > 4 || n < 1) ? false : n);
 
-    program.option('--seed <seed>', 'seed used for random numbers. Default: "seed"');
-    program.option('--no-seed', 'no seeding, savegame disabled');
+    program.option('--seed <seed>', 'seed used for random numbers');
 
     program.option('--log <logLevels>', 'comma separated list of log levels. To disable prepend with -. Available: private, info, error, gameInfo, report, stats, time', log => log.split(',').map((s: string) => s.trim()));
 
