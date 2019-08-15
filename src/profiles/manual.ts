@@ -10,7 +10,7 @@ if (program.seed == undefined) {
     program.seed = false;
     console.log('using unseeded random number generator in manual play');
 }
-makeSeededPrng();
+let seed = makeSeededPrng();
 
 let runs = program.runs || 32;
 
@@ -44,7 +44,7 @@ let date = new Date();
 setLogConfigWithDefaults({
     private: false,
     time: false,
-    toFile: `manual-${date.toISOString().replace(/:/g, '-')}.log`
+    toFile: `manual-${date.toISOString().replace(/:/g, '-')}-${seed}.log`
 });
 
 export default {
