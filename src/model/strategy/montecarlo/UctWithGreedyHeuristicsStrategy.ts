@@ -92,7 +92,7 @@ export default class UctWithGreedyHeuristicsStrategy implements StrategyInterfac
 
         for (let i = 0; i < 4; i++) {
             if (i == playerIndex) {
-                playerMap[playerName] = new PlayerPlaceholder(playerName);
+                playerMap[playerName] = this.thisPlayer;
             } else {
                 playerMap["FakePlayer " + i] = new PlayerPlaceholder("FakePlayer " + i);
             }
