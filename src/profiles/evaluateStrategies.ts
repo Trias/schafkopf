@@ -11,9 +11,9 @@ let runs = program.runs || 50;
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
 setLogConfigWithDefaults({time: true});
-
+let strategies = makeStrategiesForEvaluation() || [Nemesis, CallingRulesWithHeuristic];
 let evaluation = new Evaluation(playerNames, {
-    strategy: makeStrategiesForEvaluation() || [Nemesis, CallingRulesWithHeuristic],
+    strategy: strategies,
 });
 
 export default {
@@ -24,5 +24,5 @@ export default {
     saveGamesTo: program.saveFile,
     saveRules: program.saveRules,
     runMode: "evaluateStrategies",
-    csvFile: `evaluateStrategies-${seed}-${new Date().toISOString().replace(/:/g, '-')}.csv`,
+    csvFile: `evaluateStrategies-${strategies.map(c => c.name)}-${seed}-${new Date().toISOString().replace(/:/g, '-')}.csv`,
 } as TableOptions;
