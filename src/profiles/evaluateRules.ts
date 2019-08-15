@@ -1,7 +1,7 @@
 import {CallingRulesWithHeuristic} from "../model/strategy/rulebased/CallingRulesWithHeuristic";
 import {CallingRulesWithHeuristicWithRuleBlacklist} from "../model/strategy/rulebased/CallingRulesWithHeuristicWithRuleBlacklist";
 import {Evaluation} from "../model/reporting/Evaluation";
-import {zip} from "lodash";
+import {includes, zip} from "lodash";
 import {TableOptions} from "../model/Table";
 import {makeSeededPrng, setLogConfigWithDefaults} from "./cliOptions";
 import program from "commander";
@@ -20,6 +20,19 @@ setLogConfigWithDefaults({
 });
 
 let rules = require('../../data/rules.json') as string[];
+
+let addRules = [];
+for (let rule of rules) {
+    let ruleSplitted = rule.split(',');
+    ruleSplitted.pop();
+    while (ruleSplitted.length && !includes(addRules, ruleSplitted.toString())) {
+        addRules.push(ruleSplitted.toString());
+        ruleSplitted.pop();
+    }
+}
+rules = rules.concat(addRules);
+rules.sort();
+
 let blacklists = zip(rules) as string[][];
 
 let evaluation = new Evaluation(playerNames, {

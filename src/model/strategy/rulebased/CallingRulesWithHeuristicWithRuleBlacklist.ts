@@ -7,7 +7,7 @@ import {GameWorld} from "../../GameWorld";
 import {Player} from "../../Player";
 import {AdvancedHeuristic} from "./heuristic/AdvancedHeuristics";
 import {RuleEvaluation} from "../../reporting/RuleEvaluation";
-import {includes} from "lodash";
+import {clone, intersection} from "lodash";
 import {getPlayableCards} from "../../PlayableMoves";
 import log from "../../../logging/log";
 import {sample} from "../../../utils/sample";
@@ -45,8 +45,16 @@ export class CallingRulesWithHeuristicWithRuleBlacklist implements StrategyInter
         });
         let card = heuristic.chooseCardToPlay(world, cardSet);
 
+        let ruleClone = clone(ruleApplied);
+        ruleClone.pop();
+        let rulesPath: string[] = [ruleApplied.toString()];
+        while (ruleClone.length) {
+            rulesPath.push(ruleClone.toString());
+            ruleClone.pop();
+        }
+
         if (this.ruleEvaluation) {
-            if (includes(this.ruleBlacklist, ruleApplied.toString())) {
+            if (intersection(this.ruleBlacklist, rulesPath).length > 0) {
                 let playableCards = getPlayableCards(cardSet, world.gameMode, world.round);
                 card = sample(playableCards)!;
                 log.private('overwriting choice with random play');

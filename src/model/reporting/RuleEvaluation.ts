@@ -1,5 +1,5 @@
 import GameResult from "./GameResult";
-import {clone, intersection, union} from "lodash";
+import {clone, includes, intersection, union} from "lodash";
 
 type RuleStats = { [index in string]: { wins: number; losses: number; } };
 type RulesByPlayer = { [index in string]: string[] };
@@ -38,8 +38,16 @@ export class RuleEvaluation {
 
     addRule(playerName: string, rule: string[]) {
         this.usedRulesByPlayer[playerName] = this.usedRulesByPlayer[playerName] || [];
-        this.usedRulesByPlayer[playerName].push(clone(rule.toString()));
-        this.usedRules.push(clone(rule.toString()));
+        this.usedRulesByPlayer[playerName].push(rule.toString());
+        this.usedRules.push(rule.toString());
+
+        let ruleClone = clone(rule);
+        ruleClone.pop();
+        while (ruleClone.length && !includes(this.usedRules, ruleClone.toString())) {
+            this.usedRules.push(ruleClone.toString());
+            this.usedRulesByPlayer[playerName].push(ruleClone.toString());
+            ruleClone.pop();
+        }
     }
 
     gradeRules(gameResult: GameResult, blacklist: string[] | null = null) {
@@ -93,10 +101,18 @@ export class RuleEvaluation {
         return ruleStats;
     }
 
-    addBlacklistedRule(playerName: string, ruleApplied: string[]) {
+    addBlacklistedRule(playerName: string, rule: string[]) {
         this.usedBlacklistedRulesByPlayer[playerName] = this.usedBlacklistedRulesByPlayer[playerName] || [];
-        this.usedBlacklistedRulesByPlayer[playerName].push(clone(ruleApplied.toString()));
-        this.usedRules.push(clone(ruleApplied.toString()));
+        this.usedBlacklistedRulesByPlayer[playerName].push(rule.toString());
+        this.usedRules.push(rule.toString());
+
+        let ruleClone = clone(rule);
+        ruleClone.pop();
+        while (ruleClone.length && !includes(this.usedRules, ruleClone.toString())) {
+            this.usedRules.push(ruleClone.toString());
+            this.usedBlacklistedRulesByPlayer[playerName].push(ruleClone.toString());
+            ruleClone.pop();
+        }
     }
 
     getCombinedRuleStatistics() {
