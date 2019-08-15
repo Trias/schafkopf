@@ -1,4 +1,4 @@
-import seedRandom from "seedRandom";
+import seedRandom from "seedrandom";
 import {TableOptions} from "../model/Table";
 import program from "commander";
 import {makeDefaultPlayerMap, setLogConfigWithDefaults} from "./cliOptions";

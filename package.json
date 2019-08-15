@@ -15,6 +15,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "repository": "https://github.com/Trias/schafkopf",
   "dependencies": {
     "chalk": "^2.4.2",
     "lodash": "^4.17.13",
