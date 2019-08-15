@@ -14,7 +14,7 @@ Now you are ready to go. You can choose from the following starting points:
 * ``node build/index.js --profile=manual --manual=2 --log=private --seed=seed``: like above but now card deals are predetermined
 * ``node build/index.js --profile=manual --manual=2 --log=private --seed=seed --saveFile=games.json``: like above but now saves the games so you can later replay them
 * ``node build/index.js --profile=manual --manual=2 --log=private --seed=seed --saveFile=games.json --runs=100``: like above but with a hundred games
-* ``node build/index.js --profile=replay --replay=1 --log=private --saveFile=games.json``: replay the saved game (seed is ignored because it is determined by the save game)
+* ``node build/index.js --profile=replay --manual=2 --replay=1 --log=private --saveFile=games.json``: replay the saved game (seed is ignored because it is determined by the save game)
 
 see more (advanced) options with ``node build/index.js -h``
 
