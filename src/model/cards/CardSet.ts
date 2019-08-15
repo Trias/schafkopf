@@ -185,7 +185,7 @@ export function getShortestColors(cardSet: readonly Card[], gameMode: GameMode) 
     let shortestColors: ColorWithTrump[] = [];
 
     for (let [color, length] of Object.entries(cardLengthsByColor) as [ColorWithTrump, number][]) {
-        if (length < shortestColorLength) {
+        if (length > 0 && length < shortestColorLength) {
             shortestColors = [color];
         } else if (length == shortestColorLength) {
             shortestColors.push(color);
