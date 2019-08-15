@@ -104,7 +104,7 @@ export function makeSeededPrng() {
     if (program.seed) {
         seed = program.seed
     } else {
-        seed = baseRandom(0, 2 ** 64).toString(16);
+        seed = baseRandom(0, Number.MAX_SAFE_INTEGER).toString(16);
         console.log('to replay, use seed: ' + seed);
     }
     seededRandomness(seed);
