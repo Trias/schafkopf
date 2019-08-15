@@ -4,7 +4,7 @@ import {shiftRightWithBase} from "../../utils/shiftRightWithBase";
 export class StrategyEvaluation {
     // constructor types are too damn complicated!
     readonly strategies: any[];
-    private readonly stats: { [index in string]: { wins: number; losses: 0 } };
+    private readonly stats: { [index in string]: { wins: number; losses: number } };
 
     constructor(strategies: any[]) {
         if (strategies.length < 2) {

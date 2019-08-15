@@ -24,5 +24,5 @@ export default {
     saveGamesTo: program.saveFile,
     saveRules: program.saveRules,
     runMode: "evaluateStrategies",
-    csvFile: `evaluateStrategies-${strategies.map(c => c.name)}-${seed}-${new Date().toISOString().replace(/:/g, '-')}.csv`,
+    csvFile: `evaluateStrategies-${new Date().toISOString().replace(/:/g, '-')}-${strategies.map(c => c.name)}-${seed}.csv`,
 } as TableOptions;

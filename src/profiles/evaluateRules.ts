@@ -35,5 +35,5 @@ export default {
     evaluation: evaluation,
     saveGamesTo: program.saveFile,
     runMode: "evaluateRules",
-    csvFile: `evaluateRules-${seed}-${new Date().toISOString().replace(/:/g, '-')}.csv`,
+    csvFile: `evaluateRules-${new Date().toISOString().replace(/:/g, '-')}-${seed}.csv`,
 } as TableOptions;

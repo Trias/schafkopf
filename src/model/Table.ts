@@ -144,7 +144,8 @@ export class Table {
 
                 if (this.options.csvFile) {
                     for (let strategy of this.options.evaluation.strategyEvaluation.strategies) {
-                        appendCsv(this.options.csvFile, [i + 1, strategy.name, strategy.wins, strategy.losses]);
+                        let evaluation = this.options.evaluation.strategyEvaluation.getEvaluationForStrategy(strategy);
+                        appendCsv(this.options.csvFile, [i + 1, strategy.name, evaluation.wins, evaluation.losses]);
                     }
                 }
             } else {
