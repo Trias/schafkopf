@@ -8,7 +8,7 @@ import {determineGameMode} from "../rules/shouldCall/determineGameMode";
 import {GameWorld} from "../../GameWorld";
 import {shuffle} from "../../../utils/shuffle";
 
-export default class CallingRulesWitRandomPlay implements StrategyInterface {
+export default class CallingRulesWithRandomPlay implements StrategyInterface {
 
     chooseCardToPlay(world: GameWorld, cardSet: readonly Card[]): Card {
         let playableCards = filter(cardSet, card => {

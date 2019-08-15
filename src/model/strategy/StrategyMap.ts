@@ -2,7 +2,6 @@ import {ManualStrategy} from "./manual/ManualStrategy";
 import CallingRulesWithUctMonteCarloStrategy from "./montecarlo/CallingRulesWithUctMonteCarloStrategy";
 import CallingRulesWithGreedyPlay from "./rulebased/CallingRulesWithGreedyPlay";
 import CallingRulesWithRandomPlay from "./rulebased/CallingRulesWithRandomPlay";
-import CallingRulesWitRandomPlay from "./rulebased/CallingRulesWithRandomPlay";
 import {CallingRulesWithHeuristic} from "./rulebased/CallingRulesWithHeuristic";
 import {CallingRulesWithHeuristicWithRuleBlacklist} from "./rulebased/CallingRulesWithHeuristicWithRuleBlacklist";
 import {CallingRulesWithUctMonteCarloAndHeuristic} from "./montecarlo/CallingRulesWithUctMonteCarloAndHeuristic";
@@ -14,6 +13,7 @@ import UctWithGreedyHeuristicsStrategy from "./montecarlo/UctWithGreedyHeuristic
 import RandomStrategy from "./random/RandomStrategy";
 import FlatMonteCarloStrategy from "./montecarlo/FlatMonteCarloStrategy";
 import {Leprechauns} from "./rulebased/Leprechauns";
+import CallingRulesWithFlatMonteCarloStrategy from "./montecarlo/CallingRulesWithFlatMonteCarloStrategy";
 
 export default {
     "ManualStrategy": ManualStrategy,
@@ -24,11 +24,11 @@ export default {
     "CallingRulesWithHeuristicWithRuleBlacklist": CallingRulesWithHeuristicWithRuleBlacklist,
     "CallingRulesWithUctMonteCarloAndHeuristic": CallingRulesWithUctMonteCarloAndHeuristic,
     "CallingRulesWithUctMonteCarloStrategyAndCheating": CallingRulesWithUctMonteCarloStrategyAndCheating,
-    "CallingRulesWitRandomPlay": CallingRulesWitRandomPlay,
     "Nemesis": Nemesis,
     "UctMonteCarloStrategy": UctMonteCarloStrategy,
     "UctWithGreedyHeuristicsStrategy": UctWithGreedyHeuristicsStrategy,
     "RandomStrategy": RandomStrategy,
     "FlatMonteCarloStrategy": FlatMonteCarloStrategy,
     "Leprechauns": Leprechauns,
+    "CallingRulesWithFlatMonteCarloStrategy": CallingRulesWithFlatMonteCarloStrategy,
 } as { [index in string]: any }
