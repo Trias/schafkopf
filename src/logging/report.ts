@@ -1,7 +1,7 @@
 import {PlayerMap} from "../model/Player";
 import Statistics from "../model/reporting/Statistics";
 import log from "./log";
-import {RuleEvaluation, RuleStat} from "../model/reporting/RuleEvaluation";
+import {RuleEvaluation} from "../model/reporting/RuleEvaluation";
 import {StrategyEvaluation} from "../model/reporting/StrategyEvaluation";
 import {Game} from "../model/Game";
 import GameResult from "../model/reporting/GameResult";
@@ -33,7 +33,7 @@ export function reportOnStrategies(evaluation: StrategyEvaluation, i: number) {
     }
 }
 
-
+/*
 export function reportOnRules(ruleStats: { [index in string]: RuleStat }, i: number) {
     log.info(`rule evaluation after ${i + 1} games`);
     let rules = Object.keys(ruleStats).sort();
@@ -48,6 +48,7 @@ export function reportOnRules(ruleStats: { [index in string]: RuleStat }, i: num
         }
     }
 }
+*/
 
 export function reportGameResult(stats: Statistics, game: Game, gameResult: GameResult, playerMap: PlayerMap, i: number) {
     if (game.getGameResult().getGameMode().isNoRetry()) {
