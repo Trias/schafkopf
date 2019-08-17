@@ -1,17 +1,14 @@
 import GameResult from "./GameResult";
-import {clone, includes, intersection, union} from "lodash";
+import {clone, intersection, union} from "lodash";
 
 type RuleStats = { [index in string]: { wins: number; losses: number; } };
 type RulesByPlayer = { [index in string]: string[] };
 
 export type RuleStat = {
-    edge: number;
     withRuleWins: number;
     withRuleLosses: number;
-    withRuleWinRatio: number;
     withoutRuleWins: number;
     withoutRuleLosses: number;
-    withoutRuleWinRatio: number;
 }
 
 export class RuleEvaluation {
@@ -43,7 +40,7 @@ export class RuleEvaluation {
 
         let ruleClone = clone(rule);
         ruleClone.pop();
-        while (ruleClone.length && !includes(this.usedRules, ruleClone.toString())) {
+        while (ruleClone.length) {
             this.usedRules.push(ruleClone.toString());
             this.usedRulesByPlayer[playerName].push(ruleClone.toString());
             ruleClone.pop();
@@ -88,13 +85,10 @@ export class RuleEvaluation {
         for (let rule of allRules) {
             if (!(rule in ruleStats)) {
                 ruleStats[rule] = {
-                    edge: NaN,
                     withRuleWins: 0,
                     withRuleLosses: 0,
-                    withRuleWinRatio: NaN,
                     withoutRuleWins: 0,
                     withoutRuleLosses: 0,
-                    withoutRuleWinRatio: NaN
                 }
             }
         }
@@ -108,7 +102,7 @@ export class RuleEvaluation {
 
         let ruleClone = clone(rule);
         ruleClone.pop();
-        while (ruleClone.length && !includes(this.usedRules, ruleClone.toString())) {
+        while (ruleClone.length) {
             this.usedRules.push(ruleClone.toString());
             this.usedBlacklistedRulesByPlayer[playerName].push(ruleClone.toString());
             ruleClone.pop();
@@ -126,18 +120,12 @@ export class RuleEvaluation {
             let ruleStat = ruleStatistics[rule];
             let blacklistedRuleStat = blackListedRuleStatistics[rule];
             if (blacklistedRuleStat && ruleStat) {
-                let winRatio = ruleStat.wins / (ruleStat.losses + ruleStat.wins);
-                let randomPlayWinRatio = blacklistedRuleStat.wins / (blacklistedRuleStat.losses + blacklistedRuleStat.wins);
-                let edge = winRatio / randomPlayWinRatio * 100 - 100;
 
                 combinedRules[rule] = {
-                    edge,
                     withRuleWins: ruleStat.wins,
                     withRuleLosses: ruleStat.losses,
-                    withRuleWinRatio: winRatio,
                     withoutRuleWins: blacklistedRuleStat.wins,
-                    withoutRuleLosses: blacklistedRuleStat.losses,
-                    withoutRuleWinRatio: randomPlayWinRatio
+                    withoutRuleLosses: blacklistedRuleStat.losses
                 };
             }
         }

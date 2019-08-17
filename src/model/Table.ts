@@ -12,7 +12,7 @@ import {PlayerMap} from "./Player";
 import {clone} from "lodash";
 import {Evaluation} from "./reporting/Evaluation";
 import GameResult from "./reporting/GameResult";
-import {reportGameResult, reportOnCallingRules, reportOnRules, reportOnStrategies} from "../logging/report";
+import {reportGameResult, reportOnCallingRules, reportOnStrategies} from "../logging/report";
 import {appendCsv, saveGames, saveRules} from "../logging/save";
 import {RuleEvaluation} from "./reporting/RuleEvaluation";
 
@@ -63,7 +63,7 @@ export class Table {
     async run() {
         if (this.options.csvFile) {
             if (this.options.runMode == "evaluateRules") {
-                appendCsv(this.options.csvFile, ["gameId", "edge", "withRuleWins", "withRuleLosses", "withRuleWinRatio", "withoutRuleWins", "withoutRuleLosses", "withoutRuleWinRatio", "rule"]);
+                appendCsv(this.options.csvFile, ["gameId", "withRuleTotal", "withRuleWins", "withRuleLosses", "withRuleTotal", "withoutRuleWins", "withoutRuleLosses", "rule"]);
             } else if (this.options.runMode == "evaluateStrategies") {
                 appendCsv(this.options.csvFile, ["gameId", "strategy", "wins", "losses"]);
             }
@@ -106,13 +106,13 @@ export class Table {
                 }
                 let ruleStats = this.options.evaluation.ruleEvaluation.getCombinedRuleStatistics();
 
-                reportOnRules(ruleStats, i);
+                //reportOnRules(ruleStats, i);
 
                 ruleStats = RuleEvaluation.getCompleteCombinedRuleStatistics(this.options.evaluation.allRules!, ruleStats);
                 if (this.options.csvFile) {
                     for (let rule of Object.keys(ruleStats)) {
                         let ruleStat = ruleStats[rule];
-                        appendCsv(this.options.csvFile, [i + 1, ruleStat.edge, ruleStat.withRuleWins, ruleStat.withRuleLosses, ruleStat.withRuleWinRatio, ruleStat.withoutRuleWins, ruleStat.withoutRuleLosses, ruleStat.withoutRuleWinRatio, rule]);
+                        appendCsv(this.options.csvFile, [i + 1, ruleStat.withRuleWins + ruleStat.withRuleLosses, ruleStat.withRuleWins, ruleStat.withRuleLosses, ruleStat.withoutRuleWins + ruleStat.withoutRuleLosses, ruleStat.withoutRuleWins, ruleStat.withoutRuleLosses, rule]);
                     }
                 }
             } else if (this.options.runMode == "evaluateStrategies") {
