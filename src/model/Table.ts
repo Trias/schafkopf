@@ -12,7 +12,7 @@ import {PlayerMap} from "./Player";
 import {clone} from "lodash";
 import {Evaluation} from "./reporting/Evaluation";
 import GameResult from "./reporting/GameResult";
-import {reportGameResult, reportOnCallingRules, reportOnStrategies} from "../logging/report";
+import {reportGameResult, reportOnStrategies} from "../logging/report";
 import {appendCsv, saveGames, saveRules} from "../logging/save";
 import {RuleEvaluation} from "./reporting/RuleEvaluation";
 
@@ -130,7 +130,7 @@ export class Table {
                     this.stats.addResult(gameResult);
                     this.options.evaluation.strategyEvaluation.addResult(gameResult, j);
                     this.options.evaluation.ruleEvaluation.gradeRules(gameResult); // for saving the rules......
-                    this.options.evaluation.callingRuleEvaluation.gradeRules(gameResult);
+                    //  this.options.evaluation.callingRuleEvaluation.gradeRules(gameResult);
 
                     reportGameResult(this.stats, game, gameResult, playerMap, i);
 
@@ -139,7 +139,7 @@ export class Table {
                     }
                 }
 
-                reportOnCallingRules(this.options.evaluation.callingRuleEvaluation, i);
+                //   reportOnCallingRules(this.options.evaluation.callingRuleEvaluation, i);
                 reportOnStrategies(this.options.evaluation.strategyEvaluation, i);
 
                 if (this.options.csvFile) {

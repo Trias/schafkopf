@@ -13,7 +13,8 @@ import {humanTranslation} from "../../../logging/humanTranslation";
 export class CallingRulesWithHeuristic implements StrategyInterface {
     private readonly thisPlayer: Player;
     private ruleEvaluation: RuleEvaluation | null = null;
-    private callingRuleEvaluation: RuleEvaluation | null = null;
+
+    //private callingRuleEvaluation: RuleEvaluation | null = null;
 
     constructor(thisPlayer: Player) {
         this.thisPlayer = thisPlayer;
@@ -47,7 +48,7 @@ export class CallingRulesWithHeuristic implements StrategyInterface {
 
     chooseGameToCall(cardSet: Card[], previousGameMode: GameMode, playerIndex: number, allowedGameModes: GameModeEnum[]): [GameModeEnum?, PlainColor?] {
         return determineGameMode(previousGameMode, cardSet, allowedGameModes, (reasons: string[]) => {
-            this.callingRuleEvaluation && this.callingRuleEvaluation.addRule(this.thisPlayer.getName(), reasons);
+            // this.callingRuleEvaluation && this.callingRuleEvaluation.addRule(this.thisPlayer.getName(), reasons);
         });
     }
 
@@ -55,7 +56,7 @@ export class CallingRulesWithHeuristic implements StrategyInterface {
         return false;
     }
 
-    injectCallingRulesEvaluation(callingRuleEvaluation: RuleEvaluation) {
-        this.callingRuleEvaluation = callingRuleEvaluation;
-    }
+    /*injectCallingRulesEvaluation(callingRuleEvaluation: RuleEvaluation) {
+       // this.callingRuleEvaluation = callingRuleEvaluation;
+    }*/
 }

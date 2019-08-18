@@ -15,7 +15,7 @@ import {sample} from "../../../utils/sample";
 export class CallingRulesWithHeuristicWithRuleBlacklist implements StrategyInterface {
     private readonly thisPlayer: Player;
     private ruleEvaluation: RuleEvaluation | null = null;
-    private callingRuleEvaluation: RuleEvaluation | null = null;
+    //  private callingRuleEvaluation: RuleEvaluation | null = null;
     private ruleBlacklist: string[] = [];
 
     constructor(thisPlayer: Player) {
@@ -69,7 +69,7 @@ export class CallingRulesWithHeuristicWithRuleBlacklist implements StrategyInter
 
     chooseGameToCall(cardSet: Card[], previousGameMode: GameMode, playerIndex: number, allowedGameModes: GameModeEnum[]): [GameModeEnum?, PlainColor?] {
         return determineGameMode(previousGameMode, cardSet, allowedGameModes, (reasons: string[]) => {
-            this.callingRuleEvaluation && this.callingRuleEvaluation.addRule(this.thisPlayer.getName(), reasons);
+            // this.callingRuleEvaluation && this.callingRuleEvaluation.addRule(this.thisPlayer.getName(), reasons);
         });
     }
 

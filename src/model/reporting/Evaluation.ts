@@ -10,7 +10,7 @@ export type EvaluationOptions = {
 
 export class Evaluation {
     readonly ruleEvaluation: RuleEvaluation;
-    readonly callingRuleEvaluation: RuleEvaluation;
+    // readonly callingRuleEvaluation: RuleEvaluation;
     readonly strategyEvaluation: StrategyEvaluation;
     readonly blacklists?: string[][];
     private readonly playerNames: string[];
@@ -19,7 +19,7 @@ export class Evaluation {
     constructor(playerNames: string[], options: EvaluationOptions) {
         this.playerNames = playerNames;
         this.ruleEvaluation = new RuleEvaluation();
-        this.callingRuleEvaluation = new RuleEvaluation();
+        //this.callingRuleEvaluation = ;
         this.strategyEvaluation = new StrategyEvaluation(options.strategy);
         this.blacklists = options.blacklists;
         this.allRules = options.allRules
@@ -32,7 +32,7 @@ export class Evaluation {
 
             options.strategy = this.strategyEvaluation.getStrategyToEvaluate(j, i);
             options.ruleEvaluation = this.ruleEvaluation;
-            options.callingRuleEvaluation = this.callingRuleEvaluation;
+            // options.callingRuleEvaluation = this.callingRuleEvaluation;
 
             if (blacklist) {
                 options.ruleBlacklist = blacklist;

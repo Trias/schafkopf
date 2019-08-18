@@ -68,9 +68,9 @@ class Player implements PlayerInterface {
             this.strategy.injectRuleBlackList(options.ruleBlacklist);
         }
 
-        if (this.strategy instanceof CallingRulesWithHeuristic && options.callingRuleEvaluation) {
-            this.strategy.injectCallingRulesEvaluation(options.callingRuleEvaluation);
-        }
+        /*   if (this.strategy instanceof CallingRulesWithHeuristic && options.callingRuleEvaluation) {
+               this.strategy.injectCallingRulesEvaluation(options.callingRuleEvaluation);
+           }*/
 
         this.moveEvaluation = options.moveEvaluation;
 
