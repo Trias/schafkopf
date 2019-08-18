@@ -5,6 +5,7 @@ import {includes, zip} from "lodash";
 import {TableOptions} from "../model/Table";
 import {makeSeededPrng, setLogConfigWithDefaults} from "./cliOptions";
 import program from "commander";
+import {RuleEvaluation} from "../model/reporting/RuleEvaluation";
 
 let runs = program.runs || 1000;
 let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
@@ -38,7 +39,8 @@ let blacklists = zip(rules) as string[][];
 let evaluation = new Evaluation(playerNames, {
     strategy: [CallingRulesWithHeuristicWithRuleBlacklist, CallingRulesWithHeuristic],
     blacklists,
-    allRules: rules
+    allRules: rules,
+    ruleEvaluation: new RuleEvaluation(),
 });
 
 export default {

@@ -83,7 +83,7 @@ export class Table {
             let game: Game;
             let gameResult: GameResult;
             if (this.options.runMode == "evaluateRules") {
-                if (!this.options.evaluation || !this.options.evaluation.blacklists) {
+                if (!this.options.evaluation || !this.options.evaluation.blacklists || !this.options.evaluation.ruleEvaluation) {
                     throw Error('missing evaluation!');
                 }
                 for (let blacklist of this.options.evaluation.blacklists) {
@@ -129,7 +129,7 @@ export class Table {
 
                     this.stats.addResult(gameResult);
                     this.options.evaluation.strategyEvaluation.addResult(gameResult, j);
-                    this.options.evaluation.ruleEvaluation.gradeRules(gameResult); // for saving the rules......
+                    //this.options.evaluation.ruleEvaluation.gradeRules(gameResult); // for saving the rules......
                     //  this.options.evaluation.callingRuleEvaluation.gradeRules(gameResult);
 
                     reportGameResult(this.stats, game, gameResult, playerMap, i);
@@ -172,7 +172,7 @@ export class Table {
         if (this.options.saveGamesTo) {
             saveGames(this.games, this.options.saveGamesTo);
         }
-        if (this.options.evaluation && this.options.saveRules) {
+        if (this.options.evaluation && this.options.evaluation.ruleEvaluation && this.options.saveRules) {
             saveRules(this.options.evaluation.ruleEvaluation);
         }
     }

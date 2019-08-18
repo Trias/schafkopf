@@ -13,6 +13,7 @@ export interface LogConfig {
     disabled: boolean;
     time: boolean;
     toFile: null | string;
+    disableCl: boolean;
 }
 
 let config: LogConfig = {
@@ -24,7 +25,8 @@ let config: LogConfig = {
     gameInfo: true,
     time: false,
     disabled: false,
-    toFile: null
+    toFile: null,
+    disableCl: false,
 };
 
 function time(string: string) {
@@ -36,9 +38,18 @@ function timeEnd(string: string) {
     console.timeEnd(string);
 }
 
-export type LogLevel = "private" | "stats" | "info" | "error" | "report" | "gameInfo" | "time";
+export type LogLevel =
+    "private"
+    | "stats"
+    | "info"
+    | "error"
+    | "report"
+    | "gameInfo"
+    | "time"
+    | "disableCl"
+    | "disabled";
 
-let logLevels: LogLevel[] = ["private", "stats", "info", "error", "report", "gameInfo", "time"];
+let logLevels: LogLevel[] = ["private", "stats", "info", "error", "report", "gameInfo", "time", "disableCl", "disabled"];
 
 export default {
     private: (string: string) => config.private && write(colors.green(string)),
@@ -62,6 +73,8 @@ function write(string: string) {
             appendLog(config.toFile, stripColors(string));
         }
 
-        console.log(string);
+        if (!config.disableCl) {
+            console.log(string);
+        }
     }
 }
