@@ -4,7 +4,6 @@ import {PlayerMap} from "./Player";
 import {GameMode, GameModeEnum} from "./GameMode";
 import {GameWorld} from "./GameWorld";
 import log from "../logging/log";
-import colors from "chalk";
 
 export class PreGame {
     private readonly playerMap: PlayerMap;
@@ -29,7 +28,7 @@ export class PreGame {
         this.dealFirstBatchOfCards(cardsInSets);
         this.setGamePhase(GamePhase.FOUR_CARDS_DEALT);
 
-        let klopfer = await this.askPlayerForKlopfer();
+        let klopfer = 0; //this.askPlayerForKlopfer();
 
         log.info(`-----deal second batch of cards ------`);
         this.dealSecondBatchOfCard(cardsInSets);
@@ -77,7 +76,7 @@ export class PreGame {
         Object.values(this.playerMap).forEach((p, i) => p.onReceiveFirstBatchOfCards(cardsInSets[i]));
     }
 
-    private async askPlayerForKlopfer() {
+    /*private async askPlayerForKlopfer() {
         let klopfer = 0;
         for (let player of Object.values(this.playerMap)) {
             let raise = await player.doYouWantToKlopf();
@@ -89,7 +88,7 @@ export class PreGame {
             }
         }
         return klopfer;
-    }
+    }*/
 
     private notifyPlayersOfGameStart(world: GameWorld | null = null) {
         Object.values(this.playerMap).forEach(p => p.onGameStart(world));
