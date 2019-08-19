@@ -1,6 +1,5 @@
 import {GameWorld} from "../../../GameWorld";
 import {Card} from "../../../cards/Card";
-import {cloneDeep} from "lodash";
 import {CardPlayStrategy} from "../../CardPlayStrategy";
 import GameAssumptions from "../../../knowledge/GameAssumptions";
 import {Actions} from "./Actions";
@@ -11,13 +10,13 @@ import {CardFilter} from "./CardFilter";
 
 export type AdvancedHeuristicOptions = {
     name: string,
-    startCardSet: Card[],
+    startCardSet: readonly Card[],
     assumptions: GameAssumptions,
     report?: ((reasons: string[], secondOrderReasons: string[], conclusion: string, card: Card, cardSet: Card[]) => void) | null
 }
 
 export class AdvancedHeuristic implements CardPlayStrategy {
-    private readonly startCardSet: Card[];
+    private readonly startCardSet: readonly Card[];
     private readonly name: string;
     private readonly assumptions: GameAssumptions;
     private readonly report: (reasons: string[], secondOrderReasons: string[], conclusion: string, card: Card, cardSet: Card[]) => void;
@@ -25,7 +24,7 @@ export class AdvancedHeuristic implements CardPlayStrategy {
     constructor(options: AdvancedHeuristicOptions) {
         this.name = options.name;
         this.assumptions = options.assumptions;
-        this.startCardSet = cloneDeep(options.startCardSet);
+        this.startCardSet = options.startCardSet;
         this.report = options.report || (() => {
         });
     }

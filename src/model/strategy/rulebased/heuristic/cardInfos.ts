@@ -52,7 +52,7 @@ export interface CardInfoBase {
     hasMoreThan1TrumpsWithoutVolle: boolean;
 }
 
-export default function getCardInfos(world: GameWorld, name: string, cardSet: Card[], assumptions: GameAssumptions, startCardSet: Card[]) {
+export default function getCardInfos(world: GameWorld, name: string, cardSet: Card[], assumptions: GameAssumptions, startCardSet: readonly Card[]) {
     let roundAnalyzer = world.round.getRoundAnalyzer(world.gameMode);
     // card ranks
 

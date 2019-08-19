@@ -48,30 +48,30 @@ export default class CardsOrdering {
 
     getTrumpOrdering(): readonly Card[] {
         if (this.gameModeEnum == GameModeEnum.CALL_GAME) {
-            return clone(DefaultTrumpOrdering);
+            return DefaultTrumpOrdering;
         } else if (this.gameModeEnum == GameModeEnum.SOLO) {
             let color = this.color as PlainColor;
             return OberAndUnter.concat(CardsByColor[color])
         } else if (this.gameModeEnum == GameModeEnum.WENZ) {
-            return clone(Unter);
+            return Unter;
         } else {
             return DefaultTrumpOrdering;
         }
     }
 
-    getColorOrdering(color: PlainColor): Card[] {
+    getColorOrdering(color: PlainColor): readonly Card[] {
         if (this.gameModeEnum == GameModeEnum.CALL_GAME || this.gameModeEnum == GameModeEnum.SOLO || this.gameModeEnum == GameModeEnum.RETRY) {
             if (color == ColorWithTrump.HERZ && this.gameModeEnum == GameModeEnum.CALL_GAME
                 || this.gameModeEnum == GameModeEnum.SOLO && color === this.color) {
                 return [];
             } else {
-                return clone(CardsByColor[color]) as Card[];
+                return CardsByColor[color];
             }
         } else if (this.gameModeEnum == GameModeEnum.WENZ) {
             let ober = color + "O" as Card;
             let myClone = clone(CardsByColor[color]) as Card[];
             myClone.splice(3, 0, ober);
-            return myClone;
+            return myClone as readonly Card[];
         } else {
             throw Error('not implemented');
         }

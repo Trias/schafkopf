@@ -47,11 +47,6 @@ function makeChart(fileName) {
             d.advantage = d.wins - d.losses;
         });
 
-
-        data.forEach(function (d) {
-            d.advantage = d.wins - d.losses;
-        });
-
         let dataByStrategy = {};
 
         data.forEach(d => {

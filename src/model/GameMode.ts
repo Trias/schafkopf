@@ -127,7 +127,7 @@ class GameMode {
         return this.hasAceBeenCalled;
     }
 
-    getTrumps() {
+    getTrumps(): readonly Card[] {
         return this.getOrdering().getTrumpOrdering();
     }
 

@@ -79,8 +79,9 @@
   },
   "exclude": [
     "node_modules",
-    "./build",
-    "./test"
+    "build",
+    "test",
+    "diagrams"
   ],
   "compileOnSave": true
 }

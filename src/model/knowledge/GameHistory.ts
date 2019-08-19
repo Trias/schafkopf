@@ -59,10 +59,10 @@ export class GameHistory {
         this.gameMode = gameMode;
         this.remainingCards = clone(CardDeck) as Card[];
         this.remainingCardsByColor = {
-            E: this.gameMode.getOrdering().getColorOrdering(PlainColor.EICHEL),
-            G: this.gameMode.getOrdering().getColorOrdering(PlainColor.GRAS),
-            H: this.gameMode.getOrdering().getColorOrdering(PlainColor.HERZ),
-            S: this.gameMode.getOrdering().getColorOrdering(PlainColor.SCHELLE),
+            E: clone(this.gameMode.getOrdering().getColorOrdering(PlainColor.EICHEL)) as Card[],
+            G: clone(this.gameMode.getOrdering().getColorOrdering(PlainColor.GRAS)) as Card[],
+            H: clone(this.gameMode.getOrdering().getColorOrdering(PlainColor.HERZ)) as Card[],
+            S: clone(this.gameMode.getOrdering().getColorOrdering(PlainColor.SCHELLE)) as Card[],
             T: clone(this.gameMode.getOrdering().getTrumpOrdering()) as Card[]
         };
 
@@ -181,7 +181,7 @@ export class GameHistory {
         return !!this.opposingTeamNames.length && !!this.playingTeamNames.length;
     }
 
-    isTeamPartnerKnownToMe(startCards: Card[]) {
+    isTeamPartnerKnownToMe(startCards: readonly Card[]) {
         if (this.isTeamPartnerKnown() || includes(startCards, this.gameMode.getCalledAce())) {
             return true;
         } else {
@@ -212,22 +212,23 @@ export class GameHistory {
     }
 
     getCurrentRankWithEqualRanksOfCardInColor(cards: readonly Card[], color: ColorWithTrump, roundCards: Card[] = []): { [index in Card]?: number } {
-        let cardsInColor = allOfColor(cards, color, this.gameMode);
+        let roundCardsInColor = allOfColor(roundCards, color, this.gameMode);
         let currentRank = 0;
         let result: { [index in Card]?: number } = {};
         let lastCard;
 
-        // TODO. WEnz
-        let cardsToBeConsidered = sortByNaturalOrdering([...this.remainingCardsByColor[color], ...roundCards]);
+        let cardsToConsider = sortByNaturalOrdering([...this.remainingCardsByColor[color], ...roundCardsInColor]);
 
-        for (let i = 0; i < cardsToBeConsidered.length; i++) {
-            let card = cardsToBeConsidered[i];
-            if (cardsInColor.indexOf(card) !== -1) {
-                if (lastCard && result[lastCard] === currentRank - 1) {
-                    currentRank = currentRank - 1;
-                }
-                result[card] = currentRank;
+        for (let i = 0; i < cardsToConsider.length; i++) {
+            let card = cardsToConsider[i];
+            if (!includes(cardsToConsider, card)) {
+                throw Error('card not in color?');
             }
+
+            if (lastCard && result[lastCard] === currentRank - 1) {
+                currentRank = currentRank - 1;
+            }
+            result[card] = currentRank;
 
             lastCard = card;
             currentRank = currentRank + 1;
@@ -286,7 +287,7 @@ export class GameHistory {
         return this.hasCalledAceBeenPlayed;
     }
 
-    getTeamPartnerNameForPlayerName(playerName: string, startCardSet: Card[] = []) {
+    getTeamPartnerNameForPlayerName(playerName: string, startCardSet: readonly Card[] = []) {
         if (this.isTeamPartnerKnown()) {
             if (this.isPlayerPlaying(playerName)) {
                 return without(this.playingTeamNames, playerName).pop()!
@@ -314,7 +315,7 @@ export class GameHistory {
         return sortByNaturalOrdering([...this.remainingCardsByColor[color], ...roundCards]).indexOf(card);
     }
 
-    isPlayerPlaying(playerName: string, startCards: Card[] = []) {
+    isPlayerPlaying(playerName: string, startCards: readonly Card[] = []) {
         if (this.gameMode.getCallingPlayerName() == playerName) {
             return true;
         }

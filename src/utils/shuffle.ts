@@ -2,8 +2,8 @@ import {clone} from "lodash";
 import {baseRandom} from "./baseRandom";
 
 // stolen from lodash... a fisher yates shuffle... (here because its annoying that lodash captures Math.random)
-export function shuffle<T>(array: T[]): T[] {
-    let clonedArray = clone(array);
+export function shuffle<T>(array: readonly T[]): T[] {
+    let clonedArray = clone(array) as T[];
     let index = -1;
     let lastIndex = clonedArray.length - 1;
 
