@@ -14,6 +14,8 @@ export type RuleStat = {
 export class RuleEvaluation {
     private readonly ruleStats: { [index in string]: { wins: number; losses: number; } } = {};
     private readonly blackListedRuleStats: { [index in string]: { wins: number; losses: number; } } = {};
+
+    // refactor to sets, bad usage...
     private usedRulesByPlayer: RulesByPlayer = {};
     private usedBlacklistedRulesByPlayer: { [index in string]: string[] } = {};
     private usedRules: string[] = [];

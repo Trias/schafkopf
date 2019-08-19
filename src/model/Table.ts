@@ -63,7 +63,7 @@ export class Table {
     async run() {
         if (this.options.csvFile) {
             if (this.options.runMode == "evaluateRules") {
-                appendCsv(this.options.csvFile, ["gameId", "withRuleTotal", "withRuleWins", "withRuleLosses", "withRuleTotal", "withoutRuleWins", "withoutRuleLosses", "rule"]);
+                appendCsv(this.options.csvFile, ["gameId", "withRuleTotal", "withRuleWins", "withRuleLosses", "withoutRuleTotal", "withoutRuleWins", "withoutRuleLosses", "rule"]);
             } else if (this.options.runMode == "evaluateStrategies") {
                 appendCsv(this.options.csvFile, ["gameId", "strategy", "wins", "losses"]);
             }

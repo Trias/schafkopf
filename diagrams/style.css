@@ -1,0 +1,13 @@
+.line {
+    fill: none;
+    stroke: steelblue;
+    stroke-width: 2px;
+}
+
+
+.zero-line {
+    fill: none;
+    stroke: grey;
+    stroke-width: 1px;
+    stroke-dasharray: 5px;
+}

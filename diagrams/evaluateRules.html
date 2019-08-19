@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <title>Collapsible Tree Example</title>
+
+    <style>
+
+        .node circle {
+            fill: #fff;
+            stroke: steelblue;
+            stroke-width: 5px;
+        }
+
+        .node text {
+            font: 12px sans-serif;
+        }
+
+        .link {
+            fill: none;
+            stroke: #ccc;
+            stroke-width: 2px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<!-- load the d3.js library -->
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="https://d3js.org/d3-dsv.v1.min.js"></script>
+<script src="https://d3js.org/d3-fetch.v1.min.js"></script>
+<script src="chi2.js"></script>
+
+<script>
+    function link(d) {
+        return "M" + d.source.y + "," + d.source.x
+            + "C" + (d.source.y + d.target.y) / 2 + "," + d.source.x
+            + " " + (d.source.y + d.target.y) / 2 + "," + d.target.x
+            + " " + d.target.y + "," + d.target.x;
+    }
+
+    var treeData = [
+        {
+            "name": "root",
+            "parent": "null"
+        }
+    ];
+
+    d3.dsv(';', "evaluateRules.csv", data => {
+        Object.keys(data).forEach(key => {
+            if (key !== "rule") {
+                data[key] = +data[key];
+            }
+        });
+
+        let path = data.rule.split(',');
+        let currentPath = path;
+
+        let root = treeData[0];
+        let currentNode = root;
+        while (currentPath.length) {
+            if (currentNode.children && currentNode.children.length) {
+                let child = currentNode.children.find(child => child.name === currentPath[0]);
+                if (child) {
+                    currentNode = child;
+                    currentPath.shift();
+                    continue;
+                }
+            }
+            let newChild = {
+                name: currentPath[0],
+                parent: root.name,
+                total: data.withRuleTotal,
+                advantage: data.withRuleWins / data.withRuleTotal - data.withoutRuleWins / data.withoutRuleTotal,
+                significance: significance([[data.withRuleWins, data.withRuleTotal - data.withRuleWins], [data.withoutRuleWins, data.withoutRuleTotal - data.withoutRuleWins]])
+            };
+            currentNode.children = currentNode.children || [];
+            currentNode.children.push(newChild);
+            currentNode = newChild;
+            currentPath.shift();
+        }
+    }).then(data => {
+        // ************** Generate the tree diagram  *****************
+        var margin = {top: 20, right: 120, bottom: 20, left: 120},
+            width = 2700 - margin.right - margin.left,
+            height = 1500 - margin.top - margin.bottom;
+
+        var i = 0;
+
+        var tree = d3.layout.tree()
+            .size([height, width]);
+
+        var diagonal = function (d) {
+            return "M" + d.source.y + "," + d.source.x
+                + "C" + (d.source.y + d.target.y) / 2 + "," + d.source.x
+                + " " + (d.source.y + d.target.y) / 2 + "," + d.target.x
+                + " " + d.target.y + "," + d.target.x;
+        };
+
+        var svg = d3.select("body").append("svg")
+            .attr("width", width + margin.right + margin.left)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+        let colorAdvantage = d3.scale.linear()
+            .domain([-1, -0.01, 0, 0.01, 0.05, 0.1, Infinity])
+            .range(['red', 'red', 'white', 'lightgreen', 'green', 'darkgreen']);
+        let colorSignificance = d3.scale.linear()
+        // @formatter:off
+            .domain([-Infinity,      0,       0.9,       0.95,      0.99,       Infinity])
+            .range([          '#a00',  '#a00',    '#aa0',     '#0a0', '#0d0']);
+        // @formatter:on
+
+        let root = treeData[0];
+        update(root);
+
+
+        function update(source) {
+
+            // Compute the new tree layout.
+            var nodes = tree.nodes(root).reverse(),
+                links = tree.links(nodes);
+
+            // Normalize for fixed-depth.
+            nodes.forEach(function (d) {
+                d.y = d.depth * 180;
+            });
+
+            // Declare the nodesâ€¦
+            var node = svg.selectAll("g.node")
+                .data(nodes, function (d) {
+                    return d.id || (d.id = ++i);
+                });
+
+            // Enter the nodes.
+            var nodeEnter = node.enter().append("g")
+                .attr("class", "node")
+                .attr("transform", function (d) {
+                    return "translate(" + d.y + "," + d.x + ")";
+                });
+
+
+            nodeEnter.append("circle")
+                .attr("r", 10)
+                .style("fill", d => colorAdvantage(d.advantage))
+                .style("stroke", d => colorSignificance(d.significance));
+
+            nodeEnter.append("text")
+                .attr("x", function (d) {
+                    return d.children || d._children ? -13 : 13;
+                })
+                .attr("dy", ".35em")
+                .attr("text-anchor", function (d) {
+                    return d.children || d._children ? "end" : "start";
+                })
+                .text(function (d) {
+                    return d.name;
+                })
+                .style("fill-opacity", 1);
+
+            // Declare the links¦
+            var link = svg.selectAll("path.link")
+                .data(links, function (d) {
+                    return d.target.id;
+                });
+
+            // Enter the links.
+            link.enter().insert("path", "g")
+                .attr("class", "link")
+                .style('stroke-width', d => {
+                    return Math.ceil((d.target.total / d.source.total) * 10)
+                })
+                .attr("d", diagonal);
+
+        }
+
+        let significanceLevels = [
+            0,
+            0.9,
+            0.95,
+            0.99
+        ];
+
+        let significanceLabels = [
+            '0% bis 90%',
+            '90% bis 95%',
+            '95 bis 99%',
+            'über 99%'
+        ];
+
+        svg.append('text')
+            .attr("x", 10)
+            .attr("y", 75)
+            .text('Signifikanz-Niveaus');
+
+        svg.selectAll("mydots")
+            .data(significanceLevels)
+            .enter()
+            .append("circle")
+            .attr("cx", 15)
+            .attr("cy", function (d, i) {
+                return 100 + i * 25
+            }) // 100 is where the first dot appears. 25 is the distance between dots
+            .attr("r", 7)
+            .style("stroke", function (d) {
+                return colorSignificance(d)
+            })
+            .style("fill", 'white')
+            .style("stroke-width", 3);
+
+        // Add one dot in the legend for each name.
+
+        svg.selectAll("mylabels")
+            .data(significanceLabels)
+            .enter()
+            .append("text")
+            .attr("x", 35)
+            .attr("y", function (d, i) {
+                return 100 + i * 25
+            }) // 100 is where the first dot appears. 25 is the distance between dots
+            .style("fill", function (d) {
+                return colorSignificance(d)
+            })
+            .text(function (d) {
+                return d
+            })
+            .attr("text-anchor", "left")
+            .style("alignment-baseline", "middle");
+
+
+        let advantageLevels = [
+            -0.01,
+            -0.005,
+            0,
+            0.03,
+            0.075,
+            0.1
+        ];
+
+        let advantageLabels = [
+            'bis -1%',
+            '-1% bis 0%',
+            '0%',
+            '0% bis 1%',
+            '1% bis 5%',
+            'über 5%',
+        ];
+
+        svg.append('text')
+            .attr("x", 10)
+            .attr("y", 75)
+            .text('Vorteil gegenüber Baseline')
+            .style("transform", "translate(0px,150px)");
+
+        svg.selectAll("mydots2")
+            .data(advantageLevels)
+            .enter()
+            .append("circle")
+            .attr("cx", 15)
+            .attr("cy", function (d, i) {
+                return 100 + i * 25
+            }) // 100 is where the first dot appears. 25 is the distance between dots
+            .attr("r", 7)
+            .style("fill", function (d) {
+                return colorAdvantage(d)
+            })
+            .style('stroke', function (d) {
+                if (d === 0) {
+                    return 'grey';
+                } else {
+                    return 'white';
+                }
+            })
+            .style("transform", "translate(0px,150px)")
+            .style("stroke-width", 1);
+
+        // Add one dot in the legend for each name.
+        svg.selectAll("mylabels2")
+            .data(advantageLabels)
+            .enter()
+            .append("text")
+            .attr("x", 35)
+            .attr("y", function (d, i) {
+                return 100 + i * 25
+            }) // 100 is where the first dot appears. 25 is the distance between dots
+            .style("fill", function (d) {
+                return colorAdvantage(d)
+            })
+            .text(function (d) {
+                return d
+            })
+            .attr("text-anchor", "left")
+            .style("transform", "translate(0px,150px)")
+            .style("alignment-baseline", "middle");
+    });
+
+
+</script>
+
+</body>
+</html>
