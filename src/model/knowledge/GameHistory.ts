@@ -217,18 +217,20 @@ export class GameHistory {
         let result: { [index in Card]?: number } = {};
         let lastCard;
 
-        let cardsToConsider = sortByNaturalOrdering([...this.remainingCardsByColor[color], ...roundCardsInColor]);
+        let remainingCardsOfColor = sortByNaturalOrdering([...this.remainingCardsByColor[color], ...roundCardsInColor]);
 
-        for (let i = 0; i < cardsToConsider.length; i++) {
-            let card = cardsToConsider[i];
-            if (!includes(cardsToConsider, card)) {
+        for (let i = 0; i < remainingCardsOfColor.length; i++) {
+            let card = remainingCardsOfColor[i];
+            if (!includes(remainingCardsOfColor, card)) {
                 throw Error('card not in color?');
             }
 
             if (lastCard && result[lastCard] === currentRank - 1) {
                 currentRank = currentRank - 1;
             }
-            result[card] = currentRank;
+            if (includes(cards, card)) {
+                result[card] = currentRank;
+            }
 
             lastCard = card;
             currentRank = currentRank + 1;
