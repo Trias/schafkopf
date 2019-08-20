@@ -84,7 +84,7 @@ export class CardInfos {
 
     @memoize
     get canForceWinRound() {
-        return !!(this.trumpCount && this.remainingTrumps.length <= 2 && this.remainingTrumps[0] == this.cardFilter.trumps[0]);
+        return this.remainingTrumps[0] == this.cardFilter.trumps[0];
     }
 
     @memoize
