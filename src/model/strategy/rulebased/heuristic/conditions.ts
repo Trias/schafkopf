@@ -1,43 +1,72 @@
-import {GameWorld} from "../../../GameWorld";
-import {Card} from "../../../cards/Card";
-import {CardInfoBase} from "./cardInfos";
+import {CardInfos} from "./cardInfos";
 
-export default function getConditions(world: GameWorld, cardSet: Card[], cardInfos: CardInfoBase, reasons: string[]) {
-    function withReporting(test: (() => boolean), reason: string) {
-        let result = test();
-        if (result) {
+export default function getConditions(cardInfos: CardInfos, reasons: string[]) {
+    function withReporting(test: boolean, reason: string) {
+        if (test) {
             reasons.push(reason)
         } else {
             reasons.push(`not(${reason})`);
         }
-        return result;
+        return test;
     }
 
-    let {
-        hasSinglePlayableCard,
-        isStartPosition,
-        isInPlayingTeam,
-        hasTrumps,
-        isPotentialPartnerPossiblyTrumpFree,
-        canForceWinRound,
-        hasAGoodAmountOfHighTrumps,
-        hasDominantTrumps,
-        isCaller,
-        canSearchCalledAce,
-        hasMoreThan1TrumpsWithoutVolle
-    } = cardInfos;
+    let handler = {
+        get: function (target: CardInfos, name: (keyof CardInfos)) {
+            if (name in target) {
+                return withReporting(!!target[name], name);
+            } else {
+                throw Error('method not on proxy target');
+            }
+        }
+    };
 
-    return {
-        hasSinglePlayableCard: () => withReporting(() => hasSinglePlayableCard, 'hasSinglePlayableCard'),
-        isStartPosition: () => withReporting(() => isStartPosition, 'isStartPosition'),
-        isInPlayingTeam: () => withReporting(() => isInPlayingTeam, 'isInPlayingTeam'),
-        hasTrumps: () => withReporting(() => hasTrumps, 'hasTrumps'),
-        isPotentialPartnerPossiblyTrumpFree: () => withReporting(() => isPotentialPartnerPossiblyTrumpFree, 'isPotentialPartnerPossiblyTrumpFree'),
-        canForceWinRound: () => withReporting(() => canForceWinRound, 'canForceWinRound'),
-        hasAGoodAmountOfHighTrumps: () => withReporting(() => hasAGoodAmountOfHighTrumps, 'hasAGoodAmountOfHighTrumps'),
-        hasDominantTrumps: () => withReporting(() => hasDominantTrumps, 'hasDominantTrumps'),
-        isCaller: () => withReporting(() => isCaller, 'isCaller'),
-        canSearchCalledAce: () => withReporting(() => canSearchCalledAce, 'canSearchCalledAce'),
-        hasMoreThan1TrumpsWithoutVolle: () => withReporting(() => hasMoreThan1TrumpsWithoutVolle, 'hasMoreThan1TrumpsWithoutVolle')
+    return new Proxy(cardInfos, handler);
+
+    // TODO: second order conditions.
+    /*
+                                if (!partnerIsBehindMe) {
+                                    secondOrderReasons.push('partner is not behind me');
+                                }
+
+                                if (!roundCanBeOvertrumped) {
+                                    secondOrderReasons.push('round cannot be overtrumped');
+                                }
+     */
+    /*
+               if (!partnerHasRound && potentialPartnerHasRound) {
+                    secondOrderReasons.push(`potential partner (${potentialPartnerConfidence.playerName}, reasons: ${potentialPartnerConfidence.reasons} with confidence ${potentialPartnerConfidence.confidence}) has round\n`);
+                }
+             */
+    /*
+if (highestCardInRoundIsHighestCardInColor && trumpRound) {
+        secondOrderReasons.push('highest trump played');
     }
+    if (isHinterhand) {
+        secondOrderReasons.push('hinterhand');
+    }
+*/
+    /*
+                        if (!roundColorHasBeenPlayed) {
+                    secondOrderReasons.push('color has not been played yet');
+                }
+
+                if (myTeamIsHinterhand) {
+                    secondOrderReasons.push('we are hinterhand');
+                }
+
+                if (isHinterhand) {
+                    secondOrderReasons.push('hinterhand');
+                }
+
+                if (roundColorHasBeenPlayed) {
+                    secondOrderReasons.push('color has been angespielt');
+                }
+
+                if (!myTeamIsHinterhand) {
+                    secondOrderReasons.push('we are not both hinterhand')
+                }
+                if (!isHinterhand) {
+                    secondOrderReasons.push('not hinterhand');
+                }
+*/
 }

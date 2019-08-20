@@ -94,10 +94,10 @@ export class Table {
                         await game.play();
 
                         gameResult = game.getGameResult();
-                        this.stats.addResult(gameResult);
+                        // this.stats.addResult(gameResult);
                         this.options.evaluation.ruleEvaluation.gradeRules(gameResult, blacklist);
 
-                        reportGameResult(this.stats, game, gameResult, playerMap, i);
+                        //reportGameResult(this.stats, game, gameResult, playerMap, i);
 
                         if (game.getGameResult().getGameMode().isRetry()) {
                             j = this.options.evaluation.strategyEvaluation.strategies.length ** 4;

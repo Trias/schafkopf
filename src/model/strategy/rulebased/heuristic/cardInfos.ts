@@ -5,186 +5,364 @@ import {Card} from "../../../cards/Card";
 import {GameWorld} from "../../../GameWorld";
 import GameAssumptions from "../../../knowledge/GameAssumptions";
 import {includes} from "lodash";
+import {memoize} from "../../../../utils/memoize";
 
-// TODO: use prototype? inheritance? laziness?
-export interface CardInfosInPlay extends CardInfoBase {
-    partnerIsTrumpFree: boolean;
-    hasLowValueBlankCard: boolean;
-    hasOnlyTrumpCards: boolean;
-    potentialPartnerHasRound: boolean;
-    highestCardInRoundIsHighestCardInColor: boolean;
-    isTrumpRound: boolean;
-    isHinterhand: boolean;
-    colorRoundProbablyWonByPartner: boolean;
-    mustFollowSuit: boolean;
-    highConfidenceInPotentialPartner: boolean;
-    highestTrumpMayBeOvertrumped: boolean;
-    roundIsExpensive: boolean;
-    haveColorAce: boolean;
-    colorMayRun: boolean;
-    isColorRoundTrumped: boolean;
-    isColor10InPlay: boolean;
-    opponentsAreInHinterhand: boolean;
-    myTeamIsHinterhand: boolean;
-    roundColorHasBeenPlayed: boolean;
-    winningCardIsHighestInColor: boolean;
-    roundCanBeOvertrumped: boolean;
-    partnerIsBehindMe: boolean;
-    isPartnerFreeOfRoundColor: boolean;
-    notInPlayingTeam: boolean;
-    callColorCount: number;
-    highestCardColor: ColorWithTrump;
-}
+// lazy but with a good memory
+export class CardInfos {
+    private readonly world: GameWorld;
+    private readonly name: string;
+    private readonly cardSet: Card[];
+    private readonly assumptions: GameAssumptions;
+    private readonly startCardSet: ReadonlyArray<Card>;
+    private readonly cardFilter: CardFilter;
 
-export interface CardInfoBase {
-    hasSinglePlayableCard: boolean;
-    isStartPosition: boolean;
-    isInPlayingTeam: boolean;
-    hasTrumps: boolean;
-    isPotentialPartnerPossiblyTrumpFree: boolean;
-    canForceWinRound: boolean;
-    isCaller: boolean;
-    canSearchCalledAce: boolean;
-    knownPartnerHasRound: boolean;
-    trumpCount: number;
-    hasAGoodAmountOfHighTrumps: boolean;
-    hasDominantTrumps: boolean;
-    hasMoreThan1TrumpsWithoutVolle: boolean;
-}
-
-export default function getCardInfos(world: GameWorld, name: string, cardSet: Card[], assumptions: GameAssumptions, startCardSet: readonly Card[]) {
-    let roundAnalyzer = world.round.getRoundAnalyzer(world.gameMode);
-    // card ranks
-
-    // position stuff
-    let isStartPosition = world.round.isEmpty();
-    let cardFilter = new CardFilter(world, cardSet);
-    let trumpCount = cardFilter.trumps.length;
-
-    let {playableCards, trumps} = cardFilter;
-
-    // partner stuff
-    let partnerName = world.history.getTeamPartnerNameForPlayerName(name, startCardSet);
-    let knownPartnerHasRound = !isStartPosition && !!partnerName && world.round.getPlayerNameAtPosition(roundAnalyzer.getHighestCardPosition()) === partnerName;
-    let potentialPartnerName = assumptions.getPossiblePartnerName();
-    let potentialPartnerConfidence = assumptions.getPossibleTeamPartnerForPlayerName(name);
-    let isCaller = world.gameMode.getCallingPlayerName() == name;
-    let isInPlayingTeam = world.history.isPlayerPlaying(name, startCardSet);
-    let isPotentialPartnerPossiblyTrumpFree = !!(potentialPartnerName && assumptions.isPlayerNameProbablyTrumpFree(potentialPartnerName));
-
-    // stuff about game history
-    let remainingTrumps = sortByNaturalOrdering(world.history.getRemainingCardsByColor()[ColorWithTrump.TRUMP]);
-    let canForceWinRound = !!(trumpCount && remainingTrumps.length <= 2 && remainingTrumps[0] == cardFilter.trumps[0]);
-    let hasCalledColorBeenAngespielt = world.history.hasColorBeenAngespielt(world.gameMode.getCalledColor());
-    let hasTrumps = trumpCount > 0;
-    let hasSinglePlayableCard = playableCards.length == 1;
-    let canSearchCalledAce = cardFilter.callColorCards.length > 0 && !hasCalledColorBeenAngespielt;
-
-    let cardRanksForTrumpCards = world.history.getCurrentRankWithEqualRanksOfCardInColor(cardSet, ColorWithTrump.TRUMP, world.round.getPlayedCards());
-    let averageRankOfHighTrumps = cardFilter.highTrumps.reduce((prev, cur) => prev + cardRanksForTrumpCards[cur]!, 0) / cardFilter.highTrumps.length;
-    let hasDominantTrumps = averageRankOfHighTrumps <= 2;
-    let hasAGoodAmountOfHighTrumps = cardFilter.highTrumps.length * 2 > cardFilter.trumps.length && cardFilter.trumps.length > 2;
-    let hasMoreThan1TrumpsWithoutVolle = cardFilter.trumpsWithoutVolle.length > 1;
-
-    let base: CardInfoBase = {
-        hasSinglePlayableCard,
-        isStartPosition,
-        isInPlayingTeam,
-        hasTrumps,
-        isPotentialPartnerPossiblyTrumpFree,
-        canForceWinRound,
-        isCaller,
-        canSearchCalledAce,
-        knownPartnerHasRound,
-        trumpCount,
-        hasAGoodAmountOfHighTrumps,
-        hasDominantTrumps,
-        hasMoreThan1TrumpsWithoutVolle
-    };
-
-    if (!isStartPosition) {
-        let roundColor = roundAnalyzer.getRoundColor();
-
-        // card stuff
-        let cardRanks = world.history.getCurrentRankWithEqualRanksOfCardInColor(cardSet, roundColor, world.round.getPlayedCards());
-        let winningCards = sortByNaturalOrdering(cardFilter.winningCards);
-        let potentialPartnerHasRound = potentialPartnerName == roundAnalyzer.getHighestCardPlayerName(); // && potentialPartnerConfidence.confidence > 0.0;
-        let partnerIsBehindMe = partnerName ? world.round.getPlayerPositionByName(partnerName) > world.round.getPosition() : false;
-        let highestCardColor = world.gameMode.getOrdering().getColor(roundAnalyzer.getHighestCard());
-        let cardRanksWithRoundCards = world.history.getCurrentRankWithEqualRanksOfCardInColor([...cardSet, ...world.round.getPlayedCards()], highestCardColor, world.round.getPlayedCards());
-        let roundIsExpensive = roundAnalyzer.getPoints() > 4 && world.round.getPosition() < 2 || roundAnalyzer.getPoints() > 10 && world.round.getPosition() >= 2;
-        let highestCardInRoundIsHighestCardInColor = cardRanksWithRoundCards[roundAnalyzer.getHighestCard()] === 0;
-        let roundColorHasBeenPlayed = world.history.hasColorBeenAngespielt(roundColor);
-        let someoneIsDefinitelyFreeOfRoundColor = world.history.isAnyoneDefinitelyFreeOfColor(cardSet, roundColor);
-        let isHinterhand = world.round.isHinterHand();
-        let colorRoundProbablyWonByPartner = highestCardInRoundIsHighestCardInColor && !roundColorHasBeenPlayed && !someoneIsDefinitelyFreeOfRoundColor;
-        let isTrumpRound = roundColor == ColorWithTrump.TRUMP;
-        let mustFollowSuit = roundColor == world.gameMode.getOrdering().getColor(playableCards[0]);
-        let isColorRoundTrumped = !isTrumpRound && world.gameMode.getOrdering().isTrump(roundAnalyzer.getHighestCard());
-        let opponentsAreInHinterhand = potentialPartnerName && potentialPartnerName != world.round.getLastPlayerName();
-        let isColor10InPlay = includes(world.history.getRemainingCardsByColor()[roundColor], roundColor + 'X' as Card);
-        let highestTrumpMayBeOvertrumped = cardRanksWithRoundCards[winningCards[0]]! + Math.floor(8 / (world.rounds.length + 2)) < cardRanksWithRoundCards[roundAnalyzer.getHighestCard()]!;
-        let colorMayRun = !roundColorHasBeenPlayed && !someoneIsDefinitelyFreeOfRoundColor;
-        let haveColorAce = !!(winningCards.length && winningCards[0][1] == "A");
-        let myTeamIsHinterhand = world.round.isHinterHand() || world.round.getPosition() == 2 && world.round.getLastPlayerName() === partnerName;
-        let winningCardColor = winningCards.length && world.gameMode.getOrdering().getColor(winningCards[0]);
-        let winningCardIsTrump = winningCardColor == ColorWithTrump.TRUMP;
-        let winningCardIsHighestInColor = !winningCardIsTrump && winningCards.length && cardRanks[winningCards[0]]! == 0;
-        let hasLowValueBlankCard = !!cardFilter.lowValueBlankCard;
-        let roundCanBeOvertrumped = cardRanksWithRoundCards[roundAnalyzer.getHighestCard()]! > 1;
-
-        let callColorCards = allOfColor(playableCards, world.gameMode.getCalledColor(), world.gameMode);
-        let callColorCount = callColorCards.length;
-        let notInPlayingTeam = partnerName != world.gameMode.getCallingPlayerName();
-
-        let isPartnerFreeOfRoundColor = !!(potentialPartnerName && world.history.isPlayerNameColorFree(potentialPartnerName, roundColor));
-
-        let hasOnlyTrumpCards = trumps.length == playableCards.length;
-        let highConfidenceInPotentialPartner = potentialPartnerConfidence.confidence >= 1;
-
-        let partnerIsTrumpFree = !!(potentialPartnerName && world.history.isPlayerNameColorFree(potentialPartnerName, ColorWithTrump.TRUMP));
-
-        return <CardInfosInPlay>{
-            hasSinglePlayableCard,
-            isStartPosition,
-            isInPlayingTeam,
-            hasTrumps,
-            isPotentialPartnerPossiblyTrumpFree,
-            canForceWinRound,
-            hasAGoodAmountOfHighTrumps,
-            hasDominantTrumps,
-            isCaller,
-            canSearchCalledAce,
-            partnerIsTrumpFree,
-            hasLowValueBlankCard,
-            hasOnlyTrumpCards,
-            knownPartnerHasRound,
-            potentialPartnerHasRound,
-            highestCardInRoundIsHighestCardInColor,
-            isTrumpRound,
-            isHinterhand,
-            colorRoundProbablyWonByPartner,
-            mustFollowSuit,
-            highConfidenceInPotentialPartner,
-            highestTrumpMayBeOvertrumped,
-            roundIsExpensive,
-            haveColorAce,
-            colorMayRun,
-            isColorRoundTrumped,
-            isColor10InPlay,
-            opponentsAreInHinterhand,
-            myTeamIsHinterhand,
-            roundColorHasBeenPlayed,
-            winningCardIsHighestInColor,
-            roundCanBeOvertrumped,
-            partnerIsBehindMe,
-            isPartnerFreeOfRoundColor,
-            notInPlayingTeam,
-            callColorCount,
-            trumpCount,
-            highestCardColor,
-        };
+    constructor(world: GameWorld, name: string, cardSet: Card[], assumptions: GameAssumptions, cardFilter: CardFilter, startCardSet: readonly Card[]) {
+        this.world = world;
+        this.name = name;
+        this.cardSet = cardSet;
+        this.assumptions = assumptions;
+        this.cardFilter = cardFilter;
+        this.startCardSet = startCardSet;
     }
 
-    return base;
+    @memoize
+    get roundAnalyzer() {
+        return this.world.round.getRoundAnalyzer(this.world.gameMode)
+    }
+
+    @memoize
+    get isStartPosition() {
+        return this.world.round.isEmpty();
+    }
+
+    @memoize
+    get trumpCount() {
+        return this.cardFilter.trumps.length;
+    }
+
+    // partner stuff
+    @memoize
+    get partnerName() {
+        return this.world.history.getTeamPartnerNameForPlayerName(this.name, this.startCardSet);
+    }
+
+    @memoize
+    get knownPartnerHasRound() {
+        return !this.isStartPosition && !!this.partnerName && this.world.round.getPlayerNameAtPosition(this.roundAnalyzer.getHighestCardPosition()) === this.partnerName;
+    }
+
+    @memoize
+    get potentialPartnerName() {
+        return this.assumptions.getPossiblePartnerName();
+    }
+
+    @memoize
+    get potentialPartnerConfidence() {
+        return this.assumptions.getPossibleTeamPartnerForPlayerName(this.name);
+    }
+
+    @memoize
+    get isCaller() {
+        return this.world.gameMode.getCallingPlayerName() == this.name;
+    }
+
+    @memoize
+    get isInPlayingTeam() {
+        return this.world.history.isPlayerPlaying(this.name, this.startCardSet);
+    }
+
+    @memoize
+    get isPotentialPartnerPossiblyTrumpFree() {
+        return !!(this.potentialPartnerName && this.assumptions.isPlayerNameProbablyTrumpFree(this.potentialPartnerName));
+    }
+
+// stuff about game history
+    @memoize
+    get remainingTrumps() {
+        return sortByNaturalOrdering(this.world.history.getRemainingCardsByColor()[ColorWithTrump.TRUMP]);
+    }
+
+    @memoize
+    get canForceWinRound() {
+        return !!(this.trumpCount && this.remainingTrumps.length <= 2 && this.remainingTrumps[0] == this.cardFilter.trumps[0]);
+    }
+
+    @memoize
+    get hasCalledColorBeenAngespielt() {
+        return this.world.history.hasColorBeenAngespielt(this.world.gameMode.getCalledColor());
+    }
+
+    @memoize
+    get hasTrumps() {
+        return this.trumpCount > 0;
+    }
+
+    @memoize
+    get hasSinglePlayableCard() {
+        return this.cardFilter.playableCards.length == 1;
+    }
+
+    @memoize
+    get canSearchCalledAce() {
+        return this.cardFilter.callColorCards.length > 0 && !this.hasCalledColorBeenAngespielt;
+    }
+
+    @memoize
+    get cardRanksForTrumpCards() {
+        return this.world.history.getCurrentRankWithEqualRanksOfCardInColor(this.cardSet, ColorWithTrump.TRUMP, this.world.round.getPlayedCards());
+    }
+
+    @memoize
+    get averageRankOfHighTrumps() {
+        return this.cardFilter.highTrumps.reduce((prev, cur) => prev + this.cardRanksForTrumpCards[cur]!, 0) / this.cardFilter.highTrumps.length;
+    }
+
+    @memoize
+    get hasDominantTrumps() {
+        return this.averageRankOfHighTrumps <= 2;
+    }
+
+    @memoize
+    get hasAGoodAmountOfHighTrumps() {
+        return this.cardFilter.highTrumps.length * 2 > this.cardFilter.trumps.length && this.cardFilter.trumps.length > 2;
+    }
+
+    @memoize
+    get hasMoreThan1TrumpsWithoutVolle() {
+        return this.cardFilter.trumpsWithoutVolle.length > 1;
+    }
+
+    @memoize
+    get roundColor() {
+        return this.roundAnalyzer.getRoundColor();
+    }
+
+// card stuff
+    @memoize
+    get cardRanks() {
+        return this.world.history.getCurrentRankWithEqualRanksOfCardInColor(this.cardSet, this.roundColor, this.world.round.getPlayedCards());
+    }
+
+    @memoize
+    get winningCards() {
+        return sortByNaturalOrdering(this.cardFilter.winningCards);
+    }
+
+    @memoize
+    get potentialPartnerHasRound() {
+        return this.potentialPartnerName == this.roundAnalyzer.getHighestCardPlayerName(); // && potentialPartnerConfidence.confidence > 0.0;
+    }
+
+    @memoize
+    get partnerIsBehindMe() {
+        return this.partnerName ? this.world.round.getPlayerPositionByName(this.partnerName) > this.world.round.getPosition() : false;
+    }
+
+    @memoize
+    get highestCardColor() {
+        return this.world.gameMode.getOrdering().getColor(this.roundAnalyzer.getHighestCard());
+    }
+
+    @memoize
+    get cardRanksWithRoundCards() {
+        return this.world.history.getCurrentRankWithEqualRanksOfCardInColor([...this.cardSet, ...this.world.round.getPlayedCards()], this.highestCardColor, this.world.round.getPlayedCards());
+    }
+
+    @memoize
+    get roundIsExpensive() {
+        return this.roundAnalyzer.getPoints() > 4 && this.world.round.getPosition() < 2 || this.roundAnalyzer.getPoints() > 10 && this.world.round.getPosition() >= 2;
+    }
+
+    @memoize
+    get highestCardInRoundIsHighestCardInColor() {
+        return this.cardRanksWithRoundCards[this.roundAnalyzer.getHighestCard()] === 0;
+    }
+
+    @memoize
+    get roundColorHasBeenPlayed() {
+        return this.world.history.hasColorBeenAngespielt(this.roundColor);
+    }
+
+    @memoize
+    get someoneIsDefinitelyFreeOfRoundColor() {
+        return this.world.history.isAnyoneDefinitelyFreeOfColor(this.cardSet, this.roundColor);
+    }
+
+    @memoize
+    get isHinterhand() {
+        return this.world.round.isHinterHand();
+    }
+
+    @memoize
+    get colorRoundProbablyWonByPartner() {
+        return this.highestCardInRoundIsHighestCardInColor && !this.roundColorHasBeenPlayed && !this.someoneIsDefinitelyFreeOfRoundColor;
+    }
+
+    @memoize
+    get isTrumpRound() {
+        return this.roundColor == ColorWithTrump.TRUMP;
+    }
+
+    @memoize
+    get mustFollowSuit() {
+        return this.roundColor == this.world.gameMode.getOrdering().getColor(this.cardFilter.playableCards[0]);
+    }
+
+    @memoize
+    get isColorRoundTrumped() {
+        return !this.isTrumpRound && this.world.gameMode.getOrdering().isTrump(this.roundAnalyzer.getHighestCard());
+    }
+
+    @memoize
+    get opponentsAreInHinterhand() {
+        return !!(this.potentialPartnerName && this.potentialPartnerName != this.world.round.getLastPlayerName());
+    }
+
+    @memoize
+    get isColor10InPlay() {
+        return includes(this.world.history.getRemainingCardsByColor()[this.roundColor], this.roundColor + 'X' as Card);
+    }
+
+    @memoize
+    get highestTrumpMayBeOvertrumped() {
+        return this.cardRanksWithRoundCards[this.winningCards[0]]! + Math.floor(8 / (this.world.rounds.length + 2)) < this.cardRanksWithRoundCards[this.roundAnalyzer.getHighestCard()]!;
+    }
+
+    @memoize
+    get colorMayRun() {
+        return !this.roundColorHasBeenPlayed && !this.someoneIsDefinitelyFreeOfRoundColor;
+    }
+
+    @memoize
+    get haveColorAce() {
+        return !!(this.winningCards.length && this.winningCards[0][1] == "A");
+    }
+
+    @memoize
+    get myTeamIsHinterhand() {
+        return this.world.round.isHinterHand() || this.world.round.getPosition() == 2 && this.world.round.getLastPlayerName() === this.partnerName;
+    }
+
+    @memoize
+    get winningCardColor() {
+        return this.winningCards.length && this.world.gameMode.getOrdering().getColor(this.winningCards[0]);
+    }
+
+    @memoize
+    get winningCardIsTrump() {
+        return this.winningCardColor == ColorWithTrump.TRUMP;
+    }
+
+    @memoize
+    get winningCardIsHighestInColor(): boolean {
+        return !!(!this.winningCardIsTrump && this.winningCards.length && this.cardRanks[this.winningCards[0]]! == 0);
+    }
+
+    @memoize
+    get hasLowValueBlankCard() {
+        return !!this.cardFilter.lowValueBlankCard;
+    }
+
+    @memoize
+    get roundCanBeOvertrumped() {
+        return this.cardRanksWithRoundCards[this.roundAnalyzer.getHighestCard()]! > 1;
+    }
+
+    @memoize
+    get callColorCards() {
+        return allOfColor(this.cardFilter.playableCards, this.world.gameMode.getCalledColor(), this.world.gameMode);
+    }
+
+    get callColorCount() {
+        return this.callColorCards.length;
+    }
+
+    get notInPlayingTeam() {
+        return this.partnerName != this.world.gameMode.getCallingPlayerName();
+    }
+
+    @memoize
+    get isPartnerFreeOfRoundColor() {
+        return !!(this.potentialPartnerName && this.world.history.isPlayerNameColorFree(this.potentialPartnerName, this.roundColor));
+    }
+
+    get hasOnlyTrumpCards() {
+        return this.cardFilter.trumps.length == this.cardFilter.playableCards.length;
+    }
+
+    get highConfidenceInPotentialPartner() {
+        return this.potentialPartnerConfidence.confidence >= 1;
+    }
+
+    @memoize
+    get partnerIsTrumpFree() {
+        return !!(this.potentialPartnerName && this.world.history.isPlayerNameColorFree(this.potentialPartnerName, ColorWithTrump.TRUMP));
+    }
+
+    get partnerHasRound() {
+        return this.knownPartnerHasRound || this.potentialPartnerHasRound;
+    }
+
+    get roundIsProbablySafe() {
+        return this.highestCardInRoundIsHighestCardInColor && this.isTrumpRound || this.isHinterhand || this.colorRoundProbablyWonByPartner;
+    }
+
+    get hasLowTrumps() {
+        return this.cardFilter.lowTrumps.length > 0;
+    }
+
+    get hasTrumpWithoutOber() {
+        return this.cardFilter.playableCardsNoOber.length > 0;
+    }
+
+    get hasGoodWinningCards() {
+        return this.cardFilter.goodWinningCardsNoOberNoPoints.length > 0;
+    }
+
+    get hasWinningCards() {
+        return this.cardFilter.winningCards.length > 0;
+    }
+
+    get aceIsProbablySafeToPlay() {
+        return this.haveColorAce && this.colorMayRun;
+    }
+
+    get hasUnter() {
+        return this.cardFilter.unter.length > 0;
+    }
+
+    get hasWinningTrumpsWithoutVolle() {
+        return this.cardFilter.winningCardsWithoutVolle.length > 0;
+    }
+
+    get hasWinningCardsNoOberNoVolle() {
+        return this.cardFilter.winningCardsNoOberNoPoints.length > 0;
+    }
+
+    get hasLowWinningTrump() {
+        return this.cardFilter.lowWinningTrumps.length > 0;
+    }
+
+    get roundMayBeWonByPartner() {
+        return this.roundCanBeOvertrumped && this.partnerIsBehindMe && !this.partnerIsTrumpFree;
+    }
+
+    get canTrumpColorRound() {
+        return !this.isTrumpRound && !this.mustFollowSuit;
+    }
+
+    get roundIsProbablySafeIfTrumped() {
+        return !this.roundColorHasBeenPlayed || this.myTeamIsHinterhand || this.isHinterhand;
+    }
+
+    get partnerMayBeAbleToTrump() {
+        return this.partnerIsBehindMe
+            && this.isPartnerFreeOfRoundColor
+            && !this.partnerIsTrumpFree
+            && !(this.highestCardInRoundIsHighestCardInColor && this.highestCardColor == ColorWithTrump.TRUMP);
+    }
+
+    get canDiscardCalledColor() {
+        return this.notInPlayingTeam && this.callColorCount == 1 && this.trumpCount > 0;
+    }
 }
