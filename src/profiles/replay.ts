@@ -1,22 +1,37 @@
 import seedRandom from "seedrandom";
 import {TableOptions} from "../model/Table";
 import program from "commander";
-import {makeDefaultPlayerMap, setLogConfigWithDefaults} from "./cliOptions";
+import {makeDefaultPlayerMap, makeSeededPrng, setLogConfigWithDefaults} from "./cliOptions";
+import {shuffleCardsTimes} from "../model/cards/shuffleCards";
 
-let gameId = program.replay || 1;
-let games = require(`../../generated/${program.saveFile || "games.json"}`);
+let cardDeal;
+let startPlayer;
+let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
-if (!games[gameId]) {
-    console.error(`game ${gameId} not found!`);
+if (program.saveFile) {
+    let gameId = program.replay || 1;
+    let games = require(`../../generated/${program.saveFile}`);
+
+    if (!games[gameId]) {
+        console.error(`game ${gameId} not found!`);
+        process.exit();
+    }
+
+    cardDeal = games[gameId].cardDeal;
+    startPlayer = games[gameId].startPlayer;
+
+    Math.random = seedRandom.alea("", {state: games[gameId].prngState});
+} else if (program.seed) {
+    makeSeededPrng();
+
+    let gameId = program.replay || 1;
+    let cardDeals = shuffleCardsTimes(gameId);
+    cardDeal = cardDeals[gameId - 1];
+    startPlayer = playerNames[(gameId - 1) % 4];
+} else {
+    console.error(`provide either seed or saveFile to replay games`);
     process.exit();
 }
-
-let cardDeal = games[gameId].cardDeal;
-let startPlayer = games[gameId].startPlayer;
-
-Math.random = seedRandom.alea("", {state: games[gameId].prngState});
-
-let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
 let playerMap = makeDefaultPlayerMap(playerNames);
 setLogConfigWithDefaults({private: true});

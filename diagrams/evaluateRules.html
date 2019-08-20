@@ -114,7 +114,7 @@
         let colorSignificance = d3.scale.linear()
         // @formatter:off
             .domain([-Infinity,      0,       0.9,       0.95,      0.99,       Infinity])
-            .range([          '#a00',  '#a00',    '#aa0',     '#0a0', '#0d0']);
+            .range([          '#a00',  '#a00',     '#a00',    '#aa0',    '#0a0']);
         // @formatter:on
 
         let root = treeData[0];
@@ -182,7 +182,7 @@
 
         let significanceLevels = [
             0,
-            0.9,
+            0.925,
             0.95,
             0.99
         ];

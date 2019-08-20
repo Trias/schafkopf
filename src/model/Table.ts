@@ -34,6 +34,7 @@ export type SaveGame = {
     startPlayer: string,
     prngState: object,
     cardDeal: Card[][],
+    advantage?: number
 }
 
 export class Table {
@@ -119,6 +120,8 @@ export class Table {
                 if (!this.options.evaluation) {
                     throw Error('missing evaluation!');
                 }
+
+                let lastAdvantage = 0;
                 for (let j = 0; j < this.options.evaluation.strategyEvaluation.strategies.length ** 4; j++) {
                     log.info(`========game ${i + 1} run ${j + 1}===========`);
                     playerMap = this.options.evaluation.makePlayerMap(j);
@@ -127,10 +130,11 @@ export class Table {
 
                     gameResult = game.getGameResult();
 
-                    this.stats.addResult(gameResult);
                     this.options.evaluation.strategyEvaluation.addResult(gameResult, j);
+                    this.stats.addResult(gameResult);
+
                     //this.options.evaluation.ruleEvaluation.gradeRules(gameResult); // for saving the rules......
-                    //  this.options.evaluation.callingRuleEvaluation.gradeRules(gameResult);
+                    //this.options.evaluation.callingRuleEvaluation.gradeRules(gameResult);
 
                     reportGameResult(this.stats, game, gameResult, playerMap, i);
 
@@ -138,6 +142,15 @@ export class Table {
                         j = this.options.evaluation.strategyEvaluation.strategies.length ** 4;
                     }
                 }
+
+                let stratEval = this.options.evaluation.strategyEvaluation.getEvaluationForStrategy(this.options.evaluation.strategyEvaluation.strategies[0]);
+                let advantage = stratEval.wins - stratEval.losses;
+
+                if (this.options.saveGamesTo) {
+                    this.games[i + 1].advantage = advantage - lastAdvantage;
+                }
+
+                lastAdvantage = advantage;
 
                 //   reportOnCallingRules(this.options.evaluation.callingRuleEvaluation, i);
                 reportOnStrategies(this.options.evaluation.strategyEvaluation, i);
