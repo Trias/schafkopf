@@ -1,6 +1,6 @@
 import {Card} from "../../../cards/Card";
 import {getAces, getNonTrumps, sortByNaturalOrdering, sortByPointsAscending} from "../../../cards/CardSet";
-import {remove} from "lodash";
+import {find, remove} from "lodash";
 import {GameWorld} from "../../../GameWorld";
 import {CardFilter} from "./CardFilter";
 
@@ -158,5 +158,20 @@ export class Actions {
         let card = sortByPointsAscending(playableCards)[playableCards.length - 1];
         this.report('playHighestCardByPoints', card, playableCards);
         return card;
+    }
+
+    playKingOrLower(callColorCards: Card[]) {
+        let king = find(callColorCards, card => card[1] == "K");
+        let nine = find(callColorCards, card => card[1] == "9");
+
+        if (king && nine) {
+            this.report('playKingOrLower', nine, callColorCards);
+            return nine;
+        } else if (king) {
+            this.report('playKingOrLower', king, callColorCards);
+            return king;
+        } else {
+            throw Error('preconditions not met!');
+        }
     }
 }

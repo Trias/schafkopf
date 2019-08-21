@@ -9,6 +9,7 @@ update: clean
 	git pull
 	npm install
 	npm run build
+evaluation: evaluateStategiesRandomBaseLine evaluateStategiesHeuristicsBaseLine evaluateRules
 evaluateStategiesRandomBaseLine:
 	nohup node build/index.js --profile=evaluateStrategies --runs=1000 --log=disabled --strategy1=CallingRulesWithRandomPlay --strategy2=CallingRulesWithHeuristic --seed=evaluationTime &
 	nohup node build/index.js --profile=evaluateStrategies --runs=1000 --log=disabled --strategy1=CallingRulesWithRandomPlay --strategy2=CallingRulesWithGreedyPlay --seed=evaluationTime &

@@ -365,4 +365,49 @@ export class CardInfos {
     get canDiscardCalledColor() {
         return this.notInPlayingTeam && this.callColorCount == 1 && this.trumpCount > 0;
     }
+
+    get isDavonlaufenPossibleAndSensible() {
+        return this.isDavonLaufenPossible && this.isDavonlaufenSensible
+    }
+
+    get isDavonLaufenPossible() {
+        if (!this.isInPlayingTeam
+            || !this.isStartPosition
+            || !includes(this.cardFilter.callColorCards, this.world.gameMode.getCalledAce())
+            || this.world.gameMode.getHasAceBeenCalled()
+            || allOfColor(this.startCardSet, this.world.gameMode.getCalledColor(), this.world.gameMode).length < 4) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    get isDavonlaufenSensible() {
+        let callColorCards = this.cardFilter.callColorCards;
+
+        if (callColorCards.length != 4) {
+            return false;
+        }
+
+        let callColor10 = this.world.gameMode.getCalledColor() + "X";
+        let callColorK = this.world.gameMode.getCalledColor() + "K";
+
+        if (this.world.history.hasPlayerAbspatzenCallColor()) {
+            if (this.world.round.getLastPlayerName() == this.partnerName) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            if (!includes(callColorCards, callColor10)) {
+                return false;
+            }
+
+            if (includes(callColorCards, callColorK)) {
+                // könig ist die höchste karte in der farbe, dh man fängt einen nixer vom partner, einen vom gegner, ein gegner wird / kann stechen
+                return true;
+            }
+            return false;
+        }
+    }
 }
