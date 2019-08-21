@@ -1,6 +1,7 @@
 import {CardInfos} from "./cardInfos";
+import {GameWorld} from "../../../GameWorld";
 
-export default function getConditions(cardInfos: CardInfos, reasons: string[]) {
+export default function getConditions(cardInfos: CardInfos, world: GameWorld, reasons: string[], secondOrderReasons: string[]) {
     function withReporting(test: boolean, reason: string) {
         if (test) {
             reasons.push(reason)
@@ -12,6 +13,9 @@ export default function getConditions(cardInfos: CardInfos, reasons: string[]) {
 
     let handler = {
         get: function (target: CardInfos, name: (keyof CardInfos)) {
+            if (!world.history.isTeamPartnerKnown() && (name == "potentialPartnerHasRound" || name == "isPartnerFreeOfRoundColor" || name == "partnerIsTrumpFree" || name == "opponentsAreInHinterhand" || name == "isPotentialPartnerPossiblyTrumpFree")) {
+                secondOrderReasons.push(`potential partner (${target.potentialPartnerConfidence.playerName}, reasons: ${target.potentialPartnerConfidence.reasons} with confidence ${target.potentialPartnerConfidence.confidence})\n`);
+            }
             if (name in target) {
                 return withReporting(!!target[name], name);
             } else {
@@ -21,52 +25,4 @@ export default function getConditions(cardInfos: CardInfos, reasons: string[]) {
     };
 
     return new Proxy(cardInfos, handler);
-
-    // TODO: second order conditions.
-    /*
-                                if (!partnerIsBehindMe) {
-                                    secondOrderReasons.push('partner is not behind me');
-                                }
-
-                                if (!roundCanBeOvertrumped) {
-                                    secondOrderReasons.push('round cannot be overtrumped');
-                                }
-     */
-    /*
-               if (!partnerHasRound && potentialPartnerHasRound) {
-                    secondOrderReasons.push(`potential partner (${potentialPartnerConfidence.playerName}, reasons: ${potentialPartnerConfidence.reasons} with confidence ${potentialPartnerConfidence.confidence}) has round\n`);
-                }
-             */
-    /*
-if (highestCardInRoundIsHighestCardInColor && trumpRound) {
-        secondOrderReasons.push('highest trump played');
-    }
-    if (isHinterhand) {
-        secondOrderReasons.push('hinterhand');
-    }
-*/
-    /*
-                        if (!roundColorHasBeenPlayed) {
-                    secondOrderReasons.push('color has not been played yet');
-                }
-
-                if (myTeamIsHinterhand) {
-                    secondOrderReasons.push('we are hinterhand');
-                }
-
-                if (isHinterhand) {
-                    secondOrderReasons.push('hinterhand');
-                }
-
-                if (roundColorHasBeenPlayed) {
-                    secondOrderReasons.push('color has been angespielt');
-                }
-
-                if (!myTeamIsHinterhand) {
-                    secondOrderReasons.push('we are not both hinterhand')
-                }
-                if (!isHinterhand) {
-                    secondOrderReasons.push('not hinterhand');
-                }
-*/
 }

@@ -211,7 +211,7 @@ export class GameHistory {
         return colorFreeByPlayer;
     }
 
-    getCurrentRankWithEqualRanksOfCardInColor(cards: readonly Card[], color: ColorWithTrump, roundCards: Card[] = []): { [index in Card]?: number } {
+    getCurrentRankWithEqualRanksOfCardInColor(cards: readonly Card[], color: ColorWithTrump, roundCards: readonly Card[] = []): { [index in Card]?: number } {
         let roundCardsInColor = allOfColor(roundCards, color, this.gameMode);
         let currentRank = 0;
         let result: { [index in Card]?: number } = {};

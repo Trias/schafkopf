@@ -406,12 +406,15 @@ export class GameAssumptionsInCallGame implements GameAssumptions {
     }
 
     private markPlayerAsPossiblePartnerByTrump(round: FinishedRound, roundIndex: number) {
+        // rather not get fooled by Eichel-ober...haha nice one ;)
+        let firstCard = round.getPlayedCards()[0];
+        let score = this.gameHistory.getCurrentRankWithEqualRanksOfCardInColor([firstCard], ColorWithTrump.TRUMP, round.getPlayedCards())[firstCard] == 0 ? 0 : 0.7;
         if (this.thisPlayerName === this.gameMode!.getCallingPlayerName()) {
             let player = round.getStartPlayerName();
-            this.scorePlayer(player, 0.7, `${player} begins with trump in round ${roundIndex + 1}`);
+            this.scorePlayer(player, score, `${player} begins with trump in round ${roundIndex + 1}`);
         } else {
             let potentialPartner = difference(this.otherPlayerNamesWithoutCaller, [round.getStartPlayerName()]).pop()!;
-            this.scorePlayer(potentialPartner, 0.7, `${round.getStartPlayerName()} begins with trump in round ${roundIndex + 1}`);
+            this.scorePlayer(potentialPartner, score, `${round.getStartPlayerName()} begins with trump in round ${roundIndex + 1}`);
         }
     }
 

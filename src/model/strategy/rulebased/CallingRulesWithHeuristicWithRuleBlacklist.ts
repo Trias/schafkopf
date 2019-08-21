@@ -33,7 +33,7 @@ export class CallingRulesWithHeuristicWithRuleBlacklist implements StrategyInter
     chooseCardToPlay(world: GameWorld, cardSet: Card[]): Card {
         let ruleApplied: string[] = [];
         let report = (reasons: string[], secondOrderReasons: string[], conclusion: string, card: Card) => {
-            log.private(reasons.toString() + (secondOrderReasons.length ? '\n-->' : '') + secondOrderReasons.toString() + ' => ' + conclusion + ': ' + card);
+            log.private(reasons.toString() + (secondOrderReasons.length ? '\n-->' : '') + secondOrderReasons.join('\n\t') + ' => ' + conclusion + ': ' + card);
             ruleApplied = reasons;
         };
 

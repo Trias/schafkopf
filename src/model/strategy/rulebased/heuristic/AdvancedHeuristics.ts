@@ -38,7 +38,7 @@ export class AdvancedHeuristic implements CardPlayStrategy {
         let cardFilter = new CardFilter(world, cardSet);
         let actions = new Actions(world, report);
         let cardInfos = new CardInfos(world, this.name, cardSet, this.assumptions, cardFilter, this.startCardSet);
-        let conditions = getConditions(cardInfos, reasons);
+        let conditions = getConditions(cardInfos, world, reasons, secondOrderReasons);
 
         if (cardFilter.playableCards.length == 0) {
             throw Error('no playable card?');
@@ -51,12 +51,8 @@ export class AdvancedHeuristic implements CardPlayStrategy {
         if (conditions.isStartPosition) {
             if (conditions.isInPlayingTeam) {
                 if (conditions.hasTrumps) {
-                    if (conditions.isPotentialPartnerPossiblyTrumpFree) {
-                        if (conditions.canForceWinRound) {
-                            return actions.playHighestCardByRank(cardFilter.trumps);
-                        } else {
-                            return actions.playAceOrColorOrTrump(cardFilter.playableCards);
-                        }
+                    if (conditions.canForceWinRound) {
+                        return actions.playHighestCardByRank(cardFilter.trumps);
                     } else {
                         if (conditions.hasAGoodAmountOfHighTrumps) {
                             if (conditions.hasDominantTrumps) {
@@ -137,7 +133,7 @@ export class AdvancedHeuristic implements CardPlayStrategy {
                         if (conditions.isTrumpRound) {
                             return actions.playLowestCardByPoints(cardFilter.playableCards);
                         } else {
-                            if (conditions.isColorRoundTrumped) {
+                            if (conditions.isHinterhand) {
                                 return actions.playHighestCardByPoints(cardFilter.playableCards);
                             } else {
                                 if (conditions.hasOnlyTrumpCards) {
