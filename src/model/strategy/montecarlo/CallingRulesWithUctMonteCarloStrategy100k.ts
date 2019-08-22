@@ -2,12 +2,12 @@ import StrategyInterface from "../StrategyInterface";
 import {PlainColor} from "../../cards/Color";
 import {GameMode, GameModeEnum} from "../../GameMode";
 import {Card} from "../../cards/Card";
-import {chooseBestCard} from "../chooseBestCard";
 import {GameWorld} from "../../GameWorld";
 import {Player} from "../../Player";
-import {Simulation} from "./UctMonteCarlo/Simulation";
 import {determineGameMode} from "../rules/shouldCall/determineGameMode";
-import log from "../../../logging/log";
+import {determineCardToPlay} from "./UctMonteCarlo/determineCardToPlay";
+import {RandomCardPlay} from "../random/RandomCardPlay";
+import {generateRandomWorldConsistentWithGameKnowledge} from "../../simulation/generateRandomWorldConsistentWithGameKnowledge";
 
 export default class CallingRulesWithUctMonteCarloStrategy100k implements StrategyInterface {
     private readonly thisPlayer: Player;
@@ -21,14 +21,7 @@ export default class CallingRulesWithUctMonteCarloStrategy100k implements Strate
             throw Error('player not to move');
         }
 
-        log.time('uct simulation');
-        let simulation = new Simulation(world, this.thisPlayer);
-        let valuations = simulation.run(cardSet, 100, 1000);
-        log.timeEnd('uct simulation');
-
-        log.private('valuations:' + JSON.stringify(valuations));
-
-        return chooseBestCard(valuations)!;
+        return determineCardToPlay(world, this.thisPlayer,cardSet,100, 1000, RandomCardPlay, generateRandomWorldConsistentWithGameKnowledge);
     }
 
     chooseGameToCall(cardSet: Card[], previousGameMode: GameMode, playerIndex: number, allowedGameModes: GameModeEnum[]): [GameModeEnum?, PlainColor?] {

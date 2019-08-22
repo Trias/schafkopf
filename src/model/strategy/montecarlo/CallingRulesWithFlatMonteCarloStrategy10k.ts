@@ -5,13 +5,9 @@ import {Card} from "../../cards/Card";
 import {GameWorld} from "../../GameWorld";
 import {Player} from "../../Player";
 import {determineGameMode} from "../rules/shouldCall/determineGameMode";
-import {AdvancedHeuristic} from "../rulebased/heuristic/AdvancedHeuristics";
-import {determineCardToPlay} from "./UctMonteCarlo/determineCardToPlay";
+import {determineCardToPlayByFlatMonteCarlo} from "./FlatMonteCarlo/determineCardToPlayByFlatMonteCarlo";
 
-/**
- * like CallingRulesWithUctMonteCarloStrategyAndCheating but with AdvancedHeuristics as a model playout... perfect enemy of AdvancedHeuristics
- */
-export default class Nemesis implements StrategyInterface {
+export default class CallingRulesWithFlatMonteCarloStrategy100k implements StrategyInterface {
     private readonly thisPlayer: Player;
 
     constructor(thisPlayer: Player) {
@@ -23,17 +19,7 @@ export default class Nemesis implements StrategyInterface {
             throw Error('player not to move');
         }
 
-        let myWorld = this.cloneThisWorld(world);
-
-        return determineCardToPlay(world, this.thisPlayer, cardSet,1, 1000, AdvancedHeuristic, () => myWorld.clone());
-    }
-
-    private cloneThisWorld(world: GameWorld) {
-        let myWorld = world.clone();
-        Object.entries(myWorld.playerMap).forEach(([playerName, player]) => {
-            myWorld.playerMap[playerName] = player.getDummyClone(myWorld, AdvancedHeuristic);
-        });
-        return myWorld;
+        return determineCardToPlayByFlatMonteCarlo(world, cardSet, this.thisPlayer, 10, 1000)
     }
 
     chooseGameToCall(cardSet: Card[], previousGameMode: GameMode, playerIndex: number, allowedGameModes: GameModeEnum[]): [GameModeEnum?, PlainColor?] {

@@ -22,10 +22,10 @@ evaluateStategiesHeuristicsBaseLine:
 	nohup node build/index.js --profile=evaluateStrategies --runs=1000 --log=disabled --strategy1=CallingRulesWithHeuristic --strategy2=CallingRulesWithGreedyPlay --seed=evaluationTime &
 	nohup node build/index.js --profile=evaluateStrategies --runs=1000 --log=disabled --strategy1=CallingRulesWithHeuristic --strategy2=CallingRulesWithFlatMonteCarloStrategy --seed=evaluationTime &
 evaluateStategiesHeuristicsBaseLineMax:
-	nohup node build/index.js --profile=evaluateStrategies --runs=100 --log=disabled --strategy1=CallingRulesWithHeuristic --strategy2=Nemesis --seed=evaluationTime &
-	nohup node build/index.js --profile=evaluateStrategies --runs=100 --log=disabled --strategy1=CallingRulesWithHeuristic --strategy2=CallingRulesWithUctMonteCarloStrategyAndCheating --seed=evaluationTime &
-	nohup node build/index.js --profile=evaluateStrategies --runs=100 --log=disabled --strategy1=CallingRulesWithHeuristic --strategy2=CallingRulesWithFlatMonteCarloStrategy100k --seed=evaluationTime &
-	nohup node build/index.js --profile=evaluateStrategies --runs=100 --log=disabled --strategy1=CallingRulesWithHeuristic --strategy2=CallingRulesWithUctMonteCarloStrategy100k --seed=evaluationTime &
+	nohup node build/index.js --profile=evaluateStrategies --runs=1000 --log=disabled --strategy1=CallingRulesWithHeuristic --strategy2=Nemesis --seed=evaluationTime &
+	nohup node build/index.js --profile=evaluateStrategies --runs=1000 --log=disabled --strategy1=CallingRulesWithHeuristic --strategy2=CallingRulesWithUctMonteCarloStrategyAndCheating --seed=evaluationTime &
+	nohup node build/index.js --profile=evaluateStrategies --runs=1000 --log=disabled --strategy1=CallingRulesWithHeuristic --strategy2=CallingRulesWithFlatMonteCarloStrategy10k --seed=evaluationTime &
+	nohup node build/index.js --profile=evaluateStrategies --runs=1000 --log=disabled --strategy1=CallingRulesWithHeuristic --strategy2=CallingRulesWithUctMonteCarloStrategy10k --seed=evaluationTime &
 
 evaluateRules:
 	nohup node build/index.js --profile=evaluateRules --runs=10000 --log=disabled --seed=evaluationTime &

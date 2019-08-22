@@ -42,7 +42,6 @@ export class Simulation {
                 name: this.thisPlayer.getName()
             });
         }
-
     }
 
     run(cardSet: Card[], simulations: number = 10, runsPerSimulation: number = 100, generateWorlds: (world: GameWorld, name: string, constructor: any) => GameWorld = generateRandomWorldConsistentWithGameKnowledge) {
