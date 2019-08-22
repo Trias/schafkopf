@@ -26,6 +26,7 @@ evaluateStategiesHeuristicsBaseLineMax:
 	nohup node build/index.js --profile=evaluateStrategies --runs=1000 --log=disabled --strategy1=CallingRulesWithHeuristic --strategy2=CallingRulesWithUctMonteCarloStrategyAndCheating --seed=evaluationTime &
 	nohup node build/index.js --profile=evaluateStrategies --runs=1000 --log=disabled --strategy1=CallingRulesWithHeuristic --strategy2=CallingRulesWithFlatMonteCarloStrategy10k --seed=evaluationTime &
 	nohup node build/index.js --profile=evaluateStrategies --runs=1000 --log=disabled --strategy1=CallingRulesWithHeuristic --strategy2=CallingRulesWithUctMonteCarloStrategy10k --seed=evaluationTime &
+	nohup node build/index.js --profile=evaluateStrategies --runs=1000 --log=disabled --strategy1=CallingRulesWithHeuristic --strategy2=CallingRulesWithUctMonteCarloAndHeuristic10k --seed=evaluationTime &
 
 evaluateRules:
 	nohup node build/index.js --profile=evaluateRules --runs=10000 --log=disabled --seed=evaluationTime &

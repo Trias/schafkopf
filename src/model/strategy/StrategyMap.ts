@@ -18,6 +18,7 @@ import CallingRulesWithFlatMonteCarloStrategy100k from "./montecarlo/CallingRule
 import CallingRulesWithUctMonteCarloStrategy100k from "./montecarlo/CallingRulesWithUctMonteCarloStrategy100k";
 import CallingRulesWithUctMonteCarloStrategy10k from "./montecarlo/CallingRulesWithUctMonteCarloStrategy10k";
 import CallingRulesWithFlatMonteCarloStrategy10k from "./montecarlo/CallingRulesWithFlatMonteCarloStrategy10k";
+import {CallingRulesWithUctMonteCarloAndHeuristic10k} from "./montecarlo/CallingRulesWithUctMonteCarloAndHeuristic10k";
 
 export default {
     "ManualStrategy": ManualStrategy,
@@ -27,6 +28,7 @@ export default {
     "CallingRulesWithHeuristic": CallingRulesWithHeuristic,
     "CallingRulesWithHeuristicWithRuleBlacklist": CallingRulesWithHeuristicWithRuleBlacklist,
     "CallingRulesWithUctMonteCarloAndHeuristic": CallingRulesWithUctMonteCarloAndHeuristic,
+    "CallingRulesWithUctMonteCarloAndHeuristic10k": CallingRulesWithUctMonteCarloAndHeuristic10k,
     "CallingRulesWithUctMonteCarloStrategyAndCheating": CallingRulesWithUctMonteCarloStrategyAndCheating,
     "Nemesis": Nemesis,
     "UctMonteCarloStrategy": UctMonteCarloStrategy,
