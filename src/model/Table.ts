@@ -66,7 +66,7 @@ export class Table {
             if (this.options.runMode == "evaluateRules") {
                 appendCsv(this.options.csvFile, ["gameId", "withRuleTotal", "withRuleWins", "withRuleLosses", "withoutRuleTotal", "withoutRuleWins", "withoutRuleLosses", "rule"]);
             } else if (this.options.runMode == "evaluateStrategies") {
-                appendCsv(this.options.csvFile, ["gameId", "strategy", "wins", "losses"]);
+                appendCsv(this.options.csvFile, ["gameId", "strategy", "wins", "losses", "performance"]);
             }
         }
         for (let i = 0; i < this.options.runs; i++) {
@@ -158,7 +158,7 @@ export class Table {
                 if (this.options.csvFile) {
                     for (let strategy of this.options.evaluation.strategyEvaluation.strategies) {
                         let evaluation = this.options.evaluation.strategyEvaluation.getEvaluationForStrategy(strategy);
-                        appendCsv(this.options.csvFile, [i + 1, strategy.name, evaluation.wins, evaluation.losses]);
+                        appendCsv(this.options.csvFile, [i + 1, strategy.name, evaluation.wins, evaluation.losses, evaluation.performance.join(',')]);
                     }
                 }
             } else {

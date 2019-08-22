@@ -7,10 +7,11 @@ let folderContent = fs.readdirSync(folder);
 let evaluateStrategies = folderContent.filter(entry => entry.startsWith('evaluateStrategies-'));
 let heuristicBaseLine = evaluateStrategies.filter(entry => entry.indexOf("Z-CallingRulesWithHeuristic") !== -1);
 let randomBaseLine = evaluateStrategies.filter(entry => entry.indexOf("Z-CallingRulesWithRandomPlay") !== -1);
-let mostRecentHeuristics = heuristicBaseLine.sort().reverse().slice(0, 6); // 6 is the number....
+let mostRecentHeuristics = heuristicBaseLine.filter(s => /(CallingRulesWith(Flat|Uct)MonteCarloStrategy(?!100k)(AndHeuristic)?)/.test(s)).sort().reverse().slice(0, 4);
+let mostRecentHeuristicsMax = heuristicBaseLine.filter(s => /(CallingRulesWith(Flat|Uct)MonteCarloStrategy(100k|AndCheating)|Nemesis)/.test(s)).sort().reverse().slice(0, 4);
 let mostRecentRandom = randomBaseLine.sort().reverse().slice(0, 5); // 5 is the number....
 
-if (mostRecentRandom.length < 5 || mostRecentHeuristics.length < 6) {
+if (mostRecentRandom.length < 5 || mostRecentHeuristics.length < 4 || mostRecentHeuristicsMax.length < 4) {
     throw Error('wrong count!');
 }
 
@@ -39,14 +40,12 @@ function readCsv(listOfCsvs) {
 }
 
 let allLinesHeuristics = readCsv(mostRecentHeuristics);
+let allLinesHeuristicsMax = readCsv(mostRecentHeuristicsMax);
 let allLinesRandom = readCsv(mostRecentRandom);
 
 fs.writeFileSync('heuristicBaseline.csv', allLinesHeuristics.join('\n'));
+fs.writeFileSync('heuristicMaxBaseline.csv', allLinesHeuristicsMax.join('\n'));
 fs.writeFileSync('randomBaseline.csv', allLinesRandom.join('\n'));
 fs.writeFileSync('evaluateRules.csv', ruleEvalLines.join('\n'));
 
 console.log("all imported!");
-
-
-
-

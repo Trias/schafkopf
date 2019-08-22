@@ -119,7 +119,7 @@ export class CardInfos {
 
     @memoize
     get hasDominantTrumps() {
-        return this.averageRankOfHighTrumps <= 2;
+        return this.averageRankOfHighTrumps <= 1;
     }
 
     @memoize

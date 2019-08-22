@@ -14,6 +14,8 @@ import RandomStrategy from "./random/RandomStrategy";
 import FlatMonteCarloStrategy from "./montecarlo/FlatMonteCarloStrategy";
 import {Leprechauns} from "./rulebased/Leprechauns";
 import CallingRulesWithFlatMonteCarloStrategy from "./montecarlo/CallingRulesWithFlatMonteCarloStrategy";
+import CallingRulesWithFlatMonteCarloStrategy100k from "./montecarlo/CallingRulesWithFlatMonteCarloStrategy100k";
+import CallingRulesWithUctMonteCarloStrategy100k from "./montecarlo/CallingRulesWithUctMonteCarloStrategy100k";
 
 export default {
     "ManualStrategy": ManualStrategy,
@@ -31,4 +33,6 @@ export default {
     "FlatMonteCarloStrategy": FlatMonteCarloStrategy,
     "Leprechauns": Leprechauns,
     "CallingRulesWithFlatMonteCarloStrategy": CallingRulesWithFlatMonteCarloStrategy,
+    "CallingRulesWithFlatMonteCarloStrategy100k": CallingRulesWithFlatMonteCarloStrategy100k,
+    "CallingRulesWithUctMonteCarloStrategy100k": CallingRulesWithUctMonteCarloStrategy100k,
 } as { [index in string]: any }

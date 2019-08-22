@@ -4,7 +4,7 @@ import {shiftRightWithBase} from "../../utils/shiftRightWithBase";
 export class StrategyEvaluation {
     // constructor types are too damn complicated!
     readonly strategies: any[];
-    private readonly stats: { [index in string]: { wins: number; losses: number } };
+    private readonly stats: { [index in string]: { wins: number; losses: number, performance: number[] } };
 
     constructor(strategies: any[]) {
         if (strategies.length < 2) {
@@ -13,7 +13,7 @@ export class StrategyEvaluation {
         this.strategies = strategies;
         this.stats = {};
         for (let strategy of strategies) {
-            this.stats[strategy.name] = {wins: 0, losses: 0};
+            this.stats[strategy.name] = {wins: 0, losses: 0, performance: []};
         }
     }
 
@@ -28,6 +28,9 @@ export class StrategyEvaluation {
                     this.stats[strategy.name].losses++
                 }
             }
+        }
+        for (let stat of Object.values(this.stats)) {
+            stat.performance.push(stat.wins - stat.losses);
         }
     }
 
