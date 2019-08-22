@@ -16,6 +16,8 @@ import {Leprechauns} from "./rulebased/Leprechauns";
 import CallingRulesWithFlatMonteCarloStrategy from "./montecarlo/CallingRulesWithFlatMonteCarloStrategy";
 import CallingRulesWithFlatMonteCarloStrategy100k from "./montecarlo/CallingRulesWithFlatMonteCarloStrategy100k";
 import CallingRulesWithUctMonteCarloStrategy100k from "./montecarlo/CallingRulesWithUctMonteCarloStrategy100k";
+import CallingRulesWithUctMonteCarloStrategy10k from "./montecarlo/CallingRulesWithUctMonteCarloStrategy10k";
+import CallingRulesWithFlatMonteCarloStrategy10k from "./montecarlo/CallingRulesWithFlatMonteCarloStrategy10k";
 
 export default {
     "ManualStrategy": ManualStrategy,
@@ -35,4 +37,6 @@ export default {
     "CallingRulesWithFlatMonteCarloStrategy": CallingRulesWithFlatMonteCarloStrategy,
     "CallingRulesWithFlatMonteCarloStrategy100k": CallingRulesWithFlatMonteCarloStrategy100k,
     "CallingRulesWithUctMonteCarloStrategy100k": CallingRulesWithUctMonteCarloStrategy100k,
+    "CallingRulesWithUctMonteCarloStrategy10k": CallingRulesWithUctMonteCarloStrategy10k,
+    "CallingRulesWithFlatMonteCarloStrategy10k": CallingRulesWithFlatMonteCarloStrategy10k,
 } as { [index in string]: any }

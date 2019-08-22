@@ -7,7 +7,7 @@ import {Player} from "../../Player";
 import {determineGameMode} from "../rules/shouldCall/determineGameMode";
 import {determineCardToPlayByFlatMonteCarlo} from "./FlatMonteCarlo/determineCardToPlayByFlatMonteCarlo";
 
-export default class CallingRulesWithFlatMonteCarloStrategy100k implements StrategyInterface {
+export default class CallingRulesWithFlatMonteCarloStrategy10k implements StrategyInterface {
     private readonly thisPlayer: Player;
 
     constructor(thisPlayer: Player) {

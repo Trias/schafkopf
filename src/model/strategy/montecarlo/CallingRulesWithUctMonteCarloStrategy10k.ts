@@ -9,7 +9,7 @@ import {determineCardToPlay} from "./UctMonteCarlo/determineCardToPlay";
 import {RandomCardPlay} from "../random/RandomCardPlay";
 import {generateRandomWorldConsistentWithGameKnowledge} from "../../simulation/generateRandomWorldConsistentWithGameKnowledge";
 
-export default class CallingRulesWithUctMonteCarloStrategy100k implements StrategyInterface {
+export default class CallingRulesWithUctMonteCarloStrategy10k implements StrategyInterface {
     private readonly thisPlayer: Player;
 
     constructor(thisPlayer: Player) {
