@@ -69,7 +69,7 @@ export default class CallingRulesWithFlatMonteCarloStrategy implements StrategyI
 
             for (let card of playableCards) {
                 wins[card] = wins[card] || [];
-                for (let j = 0; j < runsPerSimulation; j++) {
+                for (let j = 0; j < Math.ceil(runsPerSimulation/playableCards.length); j++) {
                     let winsSoFar = wins[card]![i] || 0;
 
                     let fakeWorldClone = fakeWorld.clone();
