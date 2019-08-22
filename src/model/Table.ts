@@ -25,7 +25,7 @@ export type TableOptions = {
     evaluation?: Evaluation;
     saveGamesTo?: string | null;
     saveRules?: boolean;
-    runMode: "default" | "evaluateRules" | "evaluateStrategies" | "replay";
+    runMode: "default" | "evaluateRules" | "evaluateStrategies" | "replay" | "analyze";
     csvFile?: string | null;
 }
 
@@ -66,7 +66,7 @@ export class Table {
             if (this.options.runMode == "evaluateRules") {
                 appendCsv(this.options.csvFile, ["gameId", "withRuleTotal", "withRuleWins", "withRuleLosses", "withoutRuleTotal", "withoutRuleWins", "withoutRuleLosses", "rule"]);
             } else if (this.options.runMode == "evaluateStrategies") {
-                appendCsv(this.options.csvFile, ["gameId", "strategy", "wins", "losses", "performance"]);
+                appendCsv(this.options.csvFile, ["gameId", "strategy", "wins", "losses"]);
             }
         }
         for (let i = 0; i < this.options.runs; i++) {
@@ -131,12 +131,12 @@ export class Table {
                     gameResult = game.getGameResult();
 
                     this.options.evaluation.strategyEvaluation.addResult(gameResult, j);
-                    this.stats.addResult(gameResult);
+                    //this.stats.addResult(gameResult);
 
                     //this.options.evaluation.ruleEvaluation.gradeRules(gameResult); // for saving the rules......
                     //this.options.evaluation.callingRuleEvaluation.gradeRules(gameResult);
 
-                    reportGameResult(this.stats, game, gameResult, playerMap, i);
+                    //reportGameResult(this.stats, game, gameResult, playerMap, i);
 
                     if (game.getGameResult().getGameMode().isRetry()) {
                         j = this.options.evaluation.strategyEvaluation.strategies.length ** 4;
@@ -155,12 +155,24 @@ export class Table {
                 //   reportOnCallingRules(this.options.evaluation.callingRuleEvaluation, i);
                 reportOnStrategies(this.options.evaluation.strategyEvaluation, i);
 
+
                 if (this.options.csvFile) {
                     for (let strategy of this.options.evaluation.strategyEvaluation.strategies) {
                         let evaluation = this.options.evaluation.strategyEvaluation.getEvaluationForStrategy(strategy);
-                        appendCsv(this.options.csvFile, [i + 1, strategy.name, evaluation.wins, evaluation.losses, evaluation.performance.join(',')]);
+                        appendCsv(this.options.csvFile, [i + 1, strategy.name, evaluation.wins, evaluation.losses]);
                     }
                 }
+            } else if (this.options.runMode == "analyze") {
+                playerMap = this.options.makePlayerMap();
+                game = await this.prepareGame(playerMap, i);
+                await game.play();
+
+                gameResult = game.getGameResult();
+
+                this.stats.addResult(gameResult);
+
+                reportGameResult(this.stats, game, gameResult, playerMap, i);
+
             } else {
                 if (this.options.evaluation) {
                     throw Error('evaluation on default profile?')

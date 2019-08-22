@@ -4,9 +4,11 @@ import {extend, includes} from "lodash";
 import {Player} from "../model/Player";
 import {ManualStrategy} from "../model/strategy/manual/ManualStrategy";
 import {CallingRulesWithHeuristic} from "../model/strategy/rulebased/CallingRulesWithHeuristic";
-import program from "commander";
 import seededRandomness from "../utils/seededRandomness";
+import seedRandom  from 'seedrandom';
 import {baseRandom} from "../utils/baseRandom";
+import program from "commander";
+import {shuffleCardsTimes} from "../model/cards/shuffleCards";
 
 export function makeLogConfig() {
     let logConfig: Partial<{ [index in LogLevel]: boolean }> = {};
@@ -147,4 +149,36 @@ export function defineCliOptions() {
     program.option('--replay <gameId>', 'gameId for replay');
     program.option('--saveFile <savegameFile>', 'which file to look for for the game to replay or which file to save a replayable game');
     program.option('--saveRules', 'save used rules to rules.json');
+}
+
+export function determineReplayGame(playerNames: string[]) {
+    let cardDeal, startPlayer;
+    if (program.saveFile) {
+        let gameId = program.replay || 1;
+        let games = require(`../../generated/${program.saveFile}`);
+
+        if (!games[gameId]) {
+            console.error(`game ${gameId} not found!`);
+            process.exit();
+        }
+
+        cardDeal = games[gameId].cardDeal;
+        startPlayer = games[gameId].startPlayer;
+
+        Math.random = seedRandom.alea("", {state: games[gameId].prngState});
+    } else if (program.seed) {
+        makeSeededPrng();
+
+        let gameId: number = program.replay || 1;
+        let cardDeals = shuffleCardsTimes(gameId);
+        cardDeal = cardDeals[gameId - 1];
+        startPlayer = playerNames[(gameId - 1) % 4];
+    } else {
+        console.error(`provide either seed or saveFile to replay games`);
+        process.exit();
+    }
+
+    return {
+        cardDeal, startPlayer
+    }
 }
