@@ -7,8 +7,8 @@ let folderContent = fs.readdirSync(folder);
 let evaluateStrategies = folderContent.filter(entry => entry.startsWith('evaluateStrategies-'));
 let heuristicBaseLine = evaluateStrategies.filter(entry => entry.indexOf("Z-CallingRulesWithHeuristic") !== -1);
 let randomBaseLine = evaluateStrategies.filter(entry => entry.indexOf("Z-CallingRulesWithRandomPlay") !== -1);
-let mostRecentHeuristics = heuristicBaseLine.filter(s => /(CallingRulesWith(Flat|Uct)MonteCarloStrategy(?!100k)(AndHeuristic)?)/.test(s)).sort().reverse().slice(0, 4);
-let mostRecentHeuristicsMax = heuristicBaseLine.filter(s => /(CallingRulesWith(Flat|Uct)MonteCarloStrategy(100k|AndCheating)|Nemesis)/.test(s)).sort().reverse().slice(0, 4);
+let mostRecentHeuristics = heuristicBaseLine.filter(s => /(CallingRulesWith(Flat|Uct)MonteCarloStrategy(?!(100k|10k|AndCheating))(AndHeuristic)?)/.test(s)).sort().reverse().slice(0, 4);
+let mostRecentHeuristicsMax = heuristicBaseLine.filter(s => /(CallingRulesWith(Flat|Uct)MonteCarloStrategy(100k|10k|AndCheating)|Nemesis)/.test(s)).sort().reverse().slice(0, 4);
 let mostRecentRandom = randomBaseLine.sort().reverse().slice(0, 5); // 5 is the number....
 
 if (mostRecentRandom.length < 5 || mostRecentHeuristics.length < 4 || mostRecentHeuristicsMax.length < 4) {
