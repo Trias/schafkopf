@@ -121,7 +121,7 @@
         let lastWins = 0;
         let diffs = [];
 
-        data = data.filter(d => d.strategy === "CallingRulesWithUctMonteCarloStrategy");
+        data = data.filter(d => d.strategy === "Nemesis");
 
         data.forEach(row => {
             let advantage = row.wins - row.losses;
@@ -129,7 +129,7 @@
 
             if (row.wins === lastWins) {
                 // retry, dismiss
-                // return;
+                return;
             }
             diffs.push(diff);
             lastAdvantage = advantage;
