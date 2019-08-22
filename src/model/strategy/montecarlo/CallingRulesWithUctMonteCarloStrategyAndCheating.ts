@@ -31,7 +31,7 @@ export default class CallingRulesWithUctMonteCarloStrategyAndCheating implements
 
         let simulation = new Simulation(world, this.thisPlayer);
         // disable logging for simulation
-        let valuations = simulation.run(cardSet, 1, 100, () => myWorld);
+        let valuations = simulation.run(cardSet, 1, 1000, () => myWorld);
 
         log.timeEnd('uct simulation');
 

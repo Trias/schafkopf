@@ -33,7 +33,7 @@ export default class Nemesis implements StrategyInterface {
 
         let simulation = new Simulation(world, this.thisPlayer);
         // disable logging for simulation
-        let valuations = simulation.run(cardSet, 1, 100, () => myWorld.clone());
+        let valuations = simulation.run(cardSet, 1, 1000, () => myWorld.clone());
 
         log.timeEnd('uct simulation');
 
