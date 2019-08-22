@@ -28,7 +28,7 @@ export class CallingRulesWithUctMonteCarloAndHeuristic implements StrategyInterf
         log.setConfig({disabled: true});
         //let check = JSON.stringify(world.round) + JSON.stringify(world.rounds) + JSON.stringify(this.thisPlayer.assumptions) + JSON.stringify(world.history);
         let simulation = new Simulation(world, this.thisPlayer, AdvancedHeuristic);
-        let valuations = simulation.run(cardSet, 10, 10);
+        let valuations = simulation.run(cardSet, 10, 100);
 
         /* if(check != JSON.stringify(world.round) + JSON.stringify(world.rounds) + JSON.stringify(this.thisPlayer.assumptions) + JSON.stringify(world.history)){
              throw Error('world changed!')
