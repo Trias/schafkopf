@@ -11,7 +11,7 @@ let randomBaseLine = evaluateStrategies.filter(entry => entry.indexOf("Z-Calling
 function filterForMostRecentEvaluations(heuristicBaseLine, regExp) {
     let strategies = new Set();
 
-    heuristicBaseLine.filter(s => regExp.test(s)).sort().reverse().filter(filename => {
+    return heuristicBaseLine.filter(s => regExp.test(s)).sort().reverse().filter(filename => {
         let matches = filename.match(regExp);
 
         if(strategies.has(matches[1])){
@@ -27,7 +27,7 @@ let mostRecentHeuristics = filterForMostRecentEvaluations(heuristicBaseLine, /(C
 let mostRecentHeuristicsMax = filterForMostRecentEvaluations(heuristicBaseLine, /(CallingRulesWith(Flat|Uct)MonteCarloStrategy(AndHeuristic)?(100k|10k|AndCheating)|Nemesis)/);
 let mostRecentRandom = filterForMostRecentEvaluations(randomBaseLine, /(Leprechauns|CallingRulesWith(Flat|Uct)MonteCarloStrategy|CallingRulesWithHeuristic)/);
 
-if (mostRecentRandom.length < 5 || mostRecentHeuristics.length < 4 || mostRecentHeuristicsMax.length < 4) {x;
+if (mostRecentRandom.length < 5 || mostRecentHeuristics.length < 4 || mostRecentHeuristicsMax.length < 4) {
     throw Error('wrong count!');
 }
 
@@ -44,6 +44,11 @@ function readCsv(listOfCsvs) {
     for (let csv of listOfCsvs) {
         let lines = fs.readFileSync(folder + csv, 'utf-8').split('\n');
         firstLine = lines.shift();
+
+        if (csv.indexOf('Nemesis') !== -1 || csv.indexOf('CallingRulesWithUctMonteCarloStrategyAndCheating') !== -1) {
+            lines = lines.slice(0, 100);
+        }
+
         allLines = allLines.concat(lines);
         if (allLines[allLines.length - 1] === "") {
             allLines.pop();
