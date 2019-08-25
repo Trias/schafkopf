@@ -23,12 +23,12 @@ function filterForMostRecentEvaluations(heuristicBaseLine, regExp) {
     });
 }
 
-let mostRecentHeuristics = filterForMostRecentEvaluations(heuristicBaseLine, /(CallingRulesWith(Flat|Uct)MonteCarloStrategy(AndHeuristic)?(?!(100k|10k|AndCheating)))/);
-let mostRecentHeuristicsMax = filterForMostRecentEvaluations(heuristicBaseLine, /(CallingRulesWith(Flat|Uct)MonteCarloStrategy(AndHeuristic)?(100k|10k|AndCheating)|Nemesis)/);
+let mostRecentHeuristics = filterForMostRecentEvaluations(heuristicBaseLine, /(CallingRulesWith(Flat|Uct)MonteCarlo(Strategy|AndHeuristic)(?!(100k|10k|AndCheating)))/);
+let mostRecentHeuristicsMax = filterForMostRecentEvaluations(heuristicBaseLine, /(CallingRulesWith(Flat|Uct)MonteCarlo(Strategy|AndHeuristic)(100k|10k|AndCheating)|Nemesis)/);
 let mostRecentRandom = filterForMostRecentEvaluations(randomBaseLine, /(Leprechauns|CallingRulesWith(Flat|Uct)MonteCarloStrategy|CallingRulesWithHeuristic)/);
 
 if (mostRecentRandom.length < 5 || mostRecentHeuristics.length < 4 || mostRecentHeuristicsMax.length < 4) {
-    throw Error('wrong count!');
+//    throw Error('wrong count!');
 }
 
 let evaluateRules = folderContent.filter(entry => entry.startsWith('evaluateRules-'));
@@ -46,7 +46,7 @@ function readCsv(listOfCsvs) {
         firstLine = lines.shift();
 
         if (csv.indexOf('Nemesis') !== -1 || csv.indexOf('CallingRulesWithUctMonteCarloStrategyAndCheating') !== -1) {
-            lines = lines.slice(0, 100);
+            lines = lines.slice(0, 200);
         }
 
         allLines = allLines.concat(lines);
