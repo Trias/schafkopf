@@ -7,11 +7,27 @@ let folderContent = fs.readdirSync(folder);
 let evaluateStrategies = folderContent.filter(entry => entry.startsWith('evaluateStrategies-'));
 let heuristicBaseLine = evaluateStrategies.filter(entry => entry.indexOf("Z-CallingRulesWithHeuristic") !== -1);
 let randomBaseLine = evaluateStrategies.filter(entry => entry.indexOf("Z-CallingRulesWithRandomPlay") !== -1);
-let mostRecentHeuristics = heuristicBaseLine.filter(s => /(CallingRulesWith(Flat|Uct)MonteCarloStrategy(AndHeuristic)?(?!(100k|10k|AndCheating)))/.test(s)).sort().reverse().slice(0, 4);
-let mostRecentHeuristicsMax = heuristicBaseLine.filter(s => /(CallingRulesWith(Flat|Uct)MonteCarloStrategy(AndHeuristic)?(100k|10k|AndCheating)|Nemesis)/.test(s)).sort().reverse().slice(0, 4);
-let mostRecentRandom = randomBaseLine.sort().reverse().slice(0, 5); // 5 is the number....
 
-if (mostRecentRandom.length < 5 || mostRecentHeuristics.length < 4 || mostRecentHeuristicsMax.length < 4) {
+function filterForMostRecentEvaluations(heuristicBaseLine, regExp) {
+    let strategies = new Set();
+
+    heuristicBaseLine.filter(s => regExp.test(s)).sort().reverse().filter(filename => {
+        let matches = filename.match(regExp);
+
+        if(strategies.has(matches[1])){
+            return false;
+        }else{
+            strategies.add(matches[1]);
+            return true;
+        }
+    });
+}
+
+let mostRecentHeuristics = filterForMostRecentEvaluations(heuristicBaseLine, /(CallingRulesWith(Flat|Uct)MonteCarloStrategy(AndHeuristic)?(?!(100k|10k|AndCheating)))/);
+let mostRecentHeuristicsMax = filterForMostRecentEvaluations(heuristicBaseLine, /(CallingRulesWith(Flat|Uct)MonteCarloStrategy(AndHeuristic)?(100k|10k|AndCheating)|Nemesis)/);
+let mostRecentRandom = filterForMostRecentEvaluations(randomBaseLine, /(Leprechauns|CallingRulesWith(Flat|Uct)MonteCarloStrategy|CallingRulesWithHeuristic)/);
+
+if (mostRecentRandom.length < 5 || mostRecentHeuristics.length < 4 || mostRecentHeuristicsMax.length < 4) {x;
     throw Error('wrong count!');
 }
 
